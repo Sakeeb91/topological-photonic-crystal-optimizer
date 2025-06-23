@@ -1,0 +1,59 @@
+# Production configuration for MEEP simulations
+# All length units are in micrometers (µm).
+
+# 1. Physics & Geometry Parameters (The Search Space)
+design_space:
+  a: [0.30, 0.40]      # 1st dimerization distance
+  b: [0.10, 0.20]      # 2nd dimerization distance
+  r: [0.10, 0.18]      # Hole radius
+  R: [10.0, 15.0]      # Ring radius
+  w: [0.45, 0.55]      # Waveguide width
+
+# 2. Simulation Parameters for MEEP
+simulation:
+  resolution: 50       # Higher resolution for production (pixels per µm)
+  pml_width: 2.0       # PML thickness for absorption
+  sim_time: 300        # Simulation time after source decay
+  target_wavelength: 1.547  # Target wavelength (µm) - telecom C-band
+  
+  # Material properties
+  substrate_index: 1.46    # Silicon dioxide
+  waveguide_index: 2.0     # Silicon nitride
+  air_index: 1.0           # Air holes
+  
+  # Source parameters
+  source_width_factor: 0.1  # Pulse width as fraction of center frequency
+  source_position_factor: 0.9  # Source position as fraction of ring radius
+  
+  # Monitor parameters
+  monitor_position_factor: 0.95  # Harminv monitor position
+
+# 3. Objective Function Definition
+objective:
+  num_disorder_runs: 10          # Number of disorder simulations for robustness
+  disorder_std_dev_percent: 5.0  # Hole radius disorder (% of nominal radius)
+  q_penalty_factor: 2.0          # Penalty for Q-factor variability
+  
+  # Quality filters
+  min_q_threshold: 100           # Minimum Q to consider a valid mode
+  max_freq_deviation: 0.1        # Max frequency deviation from target
+
+# 4. Optimizer (ML) Parameters
+optimizer:
+  n_initial_points: 25   # More initial sampling for better coverage
+  n_iterations: 150      # More iterations for thorough search
+  acquisition_function: "gp_hedge"  # Robust acquisition function
+  
+  # Gaussian Process parameters
+  noise_level: 1e-10     # Expected noise in objective function
+  
+# 5. Fabrication Constraints
+fabrication:
+  min_feature_size: 0.05     # Minimum fabricatable feature (µm)
+  max_aspect_ratio: 10.0     # Maximum aspect ratio for holes
+  
+# 6. Performance Targets
+targets:
+  min_q_factor: 10000        # Minimum acceptable Q-factor
+  target_wavelength: 1.547   # Target resonance wavelength (µm)
+  max_mode_volume: 100.0     # Maximum acceptable mode volume (µm³)

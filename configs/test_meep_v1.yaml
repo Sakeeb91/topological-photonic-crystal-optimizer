@@ -1,0 +1,32 @@
+# Test configuration for MEEP simulations with reduced parameters for faster testing
+# All length units are in micrometers (µm).
+
+# 1. Physics & Geometry Parameters (The Search Space)
+# Smaller search space for testing
+design_space:
+  a: [0.35, 0.40]      # 1st dimerization distance
+  b: [0.10, 0.15]      # 2nd dimerization distance
+  r: [0.14, 0.16]      # Hole radius
+  R: [12.0, 14.0]      # Ring radius
+  w: [0.48, 0.52]      # Waveguide width
+
+# 2. Simulation Parameters for MEEP
+simulation:
+  resolution: 30       # Lower resolution for faster testing
+  pml_width: 1.5       # Smaller PML for faster simulation
+  sim_time: 100        # Shorter simulation time
+  target_wavelength: 1.547
+
+# 3. Objective Function Definition
+# Reduced disorder runs for faster testing
+objective:
+  num_disorder_runs: 5           # Fewer runs for testing
+  disorder_std_dev_percent: 5.0  
+  q_penalty_factor: 2.0          
+
+# 4. Optimizer (ML) Parameters
+# Fewer iterations for testing
+optimizer:
+  n_initial_points: 5    # Fewer initial points
+  n_iterations: 10       # Fewer optimization steps
+  acquisition_function: "gp_hedge"

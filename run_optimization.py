@@ -12,8 +12,8 @@ from tqdm import tqdm
 
 # Import our wrapper function
 # We can easily switch between the mock and real one here!
-from src.simulation_wrapper import evaluate_design_mock as evaluate_design
-# from src.simulation_wrapper import evaluate_design_meep as evaluate_design
+# from src.simulation_wrapper import evaluate_design_mock as evaluate_design
+from src.simulation_wrapper import evaluate_design_meep as evaluate_design
 
 # --- 1. Setup ---
 def setup_directories(run_name):
