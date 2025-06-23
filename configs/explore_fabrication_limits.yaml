@@ -1,0 +1,25 @@
+# Exploration: Push fabrication limits
+# Test the boundaries of what's manufacturable
+
+design_space:
+  a: [0.30, 0.40]      
+  b: [0.10, 0.20]      
+  r: [0.05, 0.12]      # Very small holes (challenging fabrication)
+  R: [8.0, 15.0]       
+  w: [0.30, 0.50]      # Narrow waveguides
+
+simulation:
+  resolution: 50       # High resolution for small features
+  pml_width: 2.0       
+  sim_time: 160        
+  target_wavelength: 1.547
+
+objective:
+  num_disorder_runs: 10         # More disorder runs for robustness
+  disorder_std_dev_percent: 8.0 # High disorder (challenging fabrication)
+  q_penalty_factor: 3.0         # High penalty for robustness requirement
+
+optimizer:
+  n_initial_points: 10   # More initial points for complex space
+  n_iterations: 20       # More iterations
+  acquisition_function: "gp_hedge"

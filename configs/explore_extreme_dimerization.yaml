@@ -1,0 +1,25 @@
+# Exploration: Extreme dimerization for maximum topological protection
+# Push the limits of SSH model dimerization
+
+design_space:
+  a: [0.40, 0.60]      # Very large 'a' spacing
+  b: [0.05, 0.12]      # Very small 'b' spacing  
+  r: [0.10, 0.18]      
+  R: [12.0, 18.0]      
+  w: [0.45, 0.60]      
+
+simulation:
+  resolution: 35       
+  pml_width: 2.0       
+  sim_time: 140        
+  target_wavelength: 1.547
+
+objective:
+  num_disorder_runs: 8          
+  disorder_std_dev_percent: 5.0  
+  q_penalty_factor: 1.0          # Lower penalty to see raw Q-factors
+
+optimizer:
+  n_initial_points: 8    
+  n_iterations: 15       
+  acquisition_function: "gp_hedge"

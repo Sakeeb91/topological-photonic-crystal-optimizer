@@ -1,0 +1,25 @@
+# Exploration: Large ring resonators for ultra-high Q
+# Focus on larger radii which should reduce bending losses
+
+design_space:
+  a: [0.35, 0.45]      # Larger dimerization distances
+  b: [0.12, 0.18]      
+  r: [0.12, 0.20]      # Wider range of hole sizes
+  R: [15.0, 25.0]      # Much larger rings
+  w: [0.50, 0.70]      # Wider waveguides
+
+simulation:
+  resolution: 25       # Lower resolution for speed with large structures
+  pml_width: 3.0       # Larger PML for big rings
+  sim_time: 150        
+  target_wavelength: 1.547
+
+objective:
+  num_disorder_runs: 6          
+  disorder_std_dev_percent: 4.0  # Slightly less disorder for large features
+  q_penalty_factor: 1.5          # Less penalty to encourage exploration
+
+optimizer:
+  n_initial_points: 8    
+  n_iterations: 15       
+  acquisition_function: "gp_hedge"
