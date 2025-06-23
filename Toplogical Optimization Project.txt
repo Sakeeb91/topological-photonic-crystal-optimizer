@@ -1,0 +1,581 @@
+### **Project Context & Physics Primer for Software Engineers**
+
+**To:** Junior Developer
+**From:** Senior ML/Physics Lead
+**Subject:** The Physics Behind Our Photonic Crystal Optimizer
+
+Welcome! The code you are writing will solve a real-world problem in cutting-edge physics. To build it effectively, you need to understand the physical intuition behind the numbers. This document is your guide. You don't need to be a physicist, but understanding these concepts will help you make better design choices and debug more effectively.
+
+#### **1. The Big Picture: What Are We Building and Why?**
+
+We are building an **optical microchip**. Think of it like a computer CPU, but instead of manipulating electrons in copper wires, it manipulates **photons (particles of light)** in tiny glass-like structures called **waveguides**.
+
+*   **The Goal:** To create a tiny, on-chip component called a **cavity**. A cavity is like a "trap" for light. It's designed to capture and hold light of a very specific color (wavelength) while letting all other colors pass by.
+*   **The Analogy:** Imagine a musical instrument. When you pluck a guitar string, it vibrates at a specific frequency (a note). Our cavity is like that guitar string for light—it has a natural "resonant" frequency.
+*   **Why is this useful?** These cavities are the building blocks for on-chip lasers, ultra-sensitive sensors (e.g., detecting a single virus), and components for quantum computers.
+
+#### **2. The Figure of Merit: What Makes a "Good" Cavity? The Q-Factor.**
+
+How do we measure how good our light trap is? We use the **Quality (Q) Factor**.
+
+*   **High Q-Factor (Good):** This means the trap is excellent. Light gets trapped and bounces around inside for a very long time before leaking out. In the frequency spectrum, this looks like an extremely sharp, narrow dip. A high Q-factor is desirable for almost all applications.
+    *   *Analogy:* A high-quality bell that rings for a very long time after being struck.
+*   **Low Q-Factor (Bad):** The trap is leaky. Light escapes almost immediately. The dip in the spectrum is broad and shallow.
+    *   *Analogy:* A bell made of mud that makes a dull "thud" and stops vibrating instantly.
+
+**Our primary goal is to write code that finds a geometry that MAXIMIZES the Q-factor.**
+
+#### **3. The Geometry: How Do We Build the Trap?**
+
+Our cavity is made from a **ring of silicon nitride** (a type of glass) sitting on a silicon dioxide substrate. The key feature is a series of **holes** etched into this ring. The precise size and spacing of these holes are what create the trap.
+
+This is where the parameters in your `config.yaml` file come from:
+
+*   `w`: The width of the ring waveguide.
+*   `R`: The overall radius of the ring. A larger radius generally means less light "leaks" out from bending, leading to a higher intrinsic Q-factor.
+*   `r`: The radius of the holes we etch.
+*   `a` and `b`: These are the **crucial "topological" parameters**. They represent the two different spacings between the centers of the holes. We have a repeating pattern of `a`, `b`, `a`, `b`, ... This is called **dimerization** (grouping into pairs).
+
+**Your code's job is to find the perfect combination of `[w, R, r, a, b]` that produces the highest Q-factor.**
+
+
+*(You can include a diagram like the one from the thesis, Figure 18, here for visual reference)*
+
+#### **4. The "Topological" Secret Sauce: Why This Isn't Just Any Ring of Holes**
+
+This is the most advanced concept, but it's the most important one. The special `a, b, a, b` pattern makes this a **Topological Photonic Crystal**.
+
+*   **The Problem with Normal Designs:** If you build a normal cavity, the tiniest fabrication error (e.g., one hole is 2 nanometers off-center) can catastrophically ruin the Q-factor. Real-world manufacturing is never perfect.
+*   **The Topological Protection (Our Goal):** A topological design is special. It's inherently **robust to small imperfections**. The properties of the light trap are protected by a deep mathematical property (its "topology"), not just by the exact positions of the holes. This means our design will actually work when we try to manufacture it!
+
+**How this translates to your code (The Objective Function):**
+
+This is why we don't just maximize the Q-factor of a perfect design. We must maximize **robustness**. In `simulation_wrapper.py`, you will implement a loop:
+
+1.  Take a candidate geometry `(a, b, r, ...)`
+2.  Run `N` simulations (e.g., `N=10`).
+3.  In each of these `N` simulations, you will add a small, random error to the radius of every single hole. This mimics real-world fabrication disorder.
+4.  You will get `N` slightly different Q-factors.
+5.  Our final **score** for the design is `Q_average - k * Q_standard_deviation`.
+    *   This score rewards designs that have a **high average Q-factor** and, crucially, a **low standard deviation** (meaning the Q-factor didn't change much even with the errors). **This is the mathematical embodiment of "topological protection."**
+
+#### **5. The "Black Box": The MEEP FDTD Simulator**
+
+*   **What it is:** MEEP is a physics engine. It solves Maxwell's equations (the fundamental laws of light and electromagnetism) over a grid.
+*   **What it does:** You give it a geometry (our ring of holes) and tell it to shine a pulse of light at it. MEEP simulates, step-by-step, how that light travels, reflects, and resonates within your structure.
+*   **The `Harminv` tool:** Inside MEEP, we use a tool called `Harminv`. It watches the light field inside the cavity and, using signal processing, it can figure out the resonant frequency and the Q-factor.
+*   **Why it's expensive:** These simulations are computationally intensive. A single Q-factor calculation can take minutes to hours. **This is the entire reason we need a "smart" optimizer like Bayesian Optimization instead of just brute-forcing thousands of designs.**
+
+#### **Summary for the Developer: Your Mission**
+
+1.  **Your Inputs are Geometry:** Your code will manipulate five geometric numbers: `w, R, r, a, b`.
+2.  **Your "Black Box" is MEEP:** You will write a Python function that takes these five numbers, builds the corresponding geometry in MEEP, and runs the simulation.
+3.  **Your Goal is Robust Performance:** Your function's final output isn't just one Q-factor. It's a single score (`Q_avg - k * Q_std`) calculated from multiple simulations with random imperfections.
+4.  **The ML Loop will Drive:** You will plug this "evaluation function" into the `run_optimization.py` script. The Bayesian optimizer will then intelligently call your function with different geometries, learning from each result to find the best possible design with the minimum number of expensive simulations.
+
+Your work is not just writing code; it's building an automated discovery engine. If you have any questions about why a parameter is important or what a simulation result means, please ask. Understanding the physics will make you a far more effective developer on this project.
+
+### **Expert Advice: Recommended ML Optimization Algorithm**
+
+For this specific problem, the best-suited ML optimization technique is **Bayesian Optimization (BO)**.
+
+#### **Why Bayesian Optimization?**
+
+The core challenge in your project is that evaluating the performance (the "objective function") of a given design is computationally expensive. Each data point requires running a full-wave electromagnetic simulation (like FDTD with Meep, as used in the thesis), which can take minutes to hours. Bayesian Optimization is specifically designed for optimizing these "expensive black-box functions."
+
+Here’s how it works and why it’s a perfect fit:
+
+1.  **Sample Efficiency:** Unlike methods like Genetic Algorithms that require a large population (hundreds or thousands of simulations per generation), BO intelligently selects the next design to simulate. It aims to gather the most information possible from each expensive simulation, dramatically reducing the total number of simulations needed to find an optimal design.
+
+2.  **Surrogate Modeling:** BO builds a probabilistic "surrogate model" (typically a Gaussian Process) of the relationship between your geometric parameters (e.g., hole radii, dimerization) and the performance metric (Q-factor). This model is cheap to evaluate and provides not just a prediction but also an *uncertainty* for that prediction.
+
+3.  **Intelligent Exploration vs. Exploitation:** Using the surrogate model's predictions and uncertainties, BO uses an "acquisition function" (e.g., Expected Improvement) to balance two goals:
+    *   **Exploitation:** Simulating designs in regions the model predicts will have a high Q-factor.
+    *   **Exploration:** Simulating designs in regions where the model is highly uncertain, which could potentially hide an even better, undiscovered optimum.
+
+This intelligent trade-off is the key to its efficiency.
+
+#### **Alternative: Genetic Algorithms (GAs)**
+
+GAs are another valid approach and are widely used in photonics. They work by evolving a "population" of designs over "generations."
+*   **Pros:** Very robust, excellent at exploring a vast design space, and less likely to get stuck in local optima. They are also naturally suited for multi-objective optimization.
+*   **Cons:** They are not sample-efficient. They would require far more FDTD simulations than BO to converge, which could make the project computationally intractable.
+
+**Conclusion:** Start with Bayesian Optimization. It is the state-of-the-art for problems with expensive evaluations.
+
+---
+
+### **Complete Project Outline: Optimizing a Topological Photonic Crystal with ML**
+
+This outline details a systematic approach, building directly on the foundation of the provided thesis.
+
+#### **Phase 1: Problem Formulation and Simulation Setup**
+
+This is the most critical phase. You need to precisely define what you are optimizing for and what parameters the algorithm can change.
+
+1.  **Define the Design Space (The "Knobs"):**
+    *   Based on the thesis (Figures 18, 19), your parameters are the geometric properties of the SSH ring.
+    *   **Parameters Vector `x`:** `[a, b, r, R, w]`
+        *   `a`: 1st dimerization distance
+        *   `b`: 2nd dimerization distance
+        *   `r`: Hole radius
+        *   `R`: Ring radius
+        *   `w`: Waveguide width
+    *   **Define Bounds and Constraints:** Set realistic minimum/maximum values for each parameter based on fabrication limits (e.g., minimum feature size of ~50-100 nm, as mentioned in the thesis) and physical intuition. For example, `2r < w`.
+
+2.  **Define the Objective Function (The "Dials"):**
+    *   This is the metric you want to maximize. The thesis identifies the key trade-off: high Q-factor vs. robustness to disorder.
+    *   **Objective 1 (Primary): Maximize Q-factor.** The simulation will output the resonant wavelength and its Q-factor.
+    *   **Objective 2 (Crucial for Topology): Maximize Robustness.** This needs to be quantified. A good metric is the **mean Q-factor under disorder, penalized by its standard deviation.**
+        *   **Proposed Robustness Metric `f(x)`:** For a given design vector `x`, run *N* simulations (e.g., N=10) where you add random perturbations to the hole radii (as done in Figure 23). Calculate the mean Q (`Q_avg`) and standard deviation (`Q_std`). Your objective could be:
+            *   `f(x) = Q_avg` (simple)
+            *   `f(x) = Q_avg - k * Q_std` (penalized mean, a common approach)
+            *   `f(x) = Q_avg / Q_std` (signal-to-noise ratio)
+
+3.  **Create the Black-Box "Wrapper" Function:**
+    *   Write a Python script that acts as the interface between the optimizer and the simulator.
+    *   **Input:** A design vector `x = [a, b, r, R, w]`.
+    *   **Process:**
+        1.  Generates the geometry file for the simulator (e.g., Meep).
+        2.  Runs the FDTD simulation(s). To calculate the robustness metric, this step will involve a loop of N runs with disorder.
+        3.  Parses the simulation output to extract the Q-factor(s).
+        4.  Calculates the final objective score `f(x)`.
+    *   **Output:** A single floating-point number representing the score to be maximized.
+
+#### **Phase 2: Initial Data Generation**
+
+The Bayesian optimizer needs a few initial data points to build its first surrogate model.
+
+1.  **Initial Sampling:** Don't just pick points randomly. Use a quasi-random sampling method like **Latin Hypercube Sampling (LHS)** to generate ~10-20 initial design vectors. This ensures you get a good, space-filling coverage of your design space.
+2.  **Run Simulations:** Execute your wrapper function for each of these initial designs to get your starting dataset: `(x_i, f(x_i))`.
+
+#### **Phase 3: The Bayesian Optimization Loop**
+
+This is the core of the machine learning process. Use a Python library like `scikit-optimize`, `BoTorch` (from Facebook/Meta), or `GPyOpt`.
+
+The loop proceeds as follows for a set number of iterations (e.g., 100-200):
+
+1.  **Fit the Surrogate Model:** Train the Gaussian Process model on all the data you have collected so far.
+2.  **Select Next Point:** Use the acquisition function (e.g., Expected Improvement, `EI`) to find the point `x_next` in the design space that is most promising to simulate next.
+3.  **Evaluate:** Run your expensive FDTD simulation wrapper for `x_next` to get its true score, `f(x_next)`.
+4.  **Augment Data:** Add the new pair `(x_next, f(x_next))` to your dataset.
+5.  **Repeat.**
+
+#### **Phase 4: Analysis and Validation**
+
+Once the optimization loop is finished, you will have a proposed optimal design.
+
+1.  **Identify the Champion:** Find the design `x_best` from all your simulations that yielded the highest objective score.
+2.  **Thorough Validation:** Run a more detailed analysis on `x_best`.
+    *   Simulate its field profile (like in Figure 17) to confirm the mode is well-confined.
+    *   Calculate its band structure (like in Figures 14-16) to verify the bandgap.
+    *   Perform a sweep of disorder (like in Figure 23) to explicitly visualize its robustness.
+3.  **Compare to Baseline:** Directly compare the performance of your ML-optimized design against the "strong dimerization" case from Hotte-Kilburn's thesis. You should aim to demonstrate a quantifiable improvement in Q-factor, robustness, or both.
+4.  **Visualize the Optimization:** Plot the `objective score vs. iteration`. You should see a clear trend of improvement over time as the algorithm converges on a good solution.
+
+#### **Phase 5: Advanced Extensions & Interpretation**
+
+1.  **Multi-Objective Optimization:** The problem is naturally multi-objective (e.g., maximize Q-factor, minimize modal volume, keep resonant wavelength at 1550nm). You can use multi-objective Bayesian optimization algorithms (like `NSGA-II` for GAs or multi-objective acquisition functions in BO) to find the *Pareto front*—a set of designs representing the best possible trade-offs.
+2.  **Surrogate Model Analysis:** Your final Gaussian Process model is a treasure trove of information. You can use it to understand the design landscape:
+    *   Which parameters are most sensitive? (e.g., is Q-factor more dependent on `r` or `a`?)
+    *   Are there interesting correlations between parameters?
+3.  **Inverse Design with a Neural Network:** As a more advanced project, you could use the data generated by the BO to train a deep neural network as a fast surrogate model. This network can then be used for near-instantaneous optimization or even inverse design (specifying a desired Q-factor and getting a proposed geometry).
+
+This project combines the physics-driven insights from the thesis with a powerful, data-efficient ML framework to push the design beyond what is possible with manual iteration, leading to novel, high-performance, and robust topological photonic devices.
+
+
+
+
+
+
+The plan is to create a Python framework that uses the `scikit-optimize` library for Bayesian Optimization to intelligently search for the optimal geometric parameters of the topological photonic crystal ring resonator. It will interface with the `MEEP` FDTD simulator to evaluate the performance of each design.
+
+---
+
+### **Project Goal & Philosophy**
+
+**To:** Junior Developer
+**From:** Senior ML/Physics Lead
+
+Welcome to the team! Your task is to build a robust optimization pipeline to design a next-generation topological photonic device. Our goal is to maximize the cavity's **Quality (Q) factor** while ensuring it remains **robust to fabrication errors** (disorder).
+
+Our philosophy is **"Automate, Don't Iterate."** Instead of manually tweaking parameters and running simulations for weeks, we will build a "smart driver" that does this for us. We will treat the expensive FDTD simulation as a "black box" that our ML algorithm will learn to navigate efficiently.
+
+Follow this guide step-by-step. The structure is designed to be testable at each stage, even without running the full, slow simulations.
+
+---
+
+### **Project Structure**
+
+First, create the following directory and file structure. This separation of concerns is crucial for keeping our project clean and manageable.
+
+```
+topological-optimizer/
+├── configs/
+│   └── strong_dimerization_v1.yaml
+│
+├── results/
+│   └── # This directory will be created by the script to store output
+│
+├── src/
+│   ├── __init__.py
+│   ├── simulation_wrapper.py
+│   ├── analysis.py
+│   └── utils.py
+│
+├── run_optimization.py
+├── requirements.txt
+└── README.md
+```
+
+### **Step 1: Setup and `README.md`**
+
+1.  **Create `README.md`:** This is your project's front page.
+
+    ```markdown
+    # Topological Photonic Crystal Optimizer
+
+    This project uses Bayesian Optimization to find the optimal geometry for a topological photonic crystal ring resonator, as described in the thesis by A. Hotte-Kilburn.
+
+    ## Goal
+    Maximize the disorder-robust Q-factor of the edge-state cavity.
+
+    ## Setup
+    1. Install MEEP and its Python interface. Follow the official instructions.
+    2. Create a Python virtual environment and activate it:
+       python -m venv venv
+       source venv/bin/activate
+    3. Install required packages:
+       pip install -r requirements.txt
+
+    ## Usage
+    1. **Run Optimization:**
+       python run_optimization.py --config configs/strong_dimerization_v1.yaml
+
+    2. **Analyze Results:**
+       # (To be implemented)
+    ```
+
+2.  **Create `requirements.txt`:** This file lists our Python dependencies.
+
+    ```
+    scikit-optimize
+    numpy
+    matplotlib
+    pyyaml
+    pandas
+    tqdm
+    # Note: meep is installed separately
+    ```
+
+3.  **Install Dependencies:** Follow the instructions in your `README.md` to set up your environment.
+
+### **Step 2: Configuration File**
+
+Hard-coding parameters is a bad practice. We will use a `YAML` file to control everything. This allows us to easily track experiments.
+
+**File:** `configs/strong_dimerization_v1.yaml`
+
+```yaml
+# Configuration for optimizing a design based on the "strong dimerization" case.
+# All length units are in micrometers (µm).
+
+# 1. Physics & Geometry Parameters (The Search Space)
+# We define the search space for the optimizer here as [min, max] bounds.
+design_space:
+  a: [0.30, 0.40]      # 1st dimerization distance
+  b: [0.10, 0.20]      # 2nd dimerization distance
+  r: [0.10, 0.18]      # Hole radius
+  R: [10.0, 15.0]      # Ring radius
+  w: [0.45, 0.55]      # Waveguide width
+
+# 2. Simulation Parameters for MEEP
+simulation:
+  resolution: 40       # Pixels per µm (as per thesis)
+  pml_width: 2.0
+  sim_time: 200        # Simulation time in MEEP units after source decay
+  target_wavelength: 1.547
+
+# 3. Objective Function Definition
+# This defines how we score a design. Our goal is a high, robust Q-factor.
+objective:
+  num_disorder_runs: 10          # Number of simulations to run to average over disorder
+  disorder_std_dev_percent: 5.0  # e.g., 5.0 means hole radii vary by 5% std dev
+  q_penalty_factor: 2.0          # How much to penalize Q-factor standard deviation. Score = Q_avg - k * Q_std
+
+# 4. Optimizer (ML) Parameters
+optimizer:
+  n_initial_points: 20   # Number of random points to sample before starting optimization
+  n_iterations: 100      # Number of optimization steps after the initial points
+  acquisition_function: "gp_hedge" # A robust choice for the acquisition function
+```
+
+### **Step 3: The Simulation Wrapper (The "Black Box")**
+
+This is the most critical module. It's the bridge between our ML algorithm and the physics simulator. **Crucially, we will start with a *mock* function.** This allows us to test the entire optimization loop in seconds instead of days.
+
+**File:** `src/simulation_wrapper.py`
+
+```python
+import numpy as np
+import time
+# TODO: Uncomment the following line when you are ready for real simulations
+# import meep as mp
+
+# A very large negative number for failed simulations
+_NEGINF = -1.0e10
+
+def _calculate_objective(q_factors, config):
+    """Calculates the final score from a list of Q-factors."""
+    if not q_factors:
+        return _NEGINF
+
+    q_avg = np.mean(q_factors)
+    q_std = np.std(q_factors)
+    
+    penalty_factor = config['objective']['q_penalty_factor']
+    score = q_avg - penalty_factor * q_std
+    
+    return score
+
+def evaluate_design_mock(design_vector, config):
+    """
+    MOCK FUNCTION: Simulates the performance of a design without running MEEP.
+    This is for testing the optimization loop quickly.
+    It returns a higher score for designs that are 'better' based on a simple formula.
+    """
+    # Unpack design vector for clarity
+    a, b, r, R, w = design_vector
+    
+    print(f"  [Mock Sim] Evaluating: a={a:.3f}, b={b:.3f}, r={r:.3f}, R={R:.2f}, w={w:.3f}")
+
+    # --- Let's create a fake physics model ---
+    # Goal: A large (a-b) difference is good (strong dimerization)
+    # Goal: A larger R is good (less bending loss)
+    # Goal: Radius 'r' has an optimal value around 0.15
+    ideal_dimerization = (a - b) * 1e5
+    ideal_radius = -((r - 0.15)**2) * 1e5
+    ideal_ring_radius = R * 1000
+
+    base_q = 20000 + ideal_dimerization + ideal_radius + ideal_ring_radius
+    
+    # Simulate disorder
+    num_runs = config['objective']['num_disorder_runs']
+    # The mock 'disorder' makes the Q-factor noisy
+    q_factors = base_q + np.random.randn(num_runs) * 2000 
+    
+    time.sleep(0.1) # Simulate that the function takes some time
+    
+    score = _calculate_objective(q_factors, config)
+    print(f"  [Mock Sim] Result -> Avg Q: {np.mean(q_factors):.0f}, Std Q: {np.std(q_factors):.0f}, Score: {score:.2f}")
+    
+    return score
+
+
+def evaluate_design_meep(design_vector, config):
+    """
+    REAL FUNCTION: Evaluates a design by running MEEP FDTD simulations.
+    
+    This is the function you will build out.
+    """
+    # TODO: This is your main task.
+    print("  [MEEP Sim] This function is not implemented. Returning a random score.")
+    # You would replace this with your MEEP script logic.
+    # The logic would look something like this:
+    
+    # 1. Unpack design_vector and config parameters
+    a, b, r, R, w = design_vector
+    resolution = config['simulation']['resolution']
+    # ... and so on
+    
+    q_factors = []
+    num_runs = config['objective']['num_disorder_runs']
+    disorder_std = r * (config['objective']['disorder_std_dev_percent'] / 100.0)
+
+    # for i in range(num_runs):
+    #     # 2. Define MEEP geometry. This is the complex part.
+    #     # You need to programmatically generate the ring of holes.
+    #     # For each hole, its radius would be r + np.random.randn() * disorder_std
+    #     
+    #     # 3. Define source and simulation object
+    #     # e.g., src = mp.Source(...)
+    #     
+    #     # 4. Use Harminv to find the Q-factor
+    #     # harminv_instance = mp.Harminv(...)
+    #     # sim = mp.Simulation(...)
+    #     # sim.run(until_after_sources=...)
+    #     
+    #     # 5. Extract Q from harminv_instance and append to q_factors list
+    #     # q_val = harminv_instance.modes[0].Q # (handle cases with no modes found)
+    #     # q_factors.append(q_val)
+    
+    # For now, we return a random score to make the optimizer run.
+    # Replace this with the real calculation.
+    mock_q = np.random.rand() * 50000
+    return mock_q
+```
+
+### **Step 4: The Main Optimization Script**
+
+This script orchestrates the entire process. It loads the config, sets up the optimizer, calls the wrapper, and saves the results.
+
+**File:** `run_optimization.py`
+
+```python
+import os
+import yaml
+import argparse
+import time
+from datetime import datetime
+import numpy as np
+import pandas as pd
+from skopt import gp_minimize
+from skopt.space import Real
+from skopt.utils import use_named_args
+from tqdm import tqdm
+
+# Import our wrapper function
+# We can easily switch between the mock and real one here!
+from src.simulation_wrapper import evaluate_design_mock as evaluate_design
+# from src.simulation_wrapper import evaluate_design_meep as evaluate_design
+
+# --- 1. Setup ---
+def setup_directories(run_name):
+    """Creates a unique directory for storing results of this run."""
+    results_dir = os.path.join("results", run_name)
+    os.makedirs(results_dir, exist_ok=True)
+    return results_dir
+
+def load_config(config_path):
+    """Loads the YAML configuration file."""
+    with open(config_path, 'r') as f:
+        return yaml.safe_load(f)
+
+# --- 2. Optimizer Definition ---
+def define_search_space(config):
+    """Defines the search space for the optimizer from the config file."""
+    space = []
+    param_names = []
+    for name, bounds in config['design_space'].items():
+        space.append(Real(low=bounds[0], high=bounds[1], name=name))
+        param_names.append(name)
+    return space, param_names
+
+def main(config_path):
+    # Load config and setup
+    config = load_config(config_path)
+    run_name = f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    results_dir = setup_directories(run_name)
+    print(f"Starting optimization run: {run_name}")
+    print(f"Results will be saved in: {results_dir}")
+
+    space, param_names = define_search_space(config)
+    
+    # We create a progress bar for the optimization
+    pbar = tqdm(total=config['optimizer']['n_initial_points'] + config['optimizer']['n_iterations'])
+
+    # --- 3. The Objective Function (What the Optimizer Calls) ---
+    # The @use_named_args decorator converts a list of parameters to keyword arguments
+    @use_named_args(space)
+    def objective_function(**params):
+        design_vector = [params[name] for name in param_names]
+        
+        # The optimizer wants to MINIMIZE, so we return the NEGATIVE of our score
+        score = evaluate_design(design_vector, config)
+        pbar.update(1)
+        
+        # Log progress
+        log_data = {name: [val] for name, val in params.items()}
+        log_data['score'] = [-score] # Store the real score, not the negative
+        log_df = pd.DataFrame(log_data)
+        
+        log_path = os.path.join(results_dir, 'optimization_log.csv')
+        log_df.to_csv(log_path, mode='a', header=not os.path.exists(log_path), index=False)
+        
+        return -score
+
+    # --- 4. Run the Optimizer ---
+    print("\nStarting Bayesian Optimization...")
+    result = gp_minimize(
+        func=objective_function,
+        dimensions=space,
+        n_calls=config['optimizer']['n_initial_points'] + config['optimizer']['n_iterations'],
+        n_initial_points=config['optimizer']['n_initial_points'],
+        acq_func=config['optimizer']['acquisition_function'],
+        random_state=123 # for reproducibility
+    )
+    pbar.close()
+
+    # --- 5. Save and Print Final Results ---
+    print("\nOptimization finished!")
+    best_params = {name: val for name, val in zip(param_names, result.x)}
+    best_score = -result.fun
+
+    print(f"Best score found: {best_score:.4f}")
+    print("Best parameters:")
+    for name, val in best_params.items():
+        print(f"  {name}: {val:.4f}")
+
+    # Save best parameters to a file for analysis
+    with open(os.path.join(results_dir, 'best_params.yaml'), 'w') as f:
+        yaml.dump(best_params, f)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run Bayesian Optimization for Topological Photonic Crystals.")
+    parser.add_argument('--config', type=str, required=True, help="Path to the configuration YAML file.")
+    args = parser.parse_args()
+    main(args.config)
+```
+
+### **Step 5: How to Run and Get Quantitative Results**
+
+Now you have a fully functional (mock) optimization pipeline.
+
+1.  **Execute the Run:** Open your terminal, activate your virtual environment, and run:
+    ```bash
+    python run_optimization.py --config configs/strong_dimerization_v1.yaml
+    ```
+
+2.  **Observe the Output:** You will see a progress bar. For each step, the mock simulator will print the parameters it's testing and the resulting score.
+
+    ```
+    Starting optimization run: run_20231027_113000
+    Results will be saved in: results/run_20231027_113000
+
+    Starting Bayesian Optimization...
+    100%|███████████████████████████████████████| 120/120 [00:12<00:00,  9.88it/s]
+      [Mock Sim] Evaluating: a=0.385, b=0.112, r=0.151, R=14.89, w=0.541
+      [Mock Sim] Result -> Avg Q: 60123, Std Q: 2105, Score: 55913.00
+    ...
+
+    Optimization finished!
+    Best score found: 61045.7312
+    Best parameters:
+      a: 0.3987
+      b: 0.1013
+      r: 0.1501
+      R: 14.9876
+      w: 0.5498
+    ```
+
+3.  **Check the `results` Directory:** You will find a new folder, e.g., `results/run_20231027_113000/`. Inside:
+    *   `optimization_log.csv`: A CSV file with every single design evaluated and its score. This is your raw data.
+    *   `best_params.yaml`: A clean file containing the single best design found.
+
+These outputs are your **quantitative results**. You have a specific, numerically defined geometry that the ML algorithm predicts is optimal, along with its predicted performance score.
+
+### **Step 6: The Final Challenge - Implementing the Real Simulator**
+
+Your final task is to replace `evaluate_design_mock` with the real `evaluate_design_meep`.
+
+**Instructions:**
+
+1.  Go to `src/simulation_wrapper.py`.
+2.  Focus on the `evaluate_design_meep` function.
+3.  Your core task is to write the MEEP Python code that can **programmatically generate the ring resonator geometry** based on the input `design_vector`. This involves trigonometry to place the holes around the ring.
+4.  Remember to loop `num_disorder_runs` times, each time generating a new geometry with slight random variations in the hole radii (`r`).
+5.  Use `meep.Harminv` to extract the Q-factor from each run. Be sure to handle the case where `Harminv` finds no modes (return a very low Q or score).
+6.  Once you have a list of Q-factors, call `_calculate_objective` to get the final score.
+7.  Go to `run_optimization.py` and change the import at the top to use your new, real function.
+
+This project structure provides a clear path from a conceptual idea to a powerful, automated design tool that produces concrete, quantitative, and reproducible scientific results. Good luck

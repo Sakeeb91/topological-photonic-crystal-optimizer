@@ -1,0 +1,7 @@
+scikit-optimize
+numpy
+matplotlib
+pyyaml
+pandas
+tqdm
+# Note: meep is installed separately

@@ -1,0 +1,31 @@
+# Configuration for optimizing a design based on the "strong dimerization" case.
+# All length units are in micrometers (µm).
+
+# 1. Physics & Geometry Parameters (The Search Space)
+# We define the search space for the optimizer here as [min, max] bounds.
+design_space:
+  a: [0.30, 0.40]      # 1st dimerization distance
+  b: [0.10, 0.20]      # 2nd dimerization distance
+  r: [0.10, 0.18]      # Hole radius
+  R: [10.0, 15.0]      # Ring radius
+  w: [0.45, 0.55]      # Waveguide width
+
+# 2. Simulation Parameters for MEEP
+simulation:
+  resolution: 40       # Pixels per µm (as per thesis)
+  pml_width: 2.0
+  sim_time: 200        # Simulation time in MEEP units after source decay
+  target_wavelength: 1.547
+
+# 3. Objective Function Definition
+# This defines how we score a design. Our goal is a high, robust Q-factor.
+objective:
+  num_disorder_runs: 10          # Number of simulations to run to average over disorder
+  disorder_std_dev_percent: 5.0  # e.g., 5.0 means hole radii vary by 5% std dev
+  q_penalty_factor: 2.0          # How much to penalize Q-factor standard deviation. Score = Q_avg - k * Q_std
+
+# 4. Optimizer (ML) Parameters
+optimizer:
+  n_initial_points: 20   # Number of random points to sample before starting optimization
+  n_iterations: 100      # Number of optimization steps after the initial points
+  acquisition_function: "gp_hedge" # A robust choice for the acquisition function
