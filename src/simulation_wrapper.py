@@ -20,38 +20,120 @@ def _calculate_objective(q_factors, config):
     
     return score
 
+def _calculate_comprehensive_objectives(q_factors, bandgaps, mode_volumes, design_vector, config):
+    """
+    Calculate comprehensive objectives for multi-objective optimization.
+    
+    Args:
+        q_factors: List of Q-factors from disorder runs
+        bandgaps: List of bandgap sizes
+        mode_volumes: List of mode volumes
+        design_vector: [a, b, r, R, w]
+        config: Configuration dictionary
+    
+    Returns:
+        Dictionary with all objectives
+    """
+    if len(q_factors) == 0:
+        return {
+            'q_factor': 0,
+            'q_std': 1e6,
+            'bandgap_size': 0,
+            'mode_volume': 1e6,
+            'score': _NEGINF
+        }
+    
+    a, b, r, R, w = design_vector
+    
+    # Primary objectives
+    q_avg = np.mean(q_factors)
+    q_std = np.std(q_factors) if len(q_factors) > 1 else 0
+    bandgap_avg = np.mean(bandgaps) if bandgaps else abs(a - b)  # Fallback to dimerization
+    mode_volume_avg = np.mean(mode_volumes) if mode_volumes else np.pi * r**2  # Fallback approximation
+    
+    # Legacy score for backward compatibility
+    penalty_factor = config['objective'].get('q_penalty_factor', 1.0)
+    score = q_avg - penalty_factor * q_std
+    
+    return {
+        'q_factor': q_avg,
+        'q_std': q_std,
+        'bandgap_size': bandgap_avg,
+        'mode_volume': mode_volume_avg,
+        'score': score,
+        'dimerization_strength': abs(a - b),
+        'robustness_ratio': q_avg / max(q_std, 1e-6)
+    }
+
 def evaluate_design_mock(design_vector, config):
     """
-    MOCK FUNCTION: Simulates the performance of a design without running MEEP.
-    This is for testing the optimization loop quickly.
-    It returns a higher score for designs that are 'better' based on a simple formula.
+    Enhanced MOCK FUNCTION: Simulates comprehensive performance metrics based on thesis insights.
+    
+    Models the key trade-off between lattice confinement and radiation confinement
+    as identified in the AlexisHK thesis analysis.
     """
     # Unpack design vector for clarity
     a, b, r, R, w = design_vector
     
     print(f"  [Mock Sim] Evaluating: a={a:.3f}, b={b:.3f}, r={r:.3f}, R={R:.2f}, w={w:.3f}")
 
-    # --- Let's create a fake physics model ---
-    # Goal: A large (a-b) difference is good (strong dimerization)
-    # Goal: A larger R is good (less bending loss)
-    # Goal: Radius 'r' has an optimal value around 0.15
-    ideal_dimerization = (a - b) * 1e5
-    ideal_radius = -((r - 0.15)**2) * 1e5
-    ideal_ring_radius = R * 1000
-
-    base_q = 20000 + ideal_dimerization + ideal_radius + ideal_ring_radius
+    # --- Enhanced physics model based on thesis insights ---
     
-    # Simulate disorder
+    # Dimerization strength (primary factor for topological protection)
+    dimerization = abs(a - b)
+    dimerization_ratio = a / max(b, 1e-6)
+    
+    # Model the trade-off: lattice confinement vs radiation confinement
+    # Thesis insight: larger bandgap doesn't always mean higher Q-factor
+    
+    # Lattice confinement factor (benefits from moderate dimerization)
+    lattice_confinement = np.exp(-((dimerization - 0.15)**2) / (2 * 0.05**2))
+    
+    # Radiation confinement factor (benefits from large ring, optimal hole size)
+    bending_loss_factor = np.exp(-5.0 / R)  # Exponential improvement with R
+    hole_coupling_factor = np.exp(-((r - 0.12)**2) / (2 * 0.03**2))  # Optimal around 0.12
+    radiation_confinement = (1 - bending_loss_factor) * hole_coupling_factor
+    
+    # Base Q-factor model incorporating trade-off
+    base_q = 15000 + lattice_confinement * 20000 + radiation_confinement * 25000
+    
+    # Bandgap size model (increases with dimerization)
+    bandgap_base = dimerization * 50 + np.random.normal(0, 2)  # Units arbitrary
+    
+    # Mode volume model (roughly scales with hole area)
+    mode_volume_base = np.pi * r**2 * 0.5 + 0.1  # Approximate
+    
+    # Simulate disorder runs
     num_runs = config['objective']['num_disorder_runs']
-    # The mock 'disorder' makes the Q-factor noisy
-    q_factors = base_q + np.random.randn(num_runs) * 2000 
     
-    time.sleep(0.1) # Simulate that the function takes some time
+    q_factors = []
+    bandgaps = []
+    mode_volumes = []
     
-    score = _calculate_objective(q_factors, config)
-    print(f"  [Mock Sim] Result -> Avg Q: {np.mean(q_factors):.0f}, Std Q: {np.std(q_factors):.0f}, Score: {score:.2f}")
+    for i in range(num_runs):
+        # Add disorder to each metric
+        q_disorder = np.random.normal(0, 1500 * (1 + dimerization * 2))  # More stable with higher dimerization
+        bandgap_disorder = np.random.normal(0, 1.0)
+        mode_vol_disorder = np.random.normal(0, 0.02)
+        
+        q_factors.append(max(1000, base_q + q_disorder))
+        bandgaps.append(max(0.1, bandgap_base + bandgap_disorder))
+        mode_volumes.append(max(0.05, mode_volume_base + mode_vol_disorder))
     
-    return score
+    time.sleep(0.1)  # Simulate computation time
+    
+    # Calculate comprehensive objectives
+    objectives = _calculate_comprehensive_objectives(q_factors, bandgaps, mode_volumes, design_vector, config)
+    
+    print(f"  [Mock Sim] Q: {objectives['q_factor']:.0f}±{objectives['q_std']:.0f}, "
+          f"Bandgap: {objectives['bandgap_size']:.2f}, ModeVol: {objectives['mode_volume']:.3f}")
+    
+    # Return full objectives for multi-objective optimization, legacy score for backward compatibility
+    return_comprehensive = config.get('return_comprehensive_objectives', False)
+    if return_comprehensive:
+        return objectives
+    else:
+        return objectives['score']  # Legacy behavior
 
 
 def _generate_ssh_ring_geometry(a, b, r, R, w, disorder_std=0.0):

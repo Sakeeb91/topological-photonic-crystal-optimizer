@@ -1,0 +1,98 @@
+# Multi-Objective Optimization Configuration
+# Based on AlexisHK thesis analysis and physics-informed constraints
+
+# Extended design space with discrete variables
+design_space:
+  # Core geometric parameters (continuous)
+  a: [0.30, 0.60]      # Primary dimerization distance (μm)
+  b: [0.05, 0.20]      # Secondary dimerization distance (μm) 
+  r: [0.05, 0.18]      # Hole radius (μm)
+  w: [0.40, 0.70]      # Waveguide width (μm)
+  
+  # Discrete parameter
+  N_cells: [80, 150]   # Number of unit cells in ring
+  
+  # Experimental coupling parameters
+  coupling_gap: [0.1, 0.5]     # Gap to coupling waveguide (μm)
+  coupling_width: [0.3, 0.8]   # Coupling waveguide width (μm)
+
+# Physics-informed constraints from thesis
+constraints:
+  min_feature_size: 0.05       # Minimum fabrication feature size (μm)
+  # Note: Ring radius R is automatically calculated from 2πR = N * (a + b)
+
+# Enhanced simulation parameters  
+simulation:
+  resolution: 30               # Pixels per micrometer
+  pml_width: 2.0              # PML absorption layer width
+  sim_time: 100               # Simulation time (periods)
+  target_wavelength: 1.547    # Target wavelength (μm) - telecom C-band
+  return_comprehensive_objectives: true  # Return full objective dict
+
+# Enhanced disorder modeling with multiple error types
+disorder:
+  hole_radius_disorder_std: 0.05        # Hole radius variation (fraction)
+  sidewall_roughness_std: 0.01          # Sidewall roughness effect (μm)
+  enable_sidewall_roughness: false      # Enable sidewall roughness modeling
+  num_disorder_runs: 8                  # Number of disorder simulations per design
+
+# Multi-objective optimization settings
+objective:
+  # Legacy single-objective parameters (for backward compatibility)
+  num_disorder_runs: 8
+  disorder_std_dev_percent: 5.0
+  q_penalty_factor: 0.5
+  
+  # Multi-objective priorities
+  objectives:
+    - name: "q_factor_avg"
+      weight: 1.0
+      minimize: false
+    - name: "q_factor_std" 
+      weight: 1.0
+      minimize: true
+    - name: "bandgap_size"
+      weight: 0.8
+      minimize: false
+    - name: "mode_volume"
+      weight: 0.6
+      minimize: true
+
+# NSGA-III Multi-Objective Optimizer
+optimizer:
+  algorithm: "NSGA3"
+  population_size: 40          # Population size for genetic algorithm
+  n_generations: 50            # Number of generations
+  n_partitions: 4              # Reference direction partitions for NSGA-III
+  
+  # Genetic algorithm parameters
+  crossover_prob: 0.9
+  mutation_prob: 0.1
+  
+  # Convergence criteria
+  max_stagnation_generations: 10
+
+# Material properties (for MEEP simulations)
+materials:
+  substrate:
+    name: "Silicon Dioxide"
+    refractive_index: 1.46
+  waveguide:
+    name: "Silicon Nitride" 
+    refractive_index: 2.0
+  cladding:
+    name: "Air"
+    refractive_index: 1.0
+
+# Analysis and visualization
+analysis:
+  save_pareto_front: true
+  save_evaluation_history: true
+  generate_trade_off_plots: true
+  export_optimal_designs: 5    # Export top N designs for each objective
+
+# Experimental validation parameters
+experimental:
+  coupling_optimization: true   # Optimize coupling parameters
+  critical_coupling_target: 0.9  # Target coupling efficiency
+  fabrication_tolerance_analysis: true

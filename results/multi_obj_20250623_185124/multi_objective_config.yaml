@@ -1,0 +1,79 @@
+analysis:
+  export_optimal_designs: 5
+  generate_trade_off_plots: true
+  save_evaluation_history: true
+  save_pareto_front: true
+constraints:
+  min_feature_size: 0.05
+design_space:
+  N_cells:
+  - 80
+  - 150
+  a:
+  - 0.3
+  - 0.6
+  b:
+  - 0.05
+  - 0.2
+  coupling_gap:
+  - 0.1
+  - 0.5
+  coupling_width:
+  - 0.3
+  - 0.8
+  r:
+  - 0.05
+  - 0.18
+  w:
+  - 0.4
+  - 0.7
+disorder:
+  enable_sidewall_roughness: false
+  hole_radius_disorder_std: 0.05
+  num_disorder_runs: 8
+  sidewall_roughness_std: 0.01
+experimental:
+  coupling_optimization: true
+  critical_coupling_target: 0.9
+  fabrication_tolerance_analysis: true
+materials:
+  cladding:
+    name: Air
+    refractive_index: 1.0
+  substrate:
+    name: Silicon Dioxide
+    refractive_index: 1.46
+  waveguide:
+    name: Silicon Nitride
+    refractive_index: 2.0
+objective:
+  disorder_std_dev_percent: 5.0
+  num_disorder_runs: 8
+  objectives:
+  - minimize: false
+    name: q_factor_avg
+    weight: 1.0
+  - minimize: true
+    name: q_factor_std
+    weight: 1.0
+  - minimize: false
+    name: bandgap_size
+    weight: 0.8
+  - minimize: true
+    name: mode_volume
+    weight: 0.6
+  q_penalty_factor: 0.5
+optimizer:
+  algorithm: NSGA3
+  crossover_prob: 0.9
+  max_stagnation_generations: 10
+  mutation_prob: 0.1
+  n_generations: 3
+  n_partitions: 4
+  population_size: 8
+simulation:
+  pml_width: 2.0
+  resolution: 30
+  return_comprehensive_objectives: true
+  sim_time: 100
+  target_wavelength: 1.547

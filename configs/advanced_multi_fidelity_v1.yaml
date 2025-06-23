@@ -1,0 +1,244 @@
+# Advanced Multi-Fidelity Multi-Objective Optimization
+# Physics-informed framework based on AlexisHK thesis insights
+
+# Extended design space with physics-informed bounds
+design_space:
+  # Core geometric parameters (physics-informed ranges)
+  a: [0.30, 0.60]      # Primary dimerization distance (μm)
+  b: [0.05, 0.20]      # Secondary dimerization distance (μm) 
+  r: [0.08, 0.16]      # Hole radius (μm) - constrained for fabrication
+  w: [0.45, 0.65]      # Waveguide width (μm) - optimized for confinement
+  
+  # Discrete parameter with physical meaning
+  N_cells: [100, 200]  # Number of unit cells in ring (affects R)
+  
+  # Experimental coupling parameters for validation
+  coupling_gap: [0.15, 0.35]     # Gap to coupling waveguide (μm)
+  coupling_width: [0.45, 0.65]   # Coupling waveguide width (μm)
+
+# Physics-informed constraints from thesis analysis
+constraints:
+  min_feature_size: 0.08           # Conservative fabrication limit (μm)
+  max_dimerization_ratio: 8.0      # Practical limit for extreme dimerization
+  min_ring_radius: 5.0             # Minimum for meaningful bending loss analysis
+  max_ring_radius: 25.0            # Practical device size limit
+
+# Multi-fidelity simulation hierarchy
+simulation:
+  # High-fidelity MEEP parameters
+  high_fidelity:
+    resolution: 35               # High resolution for accurate results
+    pml_width: 3.0              # Thick PML for accurate boundaries
+    sim_time: 200               # Long simulation for accurate Q-factor
+    target_wavelength: 1.547    # Telecom C-band
+    enable_meep: false          # Set to true when MEEP is available
+    
+  # Low-fidelity parameters for rapid exploration
+  low_fidelity:
+    resolution: 20              # Lower resolution for speed
+    pml_width: 2.0              # Thinner PML
+    sim_time: 100               # Shorter simulation time
+    use_analytical_models: true # Use physics-based analytical approximations
+    
+  # Simulation control
+  return_comprehensive_objectives: true
+  fidelity_allocation_ratio: 0.2  # 20% high-fidelity, 80% low-fidelity
+
+# Enhanced disorder modeling with multiple fabrication errors
+disorder:
+  # Primary disorder: hole radius variation (from thesis)
+  hole_radius_disorder_std: 0.06        # 6% hole radius variation
+  
+  # Secondary disorder: sidewall roughness
+  sidewall_roughness_std: 0.008         # 8nm RMS sidewall roughness
+  enable_sidewall_roughness: true       # Enable for realistic modeling
+  
+  # Positional disorder (advanced modeling)
+  hole_position_disorder_std: 0.005     # 5nm positional error
+  enable_position_disorder: false       # Disable for initial studies
+  
+  # Disorder sampling strategy
+  num_disorder_runs: 12                 # More samples for robust statistics
+  adaptive_sampling: true               # More samples for high-uncertainty designs
+  max_disorder_runs: 20                 # Maximum for very uncertain designs
+
+# Multi-objective optimization with physics-informed objectives
+objective:
+  # Primary objectives from thesis analysis
+  primary_objectives:
+    q_factor_maximization:
+      weight: 1.0
+      target_range: [10000, 50000]     # Expected Q-factor range
+      
+    disorder_robustness:
+      weight: 0.8
+      metric: "q_std_normalized"       # Q_std / Q_avg
+      target_range: [0.01, 0.3]       # Target robustness range
+      
+    bandgap_maximization:
+      weight: 0.6
+      target_range: [5, 30]           # Bandgap size range (arbitrary units)
+      
+    mode_volume_minimization:
+      weight: 0.4
+      target_range: [0.1, 2.0]        # Mode volume range
+  
+  # Physics-informed secondary objectives
+  secondary_objectives:
+    purcell_factor:                    # Q/V ratio for light-matter interaction
+      weight: 0.3
+      calculate: true
+      
+    topological_gap_ratio:            # Bandgap / center frequency
+      weight: 0.2
+      calculate: true
+      
+    fabrication_tolerance:            # Minimum feature size compliance
+      weight: 0.5
+      calculate: true
+
+# Advanced NSGA-III Multi-Objective Optimizer
+optimizer:
+  algorithm: "NSGA3"
+  
+  # Population and evolution parameters
+  population_size: 60              # Larger population for better diversity
+  n_generations: 80                # Sufficient for convergence
+  n_partitions: 5                  # More reference directions
+  
+  # Advanced genetic operators
+  crossover:
+    type: "simulated_binary"
+    probability: 0.9
+    eta: 20                        # Distribution index
+    
+  mutation:
+    type: "polynomial"
+    probability: 0.1
+    eta: 20                        # Distribution index
+  
+  # Multi-fidelity strategy
+  fidelity_strategy:
+    enable: true
+    initial_high_fidelity_fraction: 0.1  # Start with 10% high-fidelity
+    adaptive_allocation: true            # Increase near Pareto front
+    switch_generation: 40               # Switch to more high-fidelity later
+  
+  # Convergence and stopping criteria
+  convergence:
+    max_stagnation_generations: 15
+    hypervolume_threshold: 0.001
+    epsilon_constraint: 1e-6
+
+# Materials and physical constants
+materials:
+  substrate:
+    name: "Silicon Dioxide (SiO2)"
+    refractive_index: 1.46
+    dispersion_enabled: false
+    
+  waveguide:
+    name: "Silicon Nitride (Si3N4)" 
+    refractive_index: 2.0
+    dispersion_enabled: false
+    
+  cladding:
+    name: "Air"
+    refractive_index: 1.0
+
+# Advanced analysis and post-processing
+analysis:
+  # Pareto front analysis
+  pareto_analysis:
+    save_front: true
+    analyze_diversity: true
+    knee_point_detection: true
+    
+  # Design space exploration
+  design_space_analysis:
+    parameter_sensitivity: true
+    interaction_analysis: true
+    cluster_analysis: true
+    
+  # Physics insights extraction
+  physics_analysis:
+    trade_off_analysis: true
+    design_rule_extraction: true
+    scaling_law_discovery: true
+    
+  # Visualization
+  visualization:
+    trade_off_plots: true
+    parameter_correlation_plots: true
+    design_space_maps: true
+    convergence_analysis: true
+    
+  # Export for experimental validation
+  experimental_export:
+    top_designs_count: 10
+    coupling_optimization: true
+    fabrication_ready_designs: true
+    gds_export_ready: false          # Requires gdspy
+
+# Active learning and adaptive sampling
+active_learning:
+  enable: true
+  
+  # Acquisition functions for intelligent sampling
+  acquisition_functions:
+    - "expected_improvement"         # Classic EI for single objective
+    - "hypervolume_improvement"      # Multi-objective EI
+    - "uncertainty_sampling"         # Explore uncertain regions
+    - "diversity_sampling"          # Maintain population diversity
+  
+  # Surrogate model configuration
+  surrogate_models:
+    gaussian_process:
+      enable: true
+      kernel: "matern_52"
+      optimize_hyperparameters: true
+      
+    neural_network:
+      enable: false                 # Disable for initial runs
+      architecture: [64, 32, 16]
+      activation: "relu"
+      
+  # Adaptive strategy
+  adaptation:
+    refit_frequency: 10             # Refit surrogates every 10 generations
+    model_selection: true           # Choose best performing surrogate
+    ensemble_methods: false         # Disable ensemble for speed
+
+# Experimental validation preparation
+experimental:
+  # Coupling waveguide optimization
+  coupling_optimization:
+    enable: true
+    critical_coupling_target: 0.95  # Target 95% coupling efficiency
+    wavelength_range: [1.54, 1.56]  # Optimization wavelength range (μm)
+    
+  # Fabrication considerations
+  fabrication:
+    process: "electron_beam_lithography"  # Assume e-beam for fine features
+    minimum_feature_size: 0.08      # 80nm minimum feature
+    aspect_ratio_limit: 10          # Height/width limit for etching
+    
+  # Measurement protocol
+  measurement:
+    coupling_method: "grating_coupler"
+    measurement_setup: "transmission"
+    expected_q_measurement_accuracy: 0.1  # 10% measurement uncertainty
+
+# Computational resources and performance
+performance:
+  # Parallelization
+  parallel_evaluation: true
+  max_workers: 4                    # Adjust based on available cores
+  
+  # Memory management
+  cache_simulations: true
+  max_cache_size: 1000             # Maximum cached evaluations
+  
+  # Progress tracking and checkpointing
+  save_checkpoint_frequency: 20     # Save every 20 generations
+  enable_progress_visualization: true
