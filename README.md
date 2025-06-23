@@ -437,7 +437,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ```bibtex
 @software{topological_ml_optimizer_2025,
   title = {Advanced ML Framework for Topological Photonic Crystal Optimization},
-  author = {Your Name},
+  author = {Shafkat Sakeebur Rahman},
   year = {2025},
   url = {https://github.com/sakeeb91/topological-photonic-crystal-optimization},
   note = {Physics-informed multi-objective optimization with automated design discovery}
@@ -455,7 +455,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Research Issues**: [GitHub Issues](https://github.com/sakeeb91/topological-photonic-crystal-optimization/issues)
 - **Academic Discussions**: [GitHub Discussions](https://github.com/sakeeb91/topological-photonic-crystal-optimization/discussions)
-- **Research Collaboration**: sakeeb.rahman@example.com
+- **Research Collaboration**: rahman.sakeeb@gmail.com
 
 ---
 
