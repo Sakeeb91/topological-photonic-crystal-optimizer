@@ -1,8 +1,33 @@
+"""
+Simulation Wrapper for Topological Photonic Crystal Ring Resonators
+
+This module provides both mock and MEEP-based simulation functions for evaluating
+SSH ring resonator designs.
+
+MEEP INTEGRATION STATUS:
+========================
+Currently, the MEEP integration is PARTIALLY IMPLEMENTED. The code structure and
+simulation workflow are complete, but MEEP execution is replaced with a physics-based
+mock to allow the optimization framework to function without MEEP installation.
+
+To enable full MEEP simulations:
+1. Install MEEP: conda install -c conda-forge pymeep
+2. Uncomment the MEEP import below
+3. Uncomment the MEEP simulation code in evaluate_design_meep()
+4. Remove or modify the _simulate_physics_model() fallback
+
+For most development and testing purposes, the mock simulation provides realistic
+behavior and is much faster than full electromagnetic simulations.
+"""
+
 import numpy as np
 import time
 import math
-# TODO: Uncomment the following line when you are ready for real simulations
+
+# MEEP Integration - Currently disabled for mock operation
+# Uncomment when MEEP is installed and you want full EM simulations
 # import meep as mp
+MEEP_AVAILABLE = False  # Set to True when MEEP is installed and imported
 
 # A very large negative number for failed simulations
 _NEGINF = -1.0e10
@@ -238,14 +263,28 @@ def _create_meep_geometry(design_vector, disorder_std, config):
 
 def evaluate_design_meep(design_vector, config):
     """
-    REAL FUNCTION: Evaluates a design by running MEEP FDTD simulations.
-    
+    MEEP FDTD Simulation Function (Currently using physics-based mock)
+
     This function implements the complete MEEP simulation workflow for
     evaluating SSH ring resonator designs with disorder robustness.
+
+    NOTE: MEEP execution is currently replaced with a physics-based model
+    (see _simulate_physics_model) until MEEP is fully installed and enabled.
+    The simulation structure and disorder loop are production-ready.
+
+    Args:
+        design_vector: [a, b, r, R, w] design parameters
+        config: Configuration dictionary with simulation settings
+
+    Returns:
+        float: Robustness score (Q_avg - penalty_factor * Q_std)
     """
     try:
         # import meep as mp
-        print("  [MEEP Sim] Starting MEEP simulation...")
+        if MEEP_AVAILABLE:
+            print("  [MEEP Sim] Starting MEEP FDTD simulation...")
+        else:
+            print("  [MEEP Sim] Using physics-based mock (MEEP not available)...")
         
         # 1. Unpack design_vector and config parameters
         a, b, r, R, w = design_vector
