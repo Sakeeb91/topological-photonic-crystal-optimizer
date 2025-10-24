@@ -1,4 +1,5 @@
 import os
+import sys
 import yaml
 import argparse
 import time
@@ -14,6 +15,9 @@ from tqdm import tqdm
 # We can easily switch between the mock and real one here!
 # from src.simulation_wrapper import evaluate_design_mock as evaluate_design
 from src.simulation_wrapper import evaluate_design_meep as evaluate_design
+
+# Import utility functions
+from src.utils import validate_config, save_config_with_timestamp
 
 # --- 1. Setup ---
 def setup_directories(run_name):
@@ -40,10 +44,22 @@ def define_search_space(config):
 def main(config_path):
     # Load config and setup
     config = load_config(config_path)
+
+    # Validate configuration before starting optimization
+    try:
+        validate_config(config)
+        print("✓ Configuration validated successfully")
+    except ValueError as e:
+        print(f"✗ Configuration validation failed: {e}")
+        sys.exit(1)
+
     run_name = f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     results_dir = setup_directories(run_name)
     print(f"Starting optimization run: {run_name}")
     print(f"Results will be saved in: {results_dir}")
+
+    # Save configuration with timestamp for reproducibility
+    save_config_with_timestamp(config, results_dir)
 
     space, param_names = define_search_space(config)
     
