@@ -130,23 +130,39 @@ def evaluate_design_mock(design_vector, config):
     
     # Simulate disorder runs
     num_runs = config['objective']['num_disorder_runs']
-    
+
     q_factors = []
     bandgaps = []
     mode_volumes = []
-    
+    failed_runs = 0
+
     for i in range(num_runs):
-        # Add disorder to each metric
-        q_disorder = np.random.normal(0, 1500 * (1 + dimerization * 2))  # More stable with higher dimerization
-        bandgap_disorder = np.random.normal(0, 1.0)
-        mode_vol_disorder = np.random.normal(0, 0.02)
-        
-        q_factors.append(max(1000, base_q + q_disorder))
-        bandgaps.append(max(0.1, bandgap_base + bandgap_disorder))
-        mode_volumes.append(max(0.05, mode_volume_base + mode_vol_disorder))
+        try:
+            # Add disorder to each metric
+            q_disorder = np.random.normal(0, 1500 * (1 + dimerization * 2))  # More stable with higher dimerization
+            bandgap_disorder = np.random.normal(0, 1.0)
+            mode_vol_disorder = np.random.normal(0, 0.02)
+
+            q_factors.append(max(1000, base_q + q_disorder))
+            bandgaps.append(max(0.1, bandgap_base + bandgap_disorder))
+            mode_volumes.append(max(0.05, mode_volume_base + mode_vol_disorder))
+        except Exception as e:
+            failed_runs += 1
+            print(f"    WARNING: Mock disorder run {i+1} failed: {e}")
     
     time.sleep(0.1)  # Simulate computation time
-    
+
+    # Check if we have enough successful runs
+    if len(q_factors) == 0:
+        print(f"  [Mock Sim] ERROR: All {num_runs} disorder runs failed")
+        return _NEGINF if not config.get('return_comprehensive_objectives', False) else {
+            'q_factor': 0, 'q_std': 1e6, 'bandgap_size': 0,
+            'mode_volume': 1e6, 'score': _NEGINF
+        }
+
+    if failed_runs > 0:
+        print(f"  [Mock Sim] Note: {failed_runs}/{num_runs} runs failed, using {len(q_factors)} results")
+
     # Calculate comprehensive objectives
     objectives = _calculate_comprehensive_objectives(q_factors, bandgaps, mode_volumes, design_vector, config)
     
@@ -298,15 +314,18 @@ def evaluate_design_meep(design_vector, config):
         disorder_std = r * (config['objective']['disorder_std_dev_percent'] / 100.0)
         
         q_factors = []
-        
+        failed_runs = 0
+        min_successful_runs = max(1, num_runs // 2)  # Require at least half to succeed
+
         print(f"  [MEEP Sim] Running {num_runs} disorder simulations...")
         print(f"  [MEEP Sim] Parameters: a={a:.3f}, b={b:.3f}, r={r:.3f}, R={R:.2f}, w={w:.3f}")
-        
+
         for run_idx in range(num_runs):
-            print(f"    Disorder run {run_idx + 1}/{num_runs}")
-            
-            # 3. Generate geometry with disorder
-            geometry, cell_size, holes = _create_meep_geometry(design_vector, disorder_std, config)
+            try:
+                print(f"    Disorder run {run_idx + 1}/{num_runs}")
+
+                # 3. Generate geometry with disorder
+                geometry, cell_size, holes = _create_meep_geometry(design_vector, disorder_std, config)
             
             # Since MEEP is not actually imported, we'll simulate the process
             # In real implementation, this would be:
@@ -366,14 +385,29 @@ def evaluate_design_meep(design_vector, config):
             #     print(f"      No modes detected")
             #     q_factors.append(1000)  # Low Q penalty
             
-            # For now, simulate the MEEP results with physics-based model
-            # This maintains the disorder loop structure while MEEP is not available
-            base_q = _simulate_physics_model(a, b, r, R, w, holes)
-            simulated_q = max(1000, base_q + np.random.normal(0, base_q * 0.1))
-            q_factors.append(simulated_q)
-            
-            print(f"      Simulated Q-factor: {simulated_q:.0f}")
-        
+                # For now, simulate the MEEP results with physics-based model
+                # This maintains the disorder loop structure while MEEP is not available
+                base_q = _simulate_physics_model(a, b, r, R, w, holes)
+                simulated_q = max(1000, base_q + np.random.normal(0, base_q * 0.1))
+                q_factors.append(simulated_q)
+
+                print(f"      Simulated Q-factor: {simulated_q:.0f}")
+
+            except Exception as run_error:
+                failed_runs += 1
+                print(f"      WARNING: Disorder run {run_idx + 1} failed: {run_error}")
+                # Continue to next run instead of failing entire evaluation
+
+        # Check if we have enough successful runs
+        if len(q_factors) < min_successful_runs:
+            print(f"  [MEEP Sim] Failed - only {len(q_factors)}/{num_runs} runs succeeded "
+                  f"(minimum {min_successful_runs} required)")
+            return _NEGINF
+
+        if failed_runs > 0:
+            print(f"  [MEEP Sim] Note: {failed_runs}/{num_runs} runs failed, "
+                  f"using {len(q_factors)} successful results")
+
         # 8. Calculate final robustness score
         if len(q_factors) > 0:
             score = _calculate_objective(q_factors, config)
