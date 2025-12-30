@@ -115,13 +115,17 @@ topological-optimizer/
 │   ├── multi_objective_v1.yaml             # Basic Multi-objective
 │   ├── strong_dimerization_v1.yaml         # Single-objective
 │   └── explore_*.yaml                      # Parameter Space Exploration
+├── docs/                                # Documentation
+│   ├── images/                             # Visualization assets
+│   ├── OPTIMIZATION_REPORT.md              # Results and recommendations
+│   ├── ADVANCED_FRAMEWORK_SUMMARY.md       # Technical documentation
+│   ├── EXPLORATION_RESULTS.md              # Scientific findings
+│   └── RESEARCH_REPORT.md                  # Research context
 ├── results/                             # Auto-generated Results
 ├── run_multi_objective_optimization.py  # Multi-objective Script
 ├── demo_advanced_framework.py           # Framework Demonstration
 ├── run_optimization.py                  # Optimization Script
 ├── visualize_best_design.py             # Design Visualization
-├── ADVANCED_FRAMEWORK_SUMMARY.md        # Technical Documentation
-├── EXPLORATION_RESULTS.md               # Scientific Findings
 └── requirements.txt                     # Dependencies
 ```
 
@@ -323,8 +327,9 @@ pip-audit
 
 ## Documentation
 
-- [ADVANCED_FRAMEWORK_SUMMARY.md](ADVANCED_FRAMEWORK_SUMMARY.md): Technical documentation
-- [EXPLORATION_RESULTS.md](EXPLORATION_RESULTS.md): Scientific findings
+- [Optimization Report](docs/OPTIMIZATION_REPORT.md): Results with visualizations and design recommendations
+- [Technical Framework Summary](docs/ADVANCED_FRAMEWORK_SUMMARY.md): Complete technical documentation
+- [Exploration Results](docs/EXPLORATION_RESULTS.md): Scientific findings from parameter space exploration
 - Configuration examples in `configs/` directory
 
 ## Research Context
