@@ -17,6 +17,25 @@ This framework implements a comprehensive machine learning approach to address f
 - **Automated Design Discovery**: Machine learning-based rule extraction and pattern recognition
 - **Fabrication Robustness**: Enhanced disorder modeling with multiple error types
 
+## Results
+
+For detailed optimization results, design recommendations, and visualizations, see the **[Optimization Report](docs/OPTIMIZATION_REPORT.md)**.
+
+<div align="center">
+
+![Multi-Objective Trade-off Analysis](docs/images/multi_objective_trade_off_analysis.png)
+
+*Pareto-optimal trade-offs between Q-factor, robustness, bandgap, and mode volume*
+
+</div>
+
+| Design Type | Q-factor | Robustness Ratio | Application |
+|-------------|----------|------------------|-------------|
+| Maximum Q-Factor | 55,700 | 68.5 | Biological sensing |
+| Maximum Robustness | 54,023 | 165.7 | Mass production |
+| Maximum Topological | 35,968 | 82.2 | Research |
+| Balanced Performance | 48,859 | 135.2 | Telecommunications |
+
 ## Features
 
 | Component | Implementation | Description |
