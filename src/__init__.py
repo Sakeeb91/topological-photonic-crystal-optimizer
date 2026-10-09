@@ -34,6 +34,7 @@ from .geometry_utils import (
 # Utility functions
 from .utils import (
     validate_config,
+    validate_multi_objective_config,
     create_parameter_summary,
     estimate_num_holes,
     check_fabrication_constraints,
@@ -63,6 +64,7 @@ __all__ = [
 
     # Utils
     "validate_config",
+    "validate_multi_objective_config",
     "create_parameter_summary",
     "estimate_num_holes",
     "check_fabrication_constraints",

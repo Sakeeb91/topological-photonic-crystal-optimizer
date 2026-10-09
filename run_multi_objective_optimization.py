@@ -14,6 +14,7 @@ Key Features:
 """
 
 import os
+import sys
 import argparse
 import yaml
 import time
@@ -25,6 +26,7 @@ import seaborn as sns
 
 from src.multi_objective_optimizer import MultiObjectiveOptimizer
 from src.simulation_wrapper import evaluate_design_mock
+from src.utils import validate_multi_objective_config
 
 def setup_directories(run_name):
     """Create directories for storing results."""
@@ -246,9 +248,17 @@ def main():
     
     # Override config with command line arguments
     if args.generations:
-        config['optimizer']['n_generations'] = args.generations
+        config.setdefault('optimizer', {})['n_generations'] = args.generations
     if args.population_size:
-        config['optimizer']['population_size'] = args.population_size
+        config.setdefault('optimizer', {})['population_size'] = args.population_size
+
+    # Validate after CLI overrides so they are checked too
+    try:
+        validate_multi_objective_config(config)
+        print("✓ Configuration validated successfully")
+    except ValueError as e:
+        print(f"✗ Configuration validation failed: {e}")
+        sys.exit(1)
     
     # Setup output directory
     if args.output_dir:
