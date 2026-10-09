@@ -62,13 +62,6 @@ setup(
             # conda install -c conda-forge pymeep
         ],
     },
-    entry_points={
-        'console_scripts': [
-            'topo-optimize=run_optimization:main',
-            'topo-multi-obj=run_multi_objective_optimization:main',
-            'topo-visualize=visualize_best_design:main',
-        ],
-    },
     include_package_data=True,
     package_data={
         'src': ['*.yaml'],
