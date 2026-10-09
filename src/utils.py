@@ -45,7 +45,10 @@ def create_parameter_summary(design_vector, param_names=None):
     for i, (name, value) in enumerate(zip(param_names, design_vector)):
         summary += f"  {name}: {value:.4f} μm\n"
     
-    # Calculate derived quantities
+    # Derived quantities assume the standard (a, b, r, R, w) ordering
+    if len(design_vector) < 5:
+        return summary
+
     a, b, r, R, w = design_vector[:5]
     dimerization_ratio = a / b if b > 0 else float('inf')
     filling_factor = (r**2) / (w**2) if w > 0 else 0
