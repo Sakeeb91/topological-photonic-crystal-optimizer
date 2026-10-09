@@ -107,6 +107,38 @@ class TestSimulationWrapper:
         assert all(isinstance(s, (int, float)) for s in scores)
         assert np.std(scores) > 0  # Some variation expected
 
+    @pytest.mark.parametrize("evaluate", [evaluate_design_mock, evaluate_design_meep])
+    def test_same_seed_gives_same_score(self, evaluate, valid_design, basic_config):
+        """A config seed makes evaluation deterministic"""
+        basic_config['seed'] = 42
+        assert evaluate(valid_design, basic_config) == evaluate(valid_design, basic_config)
+
+    @pytest.mark.parametrize("evaluate", [evaluate_design_mock, evaluate_design_meep])
+    def test_different_seeds_give_different_scores(self, evaluate, valid_design, basic_config):
+        """Different seeds produce different disorder draws"""
+        basic_config['seed'] = 1
+        score1 = evaluate(valid_design, basic_config)
+        basic_config['seed'] = 2
+        score2 = evaluate(valid_design, basic_config)
+        assert score1 != score2
+
+    def test_shared_rng_sequence_is_reproducible(self, valid_design, basic_config):
+        """A run-level Generator replays the same sequence of scores"""
+        def run(seed):
+            rng = np.random.default_rng(seed)
+            return [evaluate_design_meep(valid_design, basic_config, rng=rng) for _ in range(3)]
+
+        first = run(7)
+        assert first == run(7)
+        assert len(set(first)) == 3  # draws advance between evaluations
+
+    def test_seeded_geometry_is_reproducible(self, valid_design):
+        """Disorder in hole radii is reproducible with a seeded Generator"""
+        a, b, r, R, w = valid_design
+        holes1, _ = _generate_ssh_ring_geometry(a, b, r, R, w, 0.01, rng=np.random.default_rng(3))
+        holes2, _ = _generate_ssh_ring_geometry(a, b, r, R, w, 0.01, rng=np.random.default_rng(3))
+        assert holes1 == holes2
+
     def test_invalid_design_handling(self, basic_config):
         """Test handling of invalid design parameters"""
         # Design with negative values
