@@ -14,7 +14,6 @@ Key Features:
 """
 
 import os
-import sys
 import argparse
 import yaml
 import time
@@ -24,11 +23,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Add src directory to path
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
-
-from multi_objective_optimizer import MultiObjectiveOptimizer
-from simulation_wrapper import evaluate_design_mock
+from src.multi_objective_optimizer import MultiObjectiveOptimizer
+from src.simulation_wrapper import evaluate_design_mock
 
 def setup_directories(run_name):
     """Create directories for storing results."""
