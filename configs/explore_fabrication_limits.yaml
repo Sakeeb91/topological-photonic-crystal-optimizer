@@ -1,6 +1,10 @@
 # Exploration: Push fabrication limits
 # Test the boundaries of what's manufacturable
 
+# Random seed: drives both the optimizer's sampling and the simulated disorder.
+# Same seed + same config = identical run. Set to null for an unseeded run.
+seed: 123
+
 design_space:
   a: [0.30, 0.40]      
   b: [0.10, 0.20]      

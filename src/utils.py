@@ -26,6 +26,11 @@ def validate_config(config):
         if bounds[0] >= bounds[1]:
             raise ValueError(f"Parameter {param} min bound must be less than max bound")
     
+    # Optional top-level seed for reproducible runs
+    seed = config.get('seed')
+    if seed is not None and (isinstance(seed, bool) or not isinstance(seed, int) or seed < 0):
+        raise ValueError(f"seed must be a non-negative integer or null, got {seed!r}")
+
     # Validate physical constraints
     if design_space['a'][0] <= design_space['b'][1]:
         print("Warning: 'a' parameter range overlaps with 'b' range. "

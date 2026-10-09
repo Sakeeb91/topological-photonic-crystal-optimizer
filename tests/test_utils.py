@@ -72,6 +72,19 @@ class TestUtils:
         with pytest.raises(ValueError, match="min bound must be less than max"):
             validate_config(valid_config)
 
+    @pytest.mark.parametrize("seed", [0, 123, None])
+    def test_validate_config_accepts_valid_seed(self, valid_config, seed):
+        """Non-negative integer or null seeds are accepted"""
+        valid_config['seed'] = seed
+        assert validate_config(valid_config) is True
+
+    @pytest.mark.parametrize("seed", [-1, 1.5, "42", True])
+    def test_validate_config_rejects_invalid_seed(self, valid_config, seed):
+        """Negative, non-integer, string, and bool seeds are rejected"""
+        valid_config['seed'] = seed
+        with pytest.raises(ValueError, match="seed must be"):
+            validate_config(valid_config)
+
     def test_create_parameter_summary(self):
         """Test parameter summary creation"""
         design_vector = [0.35, 0.15, 0.14, 12.0, 0.50]

@@ -1,6 +1,10 @@
 # Exploration: Compact designs for integration density
 # Focus on smaller, more integrated devices
 
+# Random seed: drives both the optimizer's sampling and the simulated disorder.
+# Same seed + same config = identical run. Set to null for an unseeded run.
+seed: 123
+
 design_space:
   a: [0.25, 0.35]      # Smaller spacings
   b: [0.08, 0.15]      

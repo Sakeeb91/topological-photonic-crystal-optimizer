@@ -1,6 +1,10 @@
 # Configuration for optimizing a design based on the "strong dimerization" case.
 # All length units are in micrometers (µm).
 
+# Random seed: drives both the optimizer's sampling and the simulated disorder.
+# Same seed + same config = identical run. Set to null for an unseeded run.
+seed: 123
+
 # 1. Physics & Geometry Parameters (The Search Space)
 # We define the search space for the optimizer here as [min, max] bounds.
 design_space:

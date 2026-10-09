@@ -1,6 +1,10 @@
 # Exploration: Extreme dimerization for maximum topological protection
 # Push the limits of SSH model dimerization
 
+# Random seed: drives both the optimizer's sampling and the simulated disorder.
+# Same seed + same config = identical run. Set to null for an unseeded run.
+seed: 123
+
 design_space:
   a: [0.40, 0.60]      # Very large 'a' spacing
   b: [0.05, 0.12]      # Very small 'b' spacing  
