@@ -1,55 +1,92 @@
-# Session Handoff — Code Review & Hardening
+# Session Handoff
 
 **Date:** 2026-10-09
-**Branch:** `claude/review-code-011CUSEGWPp4DhiXCfDCMaNi` (pushed to origin)
-**Base:** `main` @ `e4e66b6` — the work below is **not on `main` yet**
+**Branch:** `claude/dreamy-newton-ho6psr` (pushed to origin)
+**Base:** `main` @ `e4e66b6`. This branch merges in the earlier review branch
+`claude/review-code-011CUSEGWPp4DhiXCfDCMaNi`, so it carries all work from both
+sessions. **None of it is on `main` yet.** The user chose to open/merge the PR
+themselves.
 
-## What was done
+## Status
 
-Commits on the branch, oldest first:
+- **Tests: 68 passed, 0 failed** (`pytest`).
+- `run_optimization.py` runs end-to-end, and two runs of the same seeded config
+  produce byte-identical `optimization_log.csv` files.
+- `run_multi_objective_optimization.py` runs end-to-end with
+  `configs/multi_objective_v1.yaml` (`--generations 4`, exit 0).
+- **No real electromagnetic simulation exists.** `evaluate_design_meep` still
+  returns the analytical `_simulate_physics_model` Q-factor; all MEEP code is
+  commented out.
+- **Environment does not persist.** Recreate the venv every session.
+- Repo-local git author is `Sakeeb91 <rahman.sakeeb@gmail.com>` (set by request
+  this session; earlier commits keep their Claude author, history not rewritten).
+
+## Done this session (previous known issues 1-7)
 
 | Commit | Change |
 |---|---|
-| `e9c96ac` | `.gitignore` (Python caches, venvs, MEEP `.h5` output, `results/run_*`, `results/multi_obj_*`, `*.png`) |
-| `5ad8c6f` | `src/__init__.py` now exports the public functions from all `src` modules |
-| `1978d0a` | `src/simulation_wrapper.py`: module docstring explaining MEEP status + `MEEP_AVAILABLE = False` flag |
-| `7fb800b` | `run_optimization.py` calls `validate_config()` and saves `run_config.yaml` into each results dir |
-| `a6d6241` | Per-run `try/except` in the disorder loops of `evaluate_design_meep` and `evaluate_design_mock`; MEEP path requires ≥50% of runs to succeed |
-| `2f15920` | `setup.py` (see known issues — entry points are broken) |
-| `714c398` | `tests/` (29 pytest tests) + `pytest.ini` |
-| `37869ab` | `LICENSE` (MIT) and `INSTALL.md` |
+| `b46f39c` | Merge the previous review branch (tests, setup.py, packaging) with main's repo reorganization |
+| `1a42c46` | `create_parameter_summary` skips derived quantities for vectors shorter than 5 |
+| `0eb8a22` | Untrack `src/__pycache__/*.pyc` (committed before `.gitignore` existed) |
+| `6e0b474` | Remove broken `console_scripts` entry points from `setup.py` |
+| `a5c4305` | Simulation functions take an optional `rng` (`np.random.Generator`); default is seeded from `config['seed']` |
+| `d58af9f` | Top-level `seed` config key drives `gp_minimize` and a per-run Generator; validated; `seed: 123` in single-objective configs |
+| `7752922` | `run_multi_objective_optimization.py` uses `from src....` imports (no `sys.path` hack) |
+| `da9b412` | `validate_multi_objective_config`, including a check that the design space has a feasible point |
 
-## Verified status (checked 2026-10-09)
-
-- **Tests: 28 passed, 1 failed** (`pytest`). The failure is a real bug, see issue 1. The previous session's summary said "30+ tests" and "production-ready"; neither was accurate.
-- **`run_optimization.py` runs end-to-end** with a reduced config (3 initial + 2 iterations, 2 disorder runs): config validates, BO completes, `best_params.yaml` and `run_config.yaml` are written.
-- **No real electromagnetic simulation exists.** `run_optimization.py` imports `evaluate_design_meep`, but that function still returns a hand-written analytical Q-factor (`_simulate_physics_model`). All MEEP code is commented out.
-- **Environment does not persist.** The cloud container was reset between sessions; the venv was gone. Recreate it every session (see Commands).
+Decisions: `results/` and `*.png` stay gitignored (add curated figures with
+`git add -f`).
 
 ## Known issues, in priority order
 
-1. **Failing test / bug in `create_parameter_summary`** (`src/utils.py:49`). It unpacks `design_vector[:5]` unconditionally, so any vector with fewer than 5 values raises `ValueError`. Test: `tests/test_utils.py::TestUtils::test_parameter_summary_custom_names`. Fix: only compute derived quantities when ≥5 values are present.
-2. **Work is not on `main`.** Pushing to `main` from the cloud session returns HTTP 403; only `claude/…` branches are writable. A PR from this branch into `main` is needed (the user merges it, or explicitly approves opening it).
-3. **Commit authorship.** The user asked to check git config for `Sakeeb91` / `rahman.sakeeb@gmail.com`. The session's config is `Claude <noreply@anthropic.com>`, and all 8 commits are authored that way. Nothing was changed. Next session: ask the user whether to set a repo-local `git config user.name/user.email` for future commits. Rewriting existing commits would need a force-push, so get explicit approval first.
-4. **`setup.py` entry points don't work.** `topo-optimize=run_optimization:main` etc. point at top-level scripts that `find_packages()` doesn't install, and `main(config_path)` needs an argument that console scripts don't pass. The installed package is also literally named `src`. Either drop `entry_points` or move the CLIs into the package with argparse-based `main()` functions.
-5. **`.gitignore` may hide wanted artifacts.** It ignores `*.png` and new `results/run_*` dirs. Already-tracked files (e.g. `parameter_exploration_comparison.png`, existing results) are unaffected, but new plots/results won't be committed. Ask the user whether results should be versioned.
-6. **Runs aren't reproducible.** `gp_minimize(random_state=123)` is seeded, but the simulation functions use unseeded `np.random`, so two runs of the same config give different scores. CLAUDE.md requires controlled seeds. Add a `seed` config key and use a `np.random.Generator`.
-7. **`run_multi_objective_optimization.py` was not touched.** No config validation (its config schema differs from `validate_config`'s), and it imports via a `sys.path.append` hack.
-8. **MEEP integration** is still a placeholder (see Verified status). This is the largest piece of real work left. It needs a conda env with `pymeep`, and probably a fast low-resolution config for testing.
+1. **Logged scores are negated.** `run_optimization.py` writes `-score` to
+   `optimization_log.csv` (the comment says the opposite). `src/analysis.py` and
+   `compare_explorations.py` take `max()` as "best", so they report the **worst**
+   design. Tracked historical logs under `results/run_*` have the same sign
+   error; `best_params.yaml` is correct. Check whether `docs/OPTIMIZATION_REPORT.md`
+   and `docs/EXPLORATION_RESULTS.md` used the wrong values. Ask before rewriting
+   committed result data.
+2. **`configs/advanced_multi_fidelity_v1.yaml` cannot produce any feasible
+   design** (`b_max - 2*r_min = 0.04 <= min_feature_size 0.05`), and its
+   `objective` section lacks `num_disorder_runs`. The validator now rejects it,
+   so the command in `README.md` exits with that message. Fixing it means
+   choosing new physical bounds: user's call.
+3. **Multi-objective config keys that are silently ignored.**
+   `constraints.min_feature_size` is never read (the optimizer reads a
+   top-level `min_feature_size`, default 0.05), and
+   `simulation.return_comprehensive_objectives` is never read (the mock checks
+   the top level), so the optimizer falls back to approximating Q as
+   `score + 20000` with no real bandgap/mode-volume values.
+4. **`multi_objective_v1.yaml` feasible region is ~3% of the box**, so
+   generation 1 often has zero feasible designs; with `--generations 1` the run
+   crashes with a NaN traceback in `generate_design_recommendations`.
+5. **`--output-dir` doesn't create `plots/` and `designs/`**, so the multi-objective
+   run crashes when saving the first plot unless those exist.
+6. **Seed doesn't reach the multi-objective path.** `src/multi_objective_optimizer.py`
+   and `src/active_learning.py` still use global `np.random`, and NSGA-III is not
+   seeded. If `seed` is set in a multi-objective config, every `evaluate_design_mock`
+   call reuses the same draws (fresh Generator per call).
+7. **Installed package is named `src`.** Real CLIs need a package rename.
+8. **MEEP integration** is still a placeholder. Largest piece of real work left;
+   needs a conda env with `pymeep` and a fast low-resolution test config.
 
-## Not started (low priority from the original review)
+## Not started (low priority)
 
-CI (GitHub Actions running pytest), Dockerfile (useful for MEEP), pre-commit/black/flake8, CONTRIBUTING.md, `examples/` or notebooks, `logging` instead of `print`, checkpoint/resume for long BO runs.
+CI (GitHub Actions running pytest), Dockerfile (useful for MEEP),
+pre-commit/black/flake8, CONTRIBUTING.md, `examples/` or notebooks, `logging`
+instead of `print`, checkpoint/resume for long BO runs.
 
 ## Commands
 
 ```bash
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt pytest
-pytest                                                       # expect 28 pass / 1 fail until issue 1 is fixed
-python run_optimization.py --config configs/strong_dimerization_v1.yaml   # full run: 120 evals, mock physics
+pytest                                                       # expect 68 passed
+python run_optimization.py --config configs/strong_dimerization_v1.yaml   # 120 evals, mock physics
+python run_multi_objective_optimization.py --generations 4               # quick NSGA-III check
 python src/analysis.py results/run_<TIMESTAMP>
 python visualize_best_design.py results/run_<TIMESTAMP>
 ```
 
-Branch rule for cloud sessions: develop and push on the session's `claude/…` branch, using `git push -u origin <branch>`.
+Branch rule for cloud sessions: develop and push on the session's `claude/…`
+branch, using `git push -u origin <branch>`. Pushing to `main` returns 403.
