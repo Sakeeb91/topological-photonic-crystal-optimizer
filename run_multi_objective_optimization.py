@@ -312,6 +312,11 @@ def main():
     # Analyze results
     print("\nAnalyzing Pareto front...")
     pareto_df = optimizer.save_results(result, results_dir)
+    if pareto_df.empty:
+        n_evaluated = len(optimizer.problem.evaluation_history)
+        print(f"\n✗ No feasible designs found in {n_evaluated} evaluations. "
+              "Try more generations (--generations) or a larger population (--population-size).")
+        sys.exit(1)
     
     # Generate comprehensive analysis
     print("Creating trade-off analysis plots...")
