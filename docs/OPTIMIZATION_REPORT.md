@@ -140,8 +140,8 @@ The Bayesian optimization process efficiently explores the design space.
 ### Top Panel: Objective Score Evolution
 - **Blue line**: Raw objective score at each iteration
 - **Red line**: Best score found so far (monotonically improving)
-- Rapid initial improvement followed by refinement phase
-- Final convergence to optimal region around iteration 10
+- Best score of 20,468 reached at iteration 8, with no further improvement over the remaining 6 of 15 evaluations
+- This short run is a smoke test; the 120-evaluation run (`results/run_20250623_161133`) reaches 62,813
 
 ### Bottom Panel: Parameter Evolution
 - Tracks how design parameters evolve during optimization
