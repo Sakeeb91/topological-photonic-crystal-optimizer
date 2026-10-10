@@ -87,7 +87,7 @@ def main(config_path):
         
         # Log progress
         log_data = {name: [val] for name, val in params.items()}
-        log_data['score'] = [-score] # Store the real score, not the negative
+        log_data['score'] = [score]  # Store the real score, not the negative
         log_df = pd.DataFrame(log_data)
         
         log_path = os.path.join(results_dir, 'optimization_log.csv')

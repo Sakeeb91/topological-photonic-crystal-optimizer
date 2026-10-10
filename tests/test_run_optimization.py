@@ -53,3 +53,14 @@ def test_design_space_key_order_does_not_matter(tiny_run):
     log, _ = tiny_run
     assert len(log) == 5
     assert (log['score'].abs() < FAILED_EVALUATION).all()
+
+
+@pytest.mark.integration
+def test_logged_scores_are_real_scores(tiny_run):
+    """The log stores the objective score itself, so the best design has the max score"""
+    log, best_params = tiny_run
+    assert (log['score'] > 0).all()
+
+    best_row = log.loc[log['score'].idxmax()]
+    for name, value in best_params.items():
+        assert best_row[name] == pytest.approx(value)
