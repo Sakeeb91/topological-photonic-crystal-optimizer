@@ -28,6 +28,24 @@ from src.multi_objective_optimizer import MultiObjectiveOptimizer
 from src.simulation_wrapper import evaluate_design_mock
 from src.utils import validate_multi_objective_config
 
+def make_simulation_function(config):
+    """
+    Build the simulation function passed to MultiObjectiveOptimizer.
+
+    evaluate_design_mock reads return_comprehensive_objectives from the top
+    level of its config, but configs set it under simulation. Without full
+    objectives the optimizer falls back to proxies (Q = score + 20000,
+    bandgap = a - b, mode volume = pi * r^2), so default to True.
+    """
+    comprehensive = config.get('simulation', {}).get('return_comprehensive_objectives', True)
+
+    def simulation_function(design_vector, sim_config):
+        full_config = {**config, **sim_config, 'return_comprehensive_objectives': comprehensive}
+        return evaluate_design_mock(design_vector, full_config)
+
+    return simulation_function
+
+
 def setup_directories(run_name):
     """Create directories for storing results."""
     results_dir = os.path.join("results", run_name)
@@ -280,16 +298,9 @@ def main():
     print(f"Objectives: Q-factor avg, Q-factor std, Bandgap size, Mode volume")
     print(f"Parameter space: {len(config['design_space'])} dimensions")
     
-    # Setup simulation function
-    def simulation_wrapper(design_vector, sim_config):
-        """Wrapper to ensure correct configuration format."""
-        # Merge configs appropriately
-        full_config = {**config, **sim_config}
-        return evaluate_design_mock(design_vector, full_config)
-    
     # Create and run optimizer
     print("\nInitializing multi-objective optimizer...")
-    optimizer = MultiObjectiveOptimizer(config, simulation_wrapper)
+    optimizer = MultiObjectiveOptimizer(config, make_simulation_function(config))
     
     print("\nStarting optimization...")
     start_time = time.time()
