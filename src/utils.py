@@ -38,6 +38,24 @@ def validate_config(config):
     
     return True
 
+DEFAULT_MIN_FEATURE_SIZE = 0.05  # μm
+
+
+def get_min_feature_size(config):
+    """
+    Minimum fabricable feature size (μm) from a config.
+
+    Configs use different sections for this setting, so check them in order:
+    constraints.min_feature_size (multi-objective configs),
+    fabrication.min_feature_size (MEEP configs), then a top-level key.
+    """
+    for section in ('constraints', 'fabrication'):
+        value = (config.get(section) or {}).get('min_feature_size')
+        if value is not None:
+            return value
+    return config.get('min_feature_size', DEFAULT_MIN_FEATURE_SIZE)
+
+
 def _validate_seed(config):
     """Check the optional top-level seed used for reproducible runs."""
     seed = config.get('seed')
@@ -79,9 +97,8 @@ def validate_multi_objective_config(config):
 
     # Every design must satisfy b - 2r > min_feature_size and (w - 2r)/2 > min_feature_size
     # (PhysicsInformedConstraints). If even the most favorable corner of the box fails,
-    # every design is penalized and the Pareto front is empty. The lookup mirrors
-    # MultiObjectiveProblem, which reads min_feature_size from the top level.
-    min_feature = config.get('min_feature_size', 0.05)
+    # every design is penalized and the Pareto front is empty.
+    min_feature = get_min_feature_size(config)
     b_max, r_min, w_max = design_space['b'][1], design_space['r'][0], design_space['w'][1]
     if b_max - 2 * r_min <= min_feature:
         raise ValueError(

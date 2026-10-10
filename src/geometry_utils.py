@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from datetime import datetime
 from .simulation_wrapper import _generate_ssh_ring_geometry
+from .utils import get_min_feature_size
 
 def visualize_ring_geometry(design_vector, config, disorder_std=0.0, save_path=None):
     """
@@ -159,7 +160,7 @@ def validate_geometry_constraints(design_vector, config):
     
     # Get fabrication constraints if available
     fab_constraints = config.get('fabrication', {})
-    min_feature = fab_constraints.get('min_feature_size', 0.05)
+    min_feature = get_min_feature_size(config)
     max_aspect_ratio = fab_constraints.get('max_aspect_ratio', 10.0)
     
     # Minimum feature size

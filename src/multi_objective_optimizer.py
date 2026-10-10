@@ -40,6 +40,8 @@ from sklearn.preprocessing import StandardScaler
 import scipy.optimize as opt
 from scipy import constants
 
+from .utils import get_min_feature_size
+
 
 @dataclass
 class OptimizationObjectives:
@@ -231,7 +233,7 @@ class TopologicalPhotonicCrystalProblem(Problem):
         self.config = config
         self.simulation_function = simulation_function
         self.constraints = PhysicsInformedConstraints(
-            min_feature_size=config.get('min_feature_size', 0.05)
+            min_feature_size=get_min_feature_size(config)
         )
         self.disorder_model = EnhancedDisorderModel(config.get('disorder', {}))
         

@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from src.utils import (
     validate_config,
     validate_multi_objective_config,
+    get_min_feature_size,
     create_parameter_summary,
     estimate_num_holes,
     check_fabrication_constraints,
@@ -250,7 +251,32 @@ class TestValidateMultiObjectiveConfig:
         with pytest.raises(ValueError, match=f"optimizer.{key} must be a positive integer"):
             validate_multi_objective_config(mo_config)
 
+    def test_uses_constraints_min_feature_size(self, mo_config):
+        """A box feasible at the 0.05 default is rejected under constraints.min_feature_size"""
+        mo_config['design_space']['r'] = [0.04, 0.18]  # b_max - 2*r_min = 0.12
+        assert validate_multi_objective_config(mo_config) is True
+        mo_config['constraints'] = {'min_feature_size': 0.13}
+        with pytest.raises(ValueError, match="min_feature_size = 0.13"):
+            validate_multi_objective_config(mo_config)
+
     def test_invalid_seed(self, mo_config):
         mo_config['seed'] = -3
         with pytest.raises(ValueError, match="seed must be"):
             validate_multi_objective_config(mo_config)
+
+
+class TestGetMinFeatureSize:
+    """Tests for get_min_feature_size"""
+
+    def test_default(self):
+        assert get_min_feature_size({}) == 0.05
+
+    @pytest.mark.parametrize("config, expected", [
+        ({'min_feature_size': 0.06}, 0.06),
+        ({'fabrication': {'min_feature_size': 0.07}, 'min_feature_size': 0.06}, 0.07),
+        ({'constraints': {'min_feature_size': 0.08},
+          'fabrication': {'min_feature_size': 0.07}}, 0.08),
+        ({'constraints': {'max_ring_radius': 25.0}, 'fabrication': None}, 0.05),
+    ])
+    def test_precedence(self, config, expected):
+        assert get_min_feature_size(config) == expected
