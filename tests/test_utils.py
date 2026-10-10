@@ -31,7 +31,7 @@ class TestUtils:
             'design_space': {
                 'a': [0.30, 0.40],
                 'b': [0.10, 0.20],
-                'r': [0.10, 0.18],
+                'r': [0.03, 0.07],
                 'R': [10.0, 15.0],
                 'w': [0.45, 0.55],
             },
@@ -73,6 +73,18 @@ class TestUtils:
         """Test that invalid bounds raise error"""
         valid_config['design_space']['a'] = [0.40, 0.30]  # min > max
         with pytest.raises(ValueError, match="min bound must be less than max"):
+            validate_config(valid_config)
+
+    def test_validate_config_rejects_overlapping_holes(self, valid_config):
+        """r >= 0.10 with b <= 0.20 leaves no gap between neighboring holes anywhere"""
+        valid_config['design_space']['r'] = [0.10, 0.18]
+        valid_config['design_space']['w'] = [0.45, 0.55]
+        with pytest.raises(ValueError, match="No feasible designs: b_max - 2\\*r_min"):
+            validate_config(valid_config)
+
+    def test_validate_config_uses_fabrication_min_feature_size(self, valid_config):
+        valid_config['fabrication'] = {'min_feature_size': 0.15}  # b_max - 2*r_min = 0.14
+        with pytest.raises(ValueError, match="min_feature_size = 0.15"):
             validate_config(valid_config)
 
     @pytest.mark.parametrize("seed", [0, 123, None])

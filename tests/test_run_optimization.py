@@ -13,8 +13,13 @@ REPO_ROOT = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(0, REPO_ROOT)
 
 import run_optimization
+from src.utils import hole_clearance_violations
 
 FAILED_EVALUATION = 1.0e9  # evaluate_design returns -1e10 when every disorder run fails
+
+
+def _infeasible_rows(log):
+    return log.apply(lambda row: bool(hole_clearance_violations(row.a, row.b, row.r, row.w)), axis=1)
 
 
 @pytest.fixture(scope='module')
@@ -59,8 +64,18 @@ def test_design_space_key_order_does_not_matter(tiny_run):
 def test_logged_scores_are_real_scores(tiny_run):
     """The log stores the objective score itself, so the best design has the max score"""
     log, best_params = tiny_run
-    assert (log['score'] > 0).all()
+    feasible = ~_infeasible_rows(log)
+    assert (log.loc[feasible, 'score'] > 0).all()
 
     best_row = log.loc[log['score'].idxmax()]
     for name, value in best_params.items():
         assert best_row[name] == pytest.approx(value)
+
+
+@pytest.mark.integration
+def test_infeasible_designs_get_infeasible_score(tiny_run):
+    """Designs with overlapping or crowded holes are scored without simulating"""
+    log, _ = tiny_run
+    infeasible = _infeasible_rows(log)
+    assert infeasible.any() and (~infeasible).any()  # the run exercises both paths
+    assert (log.loc[infeasible, 'score'] == run_optimization.INFEASIBLE_SCORE).all()

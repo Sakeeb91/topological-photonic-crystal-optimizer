@@ -35,6 +35,10 @@ def validate_config(config):
     
     if design_space['r'][1] * 2 >= design_space['w'][0]:
         raise ValueError("Hole diameter (2*r) cannot be larger than waveguide width (w)")
+
+    # run_optimization.py scores designs that fail hole_clearance_violations as
+    # infeasible; reject boxes where that is every design
+    _check_feasible_corner(design_space, get_min_feature_size(config))
     
     return True
 
@@ -54,6 +58,23 @@ def get_min_feature_size(config):
         if value is not None:
             return value
     return config.get('min_feature_size', DEFAULT_MIN_FEATURE_SIZE)
+
+
+def _check_feasible_corner(design_space, min_feature):
+    """
+    Raise if no design in the box can satisfy hole_clearance_violations.
+
+    The gaps a - 2r, b - 2r and (w - 2r)/2 are largest at the a_max, b_max,
+    w_max, r_min corner; if that corner fails, every design fails.
+    """
+    a_max, b_max, w_max = design_space['a'][1], design_space['b'][1], design_space['w'][1]
+    r_min = design_space['r'][0]
+    for label, gap in (("a_max - 2*r_min", a_max - 2 * r_min),
+                       ("b_max - 2*r_min", b_max - 2 * r_min),
+                       ("(w_max - 2*r_min)/2", (w_max - 2 * r_min) / 2)):
+        if gap <= min_feature:
+            raise ValueError(f"No feasible designs: {label} = {gap:.3f} must exceed "
+                             f"min_feature_size = {min_feature}")
 
 
 def _validate_seed(config):
@@ -95,19 +116,10 @@ def validate_multi_objective_config(config):
     if not all(_is_positive_int(v) for v in design_space['N_cells']):
         raise ValueError("Parameter N_cells bounds must be positive integers")
 
-    # Every design must satisfy b - 2r > min_feature_size and (w - 2r)/2 > min_feature_size
-    # (PhysicsInformedConstraints). If even the most favorable corner of the box fails,
-    # every design is penalized and the Pareto front is empty.
-    min_feature = get_min_feature_size(config)
-    b_max, r_min, w_max = design_space['b'][1], design_space['r'][0], design_space['w'][1]
-    if b_max - 2 * r_min <= min_feature:
-        raise ValueError(
-            f"No feasible designs: b_max - 2*r_min = {b_max - 2 * r_min:.3f} must exceed "
-            f"min_feature_size = {min_feature}")
-    if (w_max - 2 * r_min) / 2 <= min_feature:
-        raise ValueError(
-            f"No feasible designs: (w_max - 2*r_min)/2 = {(w_max - 2 * r_min) / 2:.3f} must exceed "
-            f"min_feature_size = {min_feature}")
+    # Every design must satisfy the PhysicsInformedConstraints gaps. If even the most
+    # favorable corner of the box fails, every design is penalized and the Pareto
+    # front is empty.
+    _check_feasible_corner(design_space, get_min_feature_size(config))
 
     # evaluate_design_mock indexes this key directly
     if not _is_positive_int(config['objective'].get('num_disorder_runs')):
