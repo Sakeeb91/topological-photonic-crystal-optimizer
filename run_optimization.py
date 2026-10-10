@@ -19,6 +19,9 @@ from src.simulation_wrapper import evaluate_design_meep as evaluate_design
 # Import utility functions
 from src.utils import validate_config, save_config_with_timestamp
 
+# evaluate_design unpacks the design vector positionally in this order
+DESIGN_ORDER = ['a', 'b', 'r', 'R', 'w']
+
 # --- 1. Setup ---
 def setup_directories(run_name):
     """Creates a unique directory for storing results of this run."""
@@ -75,7 +78,8 @@ def main(config_path):
     # The @use_named_args decorator converts a list of parameters to keyword arguments
     @use_named_args(space)
     def objective_function(**params):
-        design_vector = [params[name] for name in param_names]
+        # Build by name: config key order varies (yaml.dump sorts keys in run_config.yaml)
+        design_vector = [params[name] for name in DESIGN_ORDER]
         
         # The optimizer wants to MINIMIZE, so we return the NEGATIVE of our score
         score = evaluate_design(design_vector, config, rng=rng)
