@@ -1,5 +1,7 @@
 # Parameter Space Exploration Results
 
+> **Note (2026-10-10): these results predate a geometry fix and need regenerating.** Every design space used here let neighboring holes overlap (`b <= 2r`; `a` and `b` are center-to-center spacings), so the reported designs cannot be fabricated. Config bounds now keep a gap of at least the minimum feature size. All scores come from the analytical mock model, not MEEP. See `docs/HANDOFF.md`.
+
 ## 🎉 **Comprehensive Parameter Space Exploration Complete!**
 
 I successfully explored different parameter ranges and uncovered fascinating design insights:

@@ -1,5 +1,11 @@
 # Optimization Results Report
 
+> **Note (2026-10-10): these results predate two fixes and need regenerating.**
+> 1. Every design space used here let neighboring holes overlap (`b <= 2r`; `a` and `b` are center-to-center spacings), so the reported designs cannot be fabricated. Config bounds now keep a gap of at least the minimum feature size.
+> 2. The multi-objective run never received the simulator's full objectives, so the Q-factor, bandgap and mode volume below are proxies: Q = score + 20000, bandgap = a - b, mode volume = pi * r^2.
+>
+> All values also come from the analytical mock model, not MEEP. See `docs/HANDOFF.md`.
+
 This report presents the results from multi-objective optimization of topological photonic crystal ring resonators using the NSGA-III algorithm.
 
 ---
