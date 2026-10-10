@@ -193,15 +193,37 @@ def format_time_duration(seconds):
     else:
         return f"{seconds/3600:.1f} hours"
 
+def hole_clearance_violations(a, b, r, w, min_feature_size=DEFAULT_MIN_FEATURE_SIZE):
+    """
+    Gaps that must exceed min_feature_size for a fabricable ring.
+
+    a and b are center-to-center hole spacings, so the material left between
+    neighboring holes is a - 2r and b - 2r. The holes must also leave
+    (w - 2r)/2 of waveguide on each side.
+    """
+    violations = []
+    for name, spacing in (('a', a), ('b', b)):
+        gap = spacing - 2 * r
+        if gap <= min_feature_size:
+            violations.append(f"Gap between holes at spacing '{name}' is {gap:.3f} μm "
+                              f"(must exceed {min_feature_size} μm)")
+    edge_clearance = (w - 2 * r) / 2
+    if edge_clearance <= min_feature_size:
+        violations.append(f"Edge clearance {edge_clearance:.3f} μm "
+                          f"(must exceed {min_feature_size} μm)")
+    return violations
+
+
 def check_fabrication_constraints(design_vector, min_feature_size=0.05):
     """Check if design parameters meet fabrication constraints."""
     a, b, r, R, w = design_vector[:5]
     
     violations = []
     
-    # Minimum feature size check
-    if r < min_feature_size:
-        violations.append(f"Hole radius {r:.3f} μm below minimum feature size {min_feature_size} μm")
+    # Minimum feature size applies to the printed hole, i.e. its diameter
+    if 2 * r < min_feature_size:
+        violations.append(f"Hole radius {r:.3f} μm (diameter {2*r:.3f} μm) below "
+                          f"minimum feature size {min_feature_size} μm")
     
     if a < min_feature_size:
         violations.append(f"Spacing 'a' {a:.3f} μm below minimum feature size {min_feature_size} μm")
@@ -212,6 +234,8 @@ def check_fabrication_constraints(design_vector, min_feature_size=0.05):
     # Physical constraints
     if 2 * r >= w:
         violations.append(f"Hole diameter {2*r:.3f} μm >= waveguide width {w:.3f} μm")
+
+    violations.extend(hole_clearance_violations(a, b, r, w, min_feature_size))
     
     # Practical constraints
     if a <= b:

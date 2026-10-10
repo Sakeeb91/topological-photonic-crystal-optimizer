@@ -13,6 +13,7 @@ from src.utils import (
     validate_config,
     validate_multi_objective_config,
     get_min_feature_size,
+    hole_clearance_violations,
     create_parameter_summary,
     estimate_num_holes,
     check_fabrication_constraints,
@@ -125,6 +126,24 @@ class TestUtils:
 
         assert len(violations) > 0
         assert any('diameter' in v.lower() for v in violations)
+
+    def test_check_fabrication_constraints_overlapping_holes(self):
+        """b = 0.15 with r = 0.14 puts neighboring holes 0.28 wide 0.15 apart"""
+        violations = check_fabrication_constraints([0.35, 0.15, 0.14, 12.0, 0.50])
+        assert any("spacing 'b'" in v for v in violations)
+
+    def test_check_fabrication_constraints_small_holes_fit(self):
+        """r = 0.03 leaves b - 2r = 0.09 and has a 60 nm diameter, both above 50 nm"""
+        assert check_fabrication_constraints([0.35, 0.15, 0.03, 12.0, 0.50]) == []
+
+    @pytest.mark.parametrize("a, b, r, w, expected", [
+        (0.35, 0.15, 0.04, 0.50, 0),   # all gaps > 0.05
+        (0.35, 0.15, 0.05, 0.50, 1),   # b - 2r = 0.05, not strictly greater
+        (0.12, 0.15, 0.04, 0.50, 1),   # a - 2r = 0.04
+        (0.35, 0.15, 0.04, 0.17, 1),   # edge clearance (0.17 - 0.08)/2 = 0.045
+    ])
+    def test_hole_clearance_violations(self, a, b, r, w, expected):
+        assert len(hole_clearance_violations(a, b, r, w, 0.05)) == expected
 
     def test_load_yaml_safe(self):
         """Test safe YAML loading"""
