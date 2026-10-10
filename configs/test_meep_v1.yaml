@@ -10,7 +10,7 @@ seed: 123
 design_space:
   a: [0.35, 0.40]      # 1st dimerization distance
   b: [0.10, 0.15]      # 2nd dimerization distance
-  r: [0.14, 0.16]      # Hole radius
+  r: [0.03, 0.045]     # Hole radius; holes must leave > min feature size between them (b - 2r)
   R: [12.0, 14.0]      # Ring radius
   w: [0.48, 0.52]      # Waveguide width
 
