@@ -6,7 +6,7 @@ design_space:
   # Core geometric parameters (physics-informed ranges)
   a: [0.30, 0.60]      # Primary dimerization distance (μm)
   b: [0.05, 0.20]      # Secondary dimerization distance (μm) 
-  r: [0.08, 0.16]      # Hole radius (μm) - constrained for fabrication
+  r: [0.03, 0.055]     # Hole radius (μm); b - 2r must exceed min_feature_size (0.08)
   w: [0.45, 0.65]      # Waveguide width (μm) - optimized for confinement
   
   # Discrete parameter with physical meaning
@@ -64,6 +64,8 @@ disorder:
 
 # Multi-objective optimization with physics-informed objectives
 objective:
+  num_disorder_runs: 12            # Read by the simulation; matches disorder.num_disorder_runs
+
   # Primary objectives from thesis analysis
   primary_objectives:
     q_factor_maximization:

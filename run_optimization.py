@@ -17,7 +17,14 @@ from tqdm import tqdm
 from src.simulation_wrapper import evaluate_design_meep as evaluate_design
 
 # Import utility functions
-from src.utils import validate_config, save_config_with_timestamp
+from src.utils import (validate_config, save_config_with_timestamp,
+                       get_min_feature_size, hole_clearance_violations)
+
+# evaluate_design unpacks the design vector positionally in this order
+DESIGN_ORDER = ['a', 'b', 'r', 'R', 'w']
+
+# Score for designs whose holes overlap or crowd the waveguide edge; they are not simulated
+INFEASIBLE_SCORE = 0.0
 
 # --- 1. Setup ---
 def setup_directories(run_name):
@@ -62,6 +69,7 @@ def main(config_path):
     save_config_with_timestamp(config, results_dir)
 
     space, param_names = define_search_space(config)
+    min_feature = get_min_feature_size(config)
 
     # One Generator per run: disorder draws differ between evaluations, but the
     # whole run replays exactly when config['seed'] is set.
@@ -75,15 +83,22 @@ def main(config_path):
     # The @use_named_args decorator converts a list of parameters to keyword arguments
     @use_named_args(space)
     def objective_function(**params):
-        design_vector = [params[name] for name in param_names]
+        # Build by name: config key order varies (yaml.dump sorts keys in run_config.yaml)
+        design_vector = [params[name] for name in DESIGN_ORDER]
         
         # The optimizer wants to MINIMIZE, so we return the NEGATIVE of our score
-        score = evaluate_design(design_vector, config, rng=rng)
+        violations = hole_clearance_violations(
+            params['a'], params['b'], params['r'], params['w'], min_feature)
+        if violations:
+            print(f"  [Infeasible] {violations[0]}; scored {INFEASIBLE_SCORE} without simulating")
+            score = INFEASIBLE_SCORE
+        else:
+            score = evaluate_design(design_vector, config, rng=rng)
         pbar.update(1)
         
         # Log progress
         log_data = {name: [val] for name, val in params.items()}
-        log_data['score'] = [-score] # Store the real score, not the negative
+        log_data['score'] = [score]  # Store the real score, not the negative
         log_df = pd.DataFrame(log_data)
         
         log_path = os.path.join(results_dir, 'optimization_log.csv')

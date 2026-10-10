@@ -40,6 +40,8 @@ from sklearn.preprocessing import StandardScaler
 import scipy.optimize as opt
 from scipy import constants
 
+from .utils import get_min_feature_size
+
 
 @dataclass
 class OptimizationObjectives:
@@ -141,6 +143,13 @@ class PhysicsInformedConstraints:
         
         return len(violations) == 0, violations
     
+    def constraint_values(self, params: ExtendedDesignParameters) -> np.ndarray:
+        """Fabrication constraints in pymoo form: feasible when every value is <= 0."""
+        return np.array([
+            self.min_feature_size - (params.b - 2 * params.r),        # hole spacing
+            self.min_feature_size - (params.w - 2 * params.r) / 2,    # edge clearance
+        ])
+
     def constraint_penalty(self, params: ExtendedDesignParameters) -> float:
         """Calculate penalty for constraint violations."""
         penalty = 0.0
@@ -231,7 +240,7 @@ class TopologicalPhotonicCrystalProblem(Problem):
         self.config = config
         self.simulation_function = simulation_function
         self.constraints = PhysicsInformedConstraints(
-            min_feature_size=config.get('min_feature_size', 0.05)
+            min_feature_size=get_min_feature_size(config)
         )
         self.disorder_model = EnhancedDisorderModel(config.get('disorder', {}))
         
@@ -251,7 +260,8 @@ class TopologicalPhotonicCrystalProblem(Problem):
         super().__init__(
             n_var=7,
             n_obj=4,
-            n_constr=0,  # We'll use penalty methods instead
+            # Declared to pymoo so feasible designs always dominate infeasible ones
+            n_ieq_constr=2,
             xl=xl,
             xu=xu
         )
@@ -263,6 +273,7 @@ class TopologicalPhotonicCrystalProblem(Problem):
         """Evaluate population of designs."""
         n_pop = X.shape[0]
         objectives = np.zeros((n_pop, self.n_obj))
+        constraint_values = np.zeros((n_pop, self.n_ieq_constr))
         
         for i in range(n_pop):
             # Convert to design parameters (ensure N_cells is integer)
@@ -285,6 +296,7 @@ class TopologicalPhotonicCrystalProblem(Problem):
                 )
             
             objectives[i] = objectives_obj.to_array()
+            constraint_values[i] = self.constraints.constraint_values(params)
             
             # Store evaluation history
             self.evaluation_history.append({
@@ -295,6 +307,7 @@ class TopologicalPhotonicCrystalProblem(Problem):
             })
         
         out["F"] = objectives
+        out["G"] = constraint_values
     
     def _evaluate_single_design(self, params: ExtendedDesignParameters) -> OptimizationObjectives:
         """Evaluate a single design with disorder analysis."""
@@ -403,9 +416,11 @@ class MultiObjectiveOptimizer:
     
     def analyze_pareto_front(self, result: Result) -> pd.DataFrame:
         """Analyze and return Pareto front solutions."""
-        # Extract Pareto optimal solutions
-        pareto_f = result.F
-        pareto_x = result.X
+        # Extract Pareto optimal solutions; pymoo returns None when nothing is feasible
+        if result.X is None:
+            return pd.DataFrame()
+        pareto_f = np.atleast_2d(result.F)
+        pareto_x = np.atleast_2d(result.X)
         
         pareto_data = []
         for i in range(len(pareto_f)):
