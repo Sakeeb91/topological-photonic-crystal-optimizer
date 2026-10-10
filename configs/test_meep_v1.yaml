@@ -1,6 +1,10 @@
 # Test configuration for MEEP simulations with reduced parameters for faster testing
 # All length units are in micrometers (µm).
 
+# Random seed: drives both the optimizer's sampling and the simulated disorder.
+# Same seed + same config = identical run. Set to null for an unseeded run.
+seed: 123
+
 # 1. Physics & Geometry Parameters (The Search Space)
 # Smaller search space for testing
 design_space:

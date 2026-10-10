@@ -26,6 +26,8 @@ def validate_config(config):
         if bounds[0] >= bounds[1]:
             raise ValueError(f"Parameter {param} min bound must be less than max bound")
     
+    _validate_seed(config)
+
     # Validate physical constraints
     if design_space['a'][0] <= design_space['b'][1]:
         print("Warning: 'a' parameter range overlaps with 'b' range. "
@@ -36,6 +38,79 @@ def validate_config(config):
     
     return True
 
+def _validate_seed(config):
+    """Check the optional top-level seed used for reproducible runs."""
+    seed = config.get('seed')
+    if seed is not None and (isinstance(seed, bool) or not isinstance(seed, int) or seed < 0):
+        raise ValueError(f"seed must be a non-negative integer or null, got {seed!r}")
+
+
+def _is_positive_int(value):
+    return isinstance(value, int) and not isinstance(value, bool) and value > 0
+
+
+def validate_multi_objective_config(config):
+    """
+    Validate a config for run_multi_objective_optimization.py.
+
+    The multi-objective design space differs from validate_config's: the ring
+    radius R is derived from N_cells, and coupling parameters are added.
+    """
+    for section in ['design_space', 'objective', 'optimizer']:
+        if not isinstance(config.get(section), dict):
+            raise ValueError(f"Missing required section: {section}")
+
+    design_space = config['design_space']
+    for param in ['a', 'b', 'r', 'w', 'N_cells', 'coupling_gap', 'coupling_width']:
+        if param not in design_space:
+            raise ValueError(f"Missing parameter in design_space: {param}")
+
+        bounds = design_space[param]
+        if (not isinstance(bounds, list) or len(bounds) != 2
+                or not all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in bounds)):
+            raise ValueError(f"Parameter {param} bounds must be a list of two numbers [min, max]")
+        if bounds[0] >= bounds[1]:
+            raise ValueError(f"Parameter {param} min bound must be less than max bound")
+        if bounds[0] <= 0:
+            raise ValueError(f"Parameter {param} min bound must be positive")
+
+    if not all(_is_positive_int(v) for v in design_space['N_cells']):
+        raise ValueError("Parameter N_cells bounds must be positive integers")
+
+    # Every design must satisfy b - 2r > min_feature_size and (w - 2r)/2 > min_feature_size
+    # (PhysicsInformedConstraints). If even the most favorable corner of the box fails,
+    # every design is penalized and the Pareto front is empty. The lookup mirrors
+    # MultiObjectiveProblem, which reads min_feature_size from the top level.
+    min_feature = config.get('min_feature_size', 0.05)
+    b_max, r_min, w_max = design_space['b'][1], design_space['r'][0], design_space['w'][1]
+    if b_max - 2 * r_min <= min_feature:
+        raise ValueError(
+            f"No feasible designs: b_max - 2*r_min = {b_max - 2 * r_min:.3f} must exceed "
+            f"min_feature_size = {min_feature}")
+    if (w_max - 2 * r_min) / 2 <= min_feature:
+        raise ValueError(
+            f"No feasible designs: (w_max - 2*r_min)/2 = {(w_max - 2 * r_min) / 2:.3f} must exceed "
+            f"min_feature_size = {min_feature}")
+
+    # evaluate_design_mock indexes this key directly
+    if not _is_positive_int(config['objective'].get('num_disorder_runs')):
+        raise ValueError("objective.num_disorder_runs must be a positive integer")
+
+    optimizer = config['optimizer']
+    if optimizer.get('algorithm') != 'NSGA3':
+        raise ValueError(f"optimizer.algorithm must be 'NSGA3' (the only one implemented), "
+                         f"got {optimizer.get('algorithm')!r}")
+    for key in ['population_size', 'n_generations']:
+        if not _is_positive_int(optimizer.get(key)):
+            raise ValueError(f"optimizer.{key} must be a positive integer")
+    if 'n_partitions' in optimizer and not _is_positive_int(optimizer['n_partitions']):
+        raise ValueError("optimizer.n_partitions must be a positive integer")
+
+    _validate_seed(config)
+
+    return True
+
+
 def create_parameter_summary(design_vector, param_names=None):
     """Create a formatted summary of design parameters."""
     if param_names is None:
@@ -45,7 +120,10 @@ def create_parameter_summary(design_vector, param_names=None):
     for i, (name, value) in enumerate(zip(param_names, design_vector)):
         summary += f"  {name}: {value:.4f} μm\n"
     
-    # Calculate derived quantities
+    # Derived quantities assume the standard (a, b, r, R, w) ordering
+    if len(design_vector) < 5:
+        return summary
+
     a, b, r, R, w = design_vector[:5]
     dimerization_ratio = a / b if b > 0 else float('inf')
     filling_factor = (r**2) / (w**2) if w > 0 else 0

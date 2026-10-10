@@ -1,11 +1,42 @@
+"""
+Simulation Wrapper for Topological Photonic Crystal Ring Resonators
+
+This module provides both mock and MEEP-based simulation functions for evaluating
+SSH ring resonator designs.
+
+MEEP INTEGRATION STATUS:
+========================
+Currently, the MEEP integration is PARTIALLY IMPLEMENTED. The code structure and
+simulation workflow are complete, but MEEP execution is replaced with a physics-based
+mock to allow the optimization framework to function without MEEP installation.
+
+To enable full MEEP simulations:
+1. Install MEEP: conda install -c conda-forge pymeep
+2. Uncomment the MEEP import below
+3. Uncomment the MEEP simulation code in evaluate_design_meep()
+4. Remove or modify the _simulate_physics_model() fallback
+
+For most development and testing purposes, the mock simulation provides realistic
+behavior and is much faster than full electromagnetic simulations.
+"""
+
 import numpy as np
 import time
 import math
-# TODO: Uncomment the following line when you are ready for real simulations
+
+# MEEP Integration - Currently disabled for mock operation
+# Uncomment when MEEP is installed and you want full EM simulations
 # import meep as mp
+MEEP_AVAILABLE = False  # Set to True when MEEP is installed and imported
 
 # A very large negative number for failed simulations
 _NEGINF = -1.0e10
+
+def _get_rng(config, rng=None):
+    """Return the given Generator, or a new one seeded from config['seed'] (None = unseeded)."""
+    if rng is not None:
+        return rng
+    return np.random.default_rng(config.get('seed'))
 
 def _calculate_objective(q_factors, config):
     """Calculates the final score from a list of Q-factors."""
@@ -65,13 +96,17 @@ def _calculate_comprehensive_objectives(q_factors, bandgaps, mode_volumes, desig
         'robustness_ratio': q_avg / max(q_std, 1e-6)
     }
 
-def evaluate_design_mock(design_vector, config):
+def evaluate_design_mock(design_vector, config, rng=None):
     """
     Enhanced MOCK FUNCTION: Simulates comprehensive performance metrics based on thesis insights.
     
     Models the key trade-off between lattice confinement and radiation confinement
     as identified in the AlexisHK thesis analysis.
+
+    rng: optional np.random.Generator for disorder draws. If omitted, a new
+    Generator seeded from config['seed'] is used.
     """
+    rng = _get_rng(config, rng)
     # Unpack design vector for clarity
     a, b, r, R, w = design_vector
     
@@ -98,30 +133,46 @@ def evaluate_design_mock(design_vector, config):
     base_q = 15000 + lattice_confinement * 20000 + radiation_confinement * 25000
     
     # Bandgap size model (increases with dimerization)
-    bandgap_base = dimerization * 50 + np.random.normal(0, 2)  # Units arbitrary
+    bandgap_base = dimerization * 50 + rng.normal(0, 2)  # Units arbitrary
     
     # Mode volume model (roughly scales with hole area)
     mode_volume_base = np.pi * r**2 * 0.5 + 0.1  # Approximate
     
     # Simulate disorder runs
     num_runs = config['objective']['num_disorder_runs']
-    
+
     q_factors = []
     bandgaps = []
     mode_volumes = []
-    
+    failed_runs = 0
+
     for i in range(num_runs):
-        # Add disorder to each metric
-        q_disorder = np.random.normal(0, 1500 * (1 + dimerization * 2))  # More stable with higher dimerization
-        bandgap_disorder = np.random.normal(0, 1.0)
-        mode_vol_disorder = np.random.normal(0, 0.02)
-        
-        q_factors.append(max(1000, base_q + q_disorder))
-        bandgaps.append(max(0.1, bandgap_base + bandgap_disorder))
-        mode_volumes.append(max(0.05, mode_volume_base + mode_vol_disorder))
+        try:
+            # Add disorder to each metric
+            q_disorder = rng.normal(0, 1500 * (1 + dimerization * 2))  # More stable with higher dimerization
+            bandgap_disorder = rng.normal(0, 1.0)
+            mode_vol_disorder = rng.normal(0, 0.02)
+
+            q_factors.append(max(1000, base_q + q_disorder))
+            bandgaps.append(max(0.1, bandgap_base + bandgap_disorder))
+            mode_volumes.append(max(0.05, mode_volume_base + mode_vol_disorder))
+        except Exception as e:
+            failed_runs += 1
+            print(f"    WARNING: Mock disorder run {i+1} failed: {e}")
     
     time.sleep(0.1)  # Simulate computation time
-    
+
+    # Check if we have enough successful runs
+    if len(q_factors) == 0:
+        print(f"  [Mock Sim] ERROR: All {num_runs} disorder runs failed")
+        return _NEGINF if not config.get('return_comprehensive_objectives', False) else {
+            'q_factor': 0, 'q_std': 1e6, 'bandgap_size': 0,
+            'mode_volume': 1e6, 'score': _NEGINF
+        }
+
+    if failed_runs > 0:
+        print(f"  [Mock Sim] Note: {failed_runs}/{num_runs} runs failed, using {len(q_factors)} results")
+
     # Calculate comprehensive objectives
     objectives = _calculate_comprehensive_objectives(q_factors, bandgaps, mode_volumes, design_vector, config)
     
@@ -136,7 +187,7 @@ def evaluate_design_mock(design_vector, config):
         return objectives['score']  # Legacy behavior
 
 
-def _generate_ssh_ring_geometry(a, b, r, R, w, disorder_std=0.0):
+def _generate_ssh_ring_geometry(a, b, r, R, w, disorder_std=0.0, rng=None):
     """
     Generate geometry for SSH (Su-Schrieffer-Heeger) ring resonator.
     
@@ -146,10 +197,13 @@ def _generate_ssh_ring_geometry(a, b, r, R, w, disorder_std=0.0):
     - R: ring radius 
     - w: waveguide width
     - disorder_std: standard deviation for hole radius disorder
+    - rng: optional np.random.Generator for disorder draws (unseeded if omitted)
     
     Returns:
     - List of hole positions and radii [(x, y, radius), ...]
     """
+    if rng is None:
+        rng = np.random.default_rng()
     holes = []
     
     # Calculate number of unit cells that fit around the ring
@@ -166,7 +220,7 @@ def _generate_ssh_ring_geometry(a, b, r, R, w, disorder_std=0.0):
     
     for cell_idx in range(num_unit_cells):
         # First hole of the unit cell (spacing 'a')
-        hole_radius = r + np.random.normal(0, disorder_std)
+        hole_radius = r + rng.normal(0, disorder_std)
         hole_radius = max(hole_radius, 0.01)  # Minimum radius
         
         x = R * np.cos(current_angle)
@@ -178,7 +232,7 @@ def _generate_ssh_ring_geometry(a, b, r, R, w, disorder_std=0.0):
         current_angle += angle_increment
         
         # Second hole of the unit cell (spacing 'b')
-        hole_radius = r + np.random.normal(0, disorder_std)
+        hole_radius = r + rng.normal(0, disorder_std)
         hole_radius = max(hole_radius, 0.01)  # Minimum radius
         
         x = R * np.cos(current_angle)
@@ -191,7 +245,7 @@ def _generate_ssh_ring_geometry(a, b, r, R, w, disorder_std=0.0):
     
     return holes, num_unit_cells
 
-def _create_meep_geometry(design_vector, disorder_std, config):
+def _create_meep_geometry(design_vector, disorder_std, config, rng=None):
     """
     Create MEEP geometry objects for the SSH ring resonator.
     
@@ -205,7 +259,7 @@ def _create_meep_geometry(design_vector, disorder_std, config):
     a, b, r, R, w = design_vector
     
     # Generate hole positions
-    holes, num_cells = _generate_ssh_ring_geometry(a, b, r, R, w, disorder_std)
+    holes, num_cells = _generate_ssh_ring_geometry(a, b, r, R, w, disorder_std, rng=rng)
     
     # Calculate simulation cell size (needs padding for PML)
     pml_width = config['simulation']['pml_width']
@@ -236,16 +290,33 @@ def _create_meep_geometry(design_vector, disorder_std, config):
     
     return geometry, cell_size, holes
 
-def evaluate_design_meep(design_vector, config):
+def evaluate_design_meep(design_vector, config, rng=None):
     """
-    REAL FUNCTION: Evaluates a design by running MEEP FDTD simulations.
-    
+    MEEP FDTD Simulation Function (Currently using physics-based mock)
+
     This function implements the complete MEEP simulation workflow for
     evaluating SSH ring resonator designs with disorder robustness.
+
+    NOTE: MEEP execution is currently replaced with a physics-based model
+    (see _simulate_physics_model) until MEEP is fully installed and enabled.
+    The simulation structure and disorder loop are production-ready.
+
+    Args:
+        design_vector: [a, b, r, R, w] design parameters
+        config: Configuration dictionary with simulation settings
+        rng: Optional np.random.Generator for disorder draws. If omitted, a new
+            Generator seeded from config['seed'] is used.
+
+    Returns:
+        float: Robustness score (Q_avg - penalty_factor * Q_std)
     """
+    rng = _get_rng(config, rng)
     try:
         # import meep as mp
-        print("  [MEEP Sim] Starting MEEP simulation...")
+        if MEEP_AVAILABLE:
+            print("  [MEEP Sim] Starting MEEP FDTD simulation...")
+        else:
+            print("  [MEEP Sim] Using physics-based mock (MEEP not available)...")
         
         # 1. Unpack design_vector and config parameters
         a, b, r, R, w = design_vector
@@ -259,15 +330,18 @@ def evaluate_design_meep(design_vector, config):
         disorder_std = r * (config['objective']['disorder_std_dev_percent'] / 100.0)
         
         q_factors = []
-        
+        failed_runs = 0
+        min_successful_runs = max(1, num_runs // 2)  # Require at least half to succeed
+
         print(f"  [MEEP Sim] Running {num_runs} disorder simulations...")
         print(f"  [MEEP Sim] Parameters: a={a:.3f}, b={b:.3f}, r={r:.3f}, R={R:.2f}, w={w:.3f}")
-        
+
         for run_idx in range(num_runs):
-            print(f"    Disorder run {run_idx + 1}/{num_runs}")
-            
-            # 3. Generate geometry with disorder
-            geometry, cell_size, holes = _create_meep_geometry(design_vector, disorder_std, config)
+            try:
+                print(f"    Disorder run {run_idx + 1}/{num_runs}")
+
+                # 3. Generate geometry with disorder
+                geometry, cell_size, holes = _create_meep_geometry(design_vector, disorder_std, config, rng=rng)
             
             # Since MEEP is not actually imported, we'll simulate the process
             # In real implementation, this would be:
@@ -327,14 +401,29 @@ def evaluate_design_meep(design_vector, config):
             #     print(f"      No modes detected")
             #     q_factors.append(1000)  # Low Q penalty
             
-            # For now, simulate the MEEP results with physics-based model
-            # This maintains the disorder loop structure while MEEP is not available
-            base_q = _simulate_physics_model(a, b, r, R, w, holes)
-            simulated_q = max(1000, base_q + np.random.normal(0, base_q * 0.1))
-            q_factors.append(simulated_q)
-            
-            print(f"      Simulated Q-factor: {simulated_q:.0f}")
-        
+                # For now, simulate the MEEP results with physics-based model
+                # This maintains the disorder loop structure while MEEP is not available
+                base_q = _simulate_physics_model(a, b, r, R, w, holes)
+                simulated_q = max(1000, base_q + rng.normal(0, base_q * 0.1))
+                q_factors.append(simulated_q)
+
+                print(f"      Simulated Q-factor: {simulated_q:.0f}")
+
+            except Exception as run_error:
+                failed_runs += 1
+                print(f"      WARNING: Disorder run {run_idx + 1} failed: {run_error}")
+                # Continue to next run instead of failing entire evaluation
+
+        # Check if we have enough successful runs
+        if len(q_factors) < min_successful_runs:
+            print(f"  [MEEP Sim] Failed - only {len(q_factors)}/{num_runs} runs succeeded "
+                  f"(minimum {min_successful_runs} required)")
+            return _NEGINF
+
+        if failed_runs > 0:
+            print(f"  [MEEP Sim] Note: {failed_runs}/{num_runs} runs failed, "
+                  f"using {len(q_factors)} successful results")
+
         # 8. Calculate final robustness score
         if len(q_factors) > 0:
             score = _calculate_objective(q_factors, config)

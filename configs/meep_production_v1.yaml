@@ -1,6 +1,10 @@
 # Production configuration for MEEP simulations
 # All length units are in micrometers (µm).
 
+# Random seed: drives both the optimizer's sampling and the simulated disorder.
+# Same seed + same config = identical run. Set to null for an unseeded run.
+seed: 123
+
 # 1. Physics & Geometry Parameters (The Search Space)
 design_space:
   a: [0.30, 0.40]      # 1st dimerization distance

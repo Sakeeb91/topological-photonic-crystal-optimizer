@@ -1,4 +1,5 @@
 import os
+import sys
 import yaml
 import argparse
 import time
@@ -14,6 +15,9 @@ from tqdm import tqdm
 # We can easily switch between the mock and real one here!
 # from src.simulation_wrapper import evaluate_design_mock as evaluate_design
 from src.simulation_wrapper import evaluate_design_meep as evaluate_design
+
+# Import utility functions
+from src.utils import validate_config, save_config_with_timestamp
 
 # --- 1. Setup ---
 def setup_directories(run_name):
@@ -40,12 +44,29 @@ def define_search_space(config):
 def main(config_path):
     # Load config and setup
     config = load_config(config_path)
+
+    # Validate configuration before starting optimization
+    try:
+        validate_config(config)
+        print("✓ Configuration validated successfully")
+    except ValueError as e:
+        print(f"✗ Configuration validation failed: {e}")
+        sys.exit(1)
+
     run_name = f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     results_dir = setup_directories(run_name)
     print(f"Starting optimization run: {run_name}")
     print(f"Results will be saved in: {results_dir}")
 
+    # Save configuration with timestamp for reproducibility
+    save_config_with_timestamp(config, results_dir)
+
     space, param_names = define_search_space(config)
+
+    # One Generator per run: disorder draws differ between evaluations, but the
+    # whole run replays exactly when config['seed'] is set.
+    seed = config.get('seed')
+    rng = np.random.default_rng(seed)
     
     # We create a progress bar for the optimization
     pbar = tqdm(total=config['optimizer']['n_initial_points'] + config['optimizer']['n_iterations'])
@@ -57,7 +78,7 @@ def main(config_path):
         design_vector = [params[name] for name in param_names]
         
         # The optimizer wants to MINIMIZE, so we return the NEGATIVE of our score
-        score = evaluate_design(design_vector, config)
+        score = evaluate_design(design_vector, config, rng=rng)
         pbar.update(1)
         
         # Log progress
@@ -78,7 +99,7 @@ def main(config_path):
         n_calls=config['optimizer']['n_initial_points'] + config['optimizer']['n_iterations'],
         n_initial_points=config['optimizer']['n_initial_points'],
         acq_func=config['optimizer']['acquisition_function'],
-        random_state=123 # for reproducibility
+        random_state=seed if seed is not None else 123
     )
     pbar.close()
 
