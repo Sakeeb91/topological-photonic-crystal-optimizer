@@ -46,9 +46,8 @@ def make_simulation_function(config):
     return simulation_function
 
 
-def setup_directories(run_name):
-    """Create directories for storing results."""
-    results_dir = os.path.join("results", run_name)
+def setup_directories(results_dir):
+    """Create the results directory and its plots/ and designs/ subdirectories."""
     os.makedirs(results_dir, exist_ok=True)
     
     # Create subdirectories for different types of results
@@ -281,10 +280,10 @@ def main():
     # Setup output directory
     if args.output_dir:
         results_dir = args.output_dir
-        os.makedirs(results_dir, exist_ok=True)
     else:
         run_name = f"multi_obj_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        results_dir = setup_directories(run_name)
+        results_dir = os.path.join("results", run_name)
+    setup_directories(results_dir)
     
     print(f"Results will be saved to: {results_dir}")
     

@@ -36,3 +36,13 @@ def test_scalar_score_when_disabled():
     config = _config({'return_comprehensive_objectives': False})
     result = make_simulation_function(config)(DESIGN, config)
     assert isinstance(result, float)
+
+
+def test_setup_directories_creates_subdirectories(tmp_path):
+    """--output-dir paths get the plots/ and designs/ subdirectories too"""
+    from run_multi_objective_optimization import setup_directories
+
+    results_dir = tmp_path / 'custom_output'
+    assert setup_directories(str(results_dir)) == str(results_dir)
+    assert (results_dir / 'plots').is_dir()
+    assert (results_dir / 'designs').is_dir()
