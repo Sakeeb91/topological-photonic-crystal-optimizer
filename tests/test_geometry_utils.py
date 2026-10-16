@@ -90,6 +90,11 @@ class TestGeometryUtils:
         violations = validate_geometry_constraints([0.35, 0.15, 0.04, 12.0, 0.50], basic_config)
         assert violations == []
 
+    def test_min_feature_size_is_smallest_printed_dimension(self):
+        # diameter 0.08, gaps a-2r=0.27 and b-2r=0.07, edge clearance (0.50-0.08)/2=0.21
+        analysis = analyze_geometry_properties([0.35, 0.15, 0.04, 12.0, 0.50])
+        assert analysis['min_feature_size'] == pytest.approx(0.07)
+
     def test_geometry_properties_edge_cases(self):
         """Test geometry analysis with edge case parameters"""
         # Very small ring
