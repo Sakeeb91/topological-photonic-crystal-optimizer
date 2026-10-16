@@ -66,7 +66,7 @@ def main(config_path):
     print(f"Results will be saved in: {results_dir}")
 
     # Save configuration with timestamp for reproducibility
-    save_config_with_timestamp(config, results_dir)
+    save_config_with_timestamp(config, results_dir, config_path)
 
     space, param_names = define_search_space(config)
     min_feature = get_min_feature_size(config)

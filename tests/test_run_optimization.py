@@ -49,13 +49,13 @@ def tiny_run(tmp_path_factory):
     log = pd.read_csv(os.path.join(results_dir, 'optimization_log.csv'))
     with open(os.path.join(results_dir, 'best_params.yaml')) as f:
         best_params = yaml.safe_load(f)
-    return log, best_params
+    return log, best_params, results_dir
 
 
 @pytest.mark.integration
 def test_design_space_key_order_does_not_matter(tiny_run):
     """Every evaluation succeeds even when design_space keys are not in a, b, r, R, w order"""
-    log, _ = tiny_run
+    log, _, _ = tiny_run
     assert len(log) == 5
     assert (log['score'].abs() < FAILED_EVALUATION).all()
 
@@ -63,7 +63,7 @@ def test_design_space_key_order_does_not_matter(tiny_run):
 @pytest.mark.integration
 def test_logged_scores_are_real_scores(tiny_run):
     """The log stores the objective score itself, so the best design has the max score"""
-    log, best_params = tiny_run
+    log, best_params, _ = tiny_run
     feasible = ~_infeasible_rows(log)
     assert (log.loc[feasible, 'score'] > 0).all()
 
@@ -75,7 +75,19 @@ def test_logged_scores_are_real_scores(tiny_run):
 @pytest.mark.integration
 def test_infeasible_designs_get_infeasible_score(tiny_run):
     """Designs with overlapping or crowded holes are scored without simulating"""
-    log, _ = tiny_run
+    log, _, _ = tiny_run
     infeasible = _infeasible_rows(log)
     assert infeasible.any() and (~infeasible).any()  # the run exercises both paths
     assert (log.loc[infeasible, 'score'] == run_optimization.INFEASIBLE_SCORE).all()
+
+
+@pytest.mark.integration
+def test_run_config_records_config_file(tiny_run):
+    """compare_explorations.py labels runs by the config file recorded here"""
+    import compare_explorations
+
+    _, _, results_dir = tiny_run
+    with open(os.path.join(results_dir, 'run_config.yaml')) as f:
+        run_info = yaml.safe_load(f)['run_info']
+    assert run_info['config_file'] == 'tiny.yaml'
+    assert compare_explorations.config_label(results_dir) == 'tiny'

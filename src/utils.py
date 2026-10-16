@@ -172,12 +172,13 @@ def estimate_num_holes(R, a, b):
     total_holes = num_pairs * 2
     return total_holes, num_pairs
 
-def save_config_with_timestamp(config, results_dir):
+def save_config_with_timestamp(config, results_dir, config_path=None):
     """Save the configuration with a timestamp for reproducibility."""
     config_copy = config.copy()
     config_copy['run_info'] = {
         'timestamp': datetime.now().isoformat(),
         'git_commit': get_git_commit_hash(),
+        'config_file': os.path.basename(config_path) if config_path else None,
     }
     
     config_path = os.path.join(results_dir, 'run_config.yaml')

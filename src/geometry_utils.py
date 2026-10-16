@@ -129,8 +129,9 @@ def analyze_geometry_properties(design_vector):
     # For photonic crystals, larger dimerization typically opens larger gaps
     estimated_gap_width = dimerization_ratio * 0.1  # Rough estimate
     
-    # Fabrication metrics
-    min_feature = min(r, min(a, b), w)
+    # Fabrication metrics: smallest printed dimension (hole diameter, the material
+    # between holes at either spacing, or the waveguide left beside a hole)
+    min_feature = min(2 * r, a - 2 * r, b - 2 * r, (w - 2 * r) / 2)
     aspect_ratio = w / (2 * r) if r > 0 else float('inf')
     
     analysis = {

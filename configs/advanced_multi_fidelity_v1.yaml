@@ -1,6 +1,10 @@
 # Advanced Multi-Fidelity Multi-Objective Optimization
 # Physics-informed framework based on AlexisHK thesis insights
 
+# Random seed: drives NSGA-III, the disorder model and the simulated noise.
+# Same seed + same config = identical run. Set to null for an unseeded run.
+seed: 123
+
 # Extended design space with physics-informed bounds
 design_space:
   # Core geometric parameters (physics-informed ranges)

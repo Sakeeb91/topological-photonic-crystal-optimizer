@@ -1,248 +1,111 @@
 # Machine Learning Optimization of Topological Photonic Crystal Ring Resonators
-## A Comprehensive Research Report
+
+## Research Summary
+
+Regenerated 2026-10-16 from seeded runs at commit `92a9964`. Detailed results:
+[EXPLORATION_RESULTS.md](EXPLORATION_RESULTS.md) (six Bayesian optimization runs) and
+[OPTIMIZATION_REPORT.md](OPTIMIZATION_REPORT.md) (NSGA-III multi-objective run and recommended designs).
 
 ---
 
-### 🎯 **Executive Summary**
+## Status of the evidence
 
-This research presents a breakthrough application of machine learning to optimize topological photonic crystal ring resonators for maximum Q-factor performance while maintaining fabrication robustness. Using Bayesian optimization with Gaussian Process surrogate modeling, we systematically explored a 5-dimensional parameter space encompassing over 400 unique device designs across multiple application regimes.
+**Every result here comes from analytical stand-in models, not electromagnetic simulation.** The MEEP
+FDTD path in `src/simulation_wrapper.py` exists only as commented-out code; `evaluate_design_meep`
+returns the analytical `_simulate_physics_model` Q. The findings therefore describe how the stand-in
+models respond to the design parameters. They do not yet establish anything about real devices.
 
-**Key Achievements:**
-- **67% Q-factor improvement** through extreme dimerization optimization (Score: 32,517)
-- **5 distinct design regimes** identified: compact integration, maximum performance, fabrication-robust, large-scale, and extreme topological protection
-- **95nm minimum feature tolerance** demonstrated with maintained performance
-- **Complete MEEP FDTD integration** for rigorous electromagnetic validation
-
----
-
-## 📊 **Research Methodology**
-
-### **Optimization Framework Architecture**
-
-Our research employed a sophisticated multi-stage optimization approach combining:
-
-1. **Bayesian Optimization Engine**: Gaussian Process surrogate model with Expected Improvement acquisition function
-2. **MEEP FDTD Simulation**: Full electromagnetic field simulation with Harminv mode analysis 
-3. **Disorder Robustness Evaluation**: Multiple simulations with random fabrication perturbations
-4. **Multi-objective Scoring**: Balanced Q-factor maximization with disorder tolerance
-
-### **Parameter Space Definition**
-
-The optimization targeted 5 critical geometric parameters defining the Su-Schrieffer-Heeger (SSH) topological photonic crystal structure:
-
-| Parameter | Symbol | Physical Range | Significance |
-|-----------|--------|----------------|--------------|
-| **Primary Dimerization** | `a` | 0.30-0.60 μm | SSH coupling strength, primary bandgap control |
-| **Secondary Dimerization** | `b` | 0.05-0.20 μm | SSH coupling asymmetry, edge state localization |
-| **Hole Radius** | `r` | 0.05-0.18 μm | Scattering control, mode confinement |
-| **Ring Radius** | `R` | 6.0-25.0 μm | Bending loss management, device footprint |
-| **Waveguide Width** | `w` | 0.40-0.70 μm | Vertical mode confinement |
+An earlier version of this report (June 2025) claimed a 67% Q-factor improvement, a MEEP validation
+campaign, an empirical bending-loss law (Q ∝ R^2.3) and several efficiency metrics. None of these were
+supported by the code or data: no MEEP simulation was run, and its designs placed neighboring holes so
+close that they overlapped. Those claims are withdrawn.
 
 ---
 
-## 🏆 **Breakthrough Discoveries**
+## Method
 
-### **Performance Achievements Across Design Regimes**
+The design is an SSH ring: holes along a ring waveguide with alternating center-to-center spacings
+`a` and `b`, hole radius `r`, ring radius `R` and waveguide width `w`.
 
-![Parameter Space Exploration Results](parameter_exploration_comparison.png)
-
-**Figure 1: Comprehensive Parameter Space Analysis**
-*This multi-panel visualization reveals the complete landscape of our optimization efforts across 6 distinct exploration campaigns. (Top Left) Performance comparison showing the extreme dimerization regime achieving peak scores of -5,000 to -10,000 (remember: higher magnitude = better Q-factor in our negative scoring system). (Top Center) Dimerization ratios demonstrate the critical importance of the a/b parameter ratio, with extreme dimerization achieving ratios of 5.0. (Top Right) Optimal ring sizes reveal the trade-off between performance and footprint, ranging from compact 7.7μm to large-scale 15μm designs. (Bottom Left) Hole radius optimization showing fabrication constraints, with optimal sizes clustering around 0.10-0.18μm. (Bottom Center) Convergence analysis demonstrates rapid optimization across different regimes, with most campaigns achieving near-optimal performance within 20-40 iterations. (Bottom Right) The optimal (a,b) parameter space map reveals distinct clustering of solutions, validating our regime-based exploration strategy.*
-
-### **Champion Designs by Application Category**
-
-#### **🥇 Extreme Dimerization Champion: Maximum Q-Factor Performance**
-- **Performance Score**: 32,517 (67% improvement over baseline)
-- **Optimal Parameters**: a=0.600μm, b=0.120μm, r=0.180μm, R=12.0μm, w=0.450μm
-- **Dimerization Ratio**: 5.00 (maximum topological protection)
-- **Key Innovation**: Extreme parameter asymmetry creates unprecedented edge state localization
-
-#### **🥈 Large Ring Excellence: Bending Loss Minimization**
-- **Performance Score**: 24,687
-- **Optimal Parameters**: a=0.450μm, b=0.145μm, r=0.120μm, R=15.0μm, w=0.700μm
-- **Dimerization Ratio**: 3.10
-- **Key Innovation**: Large radius dramatically reduces curvature-induced radiation losses
-
-#### **🥉 Fabrication-Robust Design: Manufacturing Resilience**
-- **Performance Score**: 19,873 with 8% disorder tolerance
-- **Optimal Parameters**: a=0.390μm, b=0.170μm, r=0.095μm, R=8.8μm, w=0.500μm
-- **Dimerization Ratio**: 2.30
-- **Key Innovation**: Conservative parameters ensure manufacturability while maintaining performance
+- **Fabrication rule.** The gaps `a − 2r`, `b − 2r` and the edge clearance `(w − 2r)/2` must exceed the
+  0.05 µm minimum feature size. The spacings stay in their original ranges, which keep the period
+  `a + b` near what a band gap at 1.55 µm needs, so the holes are limited to radii of about
+  0.03–0.07 µm.
+- **Robustness.** Each design is scored over several realizations with random hole-radius disorder
+  (4–8% standard deviation, depending on the config).
+- **Single-objective search.** Gaussian-process Bayesian optimization (`gp_minimize`, `gp_hedge`
+  acquisition) maximizing mean Q − 2 × Q standard deviation. Infeasible designs are scored 0 without
+  simulating.
+- **Multi-objective search.** NSGA-III over seven variables with four objectives (mean Q, Q standard
+  deviation, bandgap, mode volume) and the fabrication rule as explicit constraints.
+- **Reproducibility.** Every config sets `seed: 123`. Single-objective run directories store the full
+  config, the config file name and the git commit; multi-objective runs store their config.
 
 ---
 
-## 🔬 **Deep Scientific Analysis**
+## Results
 
-### **Topological Protection Mechanism Discovery**
+### Single-objective explorations
 
-Our research revealed the fundamental relationship between dimerization strength and topological protection:
+| Exploration | Evaluations | Best score | a (µm) | b (µm) | r (µm) | R (µm) | a/b |
+|---|---|---|---|---|---|---|---|
+| Extreme dimerization | 23 | 23,344 | 0.600 | 0.130 | 0.039 | 18.00 | 4.62 |
+| Large rings | 23 | 14,987 | 0.450 | 0.175 | 0.048 | 15.00 | 2.57 |
+| Strong dimerization (baseline) | 120 | 12,890 | 0.400 | 0.188 | 0.041 | 10.00 | 2.13 |
+| Compact designs | 23 | 11,335 | 0.346 | 0.133 | 0.030 | 6.00 | 2.61 |
+| Short test run | 15 | 11,175 | 0.400 | 0.135 | 0.030 | 12.00 | 2.96 |
+| Fabrication limits | 30 | 11,094 | 0.400 | 0.200 | 0.040 | 8.00 | 2.00 |
 
-**Mathematical Framework:**
-```
-Dimerization Ratio = a/b
-Topological Gap ∝ |a - b|/(a + b)
-Edge State Localization ∝ exp(-x/ξ), where ξ ∝ 1/|a - b|
-```
+Scores carry a constant −10,000 from the stand-in model's `r < 0.08 µm` penalty, which every
+fabricable design triggers, so differences between them are meaningful but ratios are not.
 
-**Key Finding**: Extreme dimerization (a/b ≥ 5.0) creates unprecedented edge state isolation, resulting in Q-factors 67% higher than conventional designs.
+![Parameter Space Exploration Results](images/parameter_exploration_comparison.png)
 
-### **Bending Loss Physics Quantification**
+### Multi-objective Pareto front
 
-Large ring analysis revealed the critical relationship between curvature and radiation loss:
-
-**Empirical Relationship Discovered:**
-```
-Q_bending ∝ R^2.3 for R < 12μm
-Q_bending ∝ R^1.1 for R > 15μm (saturation regime)
-```
-
-This represents the first quantitative characterization of bending losses in topological photonic crystal ring resonators.
-
-### **Fabrication Tolerance Analysis**
-
-![SSH Ring Resonator Geometry](results/run_20250623_161757/best_design_geometry.png)
-
-**Figure 2: Optimal SSH Ring Resonator Design Architecture**
-*Left panel shows the complete ring resonator structure with 330 precisely positioned holes creating the SSH dimerization pattern. The blue lines indicate the waveguide boundaries (outer and inner), while red dots represent the optimized hole positions. The structure exhibits a radius of R=13.47μm with waveguide width w=0.50μm, containing 330 holes in total. Right panel provides detailed unit cell visualization showing the critical SSH parameters: primary dimerization distance a=0.390μm (orange circles), secondary dimerization distance b=0.121μm (red circles), and hole radius r=0.142μm. The alternating pattern of a-b-a-b spacings creates the topological bandgap asymmetry essential for edge state formation. The blue lines represent the waveguide walls that confine the optical modes.*
-
-**Critical Fabrication Thresholds Identified:**
-- **Minimum viable hole radius**: 0.095μm (below this, dramatic Q-factor degradation)
-- **Maximum disorder tolerance**: 8% radius variation with proper dimerization
-- **Feature size sensitivity**: Dimerization parameters show 3x better tolerance than hole radius
+2,000 designs evaluated, 1,867 feasible, 19 Pareto-optimal. Q-factors range from 15,297 to 37,361.
+The front shows a direct Q-versus-bandgap trade-off: the five designs with Q above 34,000 have
+bandgaps of 6.6–8.7, and the five with bandgaps above 20 have Q of 15,300–17,200. Recommended designs
+for each objective are tabulated in the optimization report.
 
 ---
 
-## 📈 **Optimization Convergence Analysis**
+## Findings about the stand-in models
 
-![Optimization Progress](results/run_20250623_161757/optimization_plots.png)
+1. **Dimerization dominates the single-objective score.** The model adds 15,000 × (a − b)/(a + b);
+   the extreme-dimerization run leads every other run by more than 8,000.
+2. **Ring radius goes to a bound set by the period.** The net effect of R changes sign near
+   a + b ≈ 0.63 µm, so the optimizers push R to whichever bound the period favors.
+3. **Hole radius and waveguide width are nearly inert** within the fabricable range (Q changes by
+   about 400 across r = 0.03–0.07 µm, below the disorder noise).
+4. **The two models disagree on ring size.** The multi-objective model's radiation term
+   `1 − exp(−5/R)` falls as R grows, so it favors small rings, contrary to its own code comment. The
+   single-objective model has no such term.
 
-**Figure 3: Bayesian Optimization Convergence Dynamics**
-*Top panel illustrates the optimization trajectory over 15 iterations, showing both individual evaluation scores (blue) and cumulative best performance (red). The algorithm demonstrates classic Bayesian optimization behavior: initial exploration phase (iterations 0-2) followed by rapid convergence to near-optimal solutions by iteration 9. The final best score of approximately -15,000 represents a high-quality solution in our objective function space. Bottom panel tracks the evolution of all 5 design parameters throughout optimization: ring radius R (gray) remains relatively stable around 13μm, while other parameters show more dynamic exploration. The primary dimerization parameter 'a' (blue) and hole radius 'r' (brown) show coordinated optimization, reflecting the physical coupling between these parameters in determining mode confinement and Q-factor performance.*
-
-**Optimization Efficiency Metrics:**
-- **Average convergence**: 85% of final performance achieved within 20 iterations
-- **Exploration efficiency**: 73% of parameter space effectively sampled
-- **Acquisition function performance**: Expected Improvement consistently identified high-value regions
-
----
-
-## 🎯 **Application-Specific Design Guidelines**
-
-### **For Maximum Q-Factor Applications (Research/Sensing)**
-- **Recommended Design**: Extreme dimerization champion
-- **Expected Performance**: Q > 30,000 (extrapolated from simulation scores)
-- **Trade-offs**: Larger footprint (R=12μm), relaxed fabrication tolerance
-- **Applications**: Ultra-sensitive biological sensing, fundamental physics research
-
-### **For Photonic Integration (Telecommunications)**
-- **Recommended Design**: Compact design optimization
-- **Expected Performance**: Q > 19,000 with 50% footprint reduction
-- **Trade-offs**: 20% performance penalty for integration density
-- **Applications**: Dense WDM systems, on-chip optical networks
-
-### **For Commercial Manufacturing (Mass Production)**
-- **Recommended Design**: Fabrication-robust design
-- **Expected Performance**: Q > 18,000 with 8% disorder tolerance
-- **Trade-offs**: Conservative parameters limit peak performance
-- **Applications**: Commercial optical components, consumer photonics
+These are properties of hand-written formulas. Testing whether any of them hold for real resonators
+requires the MEEP integration.
 
 ---
 
-## 🛠️ **Technical Implementation Details**
+## Next steps
 
-### **MEEP FDTD Simulation Framework**
+1. **MEEP integration**: replace the stand-in Q with FDTD + Harminv, starting with a low-resolution
+   config and a benchmark against the thesis's strong-dimerization design.
+2. **Reconcile the stand-in models** (or retire them): the r < 0.08 µm penalty contradicts the
+   fabrication rule, and the multi-objective radiation term has the wrong sign relative to its comment.
+3. **Disorder applied twice** in the multi-objective path (8 outer × 8 inner realizations) should be
+   reduced to one disorder model.
 
-Our implementation includes:
-- **Resolution**: 30 pixels/μm for λ ≈ 1.55μm operation
-- **Boundary Conditions**: Perfectly Matched Layer (PML) absorption
-- **Material System**: Silicon-on-insulator (SOI) platform
-- **Mode Analysis**: Harminv algorithm for Q-factor extraction
-- **Disorder Modeling**: Gaussian perturbations on hole radii
-
-### **Bayesian Optimization Configuration**
-
-**Algorithm**: Gaussian Process with RBF kernel
-**Acquisition Function**: Expected Improvement (EI)
-**Initial Sampling**: 20 Latin Hypercube samples
-**Optimization Budget**: 50-150 iterations per campaign
-**Convergence Criteria**: <1% improvement over 10 consecutive iterations
+See [HANDOFF.md](HANDOFF.md) for the full list of open issues.
 
 ---
 
-## 📊 **Comprehensive Results Database**
+## Reproduce
 
-### **Exploration Campaign Summary**
-
-| Campaign | Best Score | Optimal Design | Key Innovation | Application Focus |
-|----------|------------|----------------|----------------|-------------------|
-| **Extreme Dimerization** | 32,517 | a=0.600, b=0.120, r=0.180, R=12.0μm | Maximum a/b ratio (5.0) | Research/sensing |
-| **Large Rings** | 24,687 | a=0.450, b=0.145, r=0.120, R=15.0μm | Bending loss minimization | High-Q applications |
-| **Compact Designs** | 19,472 | a=0.341, b=0.132, r=0.120, R=7.7μm | Integration density | Telecommunications |
-| **Fabrication Limits** | 19,873 | a=0.390, b=0.170, r=0.095μm, R=8.8μm | Manufacturing robustness | Commercial production |
-| **MEEP Validation** | 20,468 | a=0.390, b=0.121, r=0.142, R=13.5μm | Full EM simulation | Validation/benchmarking |
-
-### **Design Space Mapping Results**
-
-Our systematic exploration mapped the complete 5D parameter landscape, identifying:
-- **4 distinct performance regimes** with characteristic parameter signatures
-- **Pareto frontiers** for performance vs. size and performance vs. fabrication tolerance
-- **Forbidden zones** where topological protection breaks down
-- **Scaling laws** governing performance vs. geometric parameters
-
----
-
-## 🔮 **Future Research Directions**
-
-### **Immediate Extensions**
-1. **Multi-wavelength Optimization**: Extend to broadband operation
-2. **3D Structure Optimization**: Include vertical geometry optimization
-3. **Active Integration**: Incorporate gain media for lasing applications
-4. **Quantum Applications**: Optimize for single-photon nonlinearity
-
-### **Advanced Methodologies**
-1. **Multi-objective Pareto Optimization**: Simultaneous Q-factor and bandwidth optimization
-2. **Reinforcement Learning**: Explore RL-based design for sequential optimization
-3. **Transfer Learning**: Apply knowledge across different photonic platforms
-4. **Uncertainty Quantification**: Robust optimization under fabrication uncertainty
-
----
-
-## 📝 **Conclusions**
-
-This research represents a paradigm shift in photonic crystal design methodology, demonstrating that machine learning optimization can discover counter-intuitive designs that significantly outperform conventional approaches. The identification of the extreme dimerization regime, achieving 67% performance improvement, establishes new possibilities for high-Q photonic applications.
-
-**Key Scientific Contributions:**
-1. **First systematic ML optimization** of topological photonic crystal ring resonators
-2. **Discovery of extreme dimerization regime** for maximum Q-factor performance
-3. **Quantitative characterization** of fabrication tolerance vs. performance trade-offs
-4. **Complete design methodology** spanning research to commercial applications
-
-**Impact**: This framework provides the photonics community with both optimal designs and a reusable optimization methodology that can be adapted to diverse photonic crystal applications, from quantum sensing to telecommunications.
-
----
-
-## 📚 **Technical Appendix**
-
-### **Repository Structure**
-```
-topological-optimizer/
-├── src/simulation_wrapper.py    # MEEP FDTD interface
-├── run_optimization.py          # Bayesian optimization engine  
-├── configs/                     # Exploration configurations
-├── results/                     # Complete optimization logs
-└── RESEARCH_REPORT.md          # This comprehensive analysis
+```bash
+python run_optimization.py --config configs/strong_dimerization_v1.yaml          # and the five explore/test configs
+python run_multi_objective_optimization.py --config configs/multi_objective_v1.yaml
+python compare_explorations.py
 ```
 
-### **Reproducibility Information**
-- **Software**: Python 3.8+, MEEP 1.21+, scikit-optimize 0.9+
-- **Hardware**: Intel/AMD x64, 16GB+ RAM recommended
-- **Runtime**: 2-48 hours per campaign (depending on MEEP vs. mock simulation)
-- **Random Seeds**: Controlled for deterministic reproduction
-
-### **Data Availability**
-All optimization logs, best parameters, and analysis scripts are available in the `/results/` directory. Each campaign includes complete parameter histories enabling full reproducibility and extended analysis.
-
----
-
-*Generated by the Topological Photonic Crystal Optimizer research framework*  
-*Repository: [https://github.com/your-username/topological-optimizer](https://github.com/your-username/topological-optimizer)*
+Results: `results/run_20261016_*/` and `results/multi_obj_20261016_015430/`.

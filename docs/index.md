@@ -8,7 +8,7 @@ image: "parameter_exploration_comparison.png"
 # 🚀 Advanced ML Framework for Topological Photonic Crystal Optimization
 
 <div align="center">
-  <img src="parameter_exploration_comparison.png" alt="Advanced ML Framework Overview" style="width: 100%; max-width: 900px; margin: 20px 0;">
+  <img src="images/parameter_exploration_comparison.png" alt="Advanced ML Framework Overview" style="width: 100%; max-width: 900px; margin: 20px 0;">
   <p><em>Revolutionary physics-informed multi-objective optimization framework with automated design discovery</em></p>
 </div>
 
@@ -55,8 +55,8 @@ This project represents a **major advancement** in computational photonics, impl
 ## 🧬 Physics-Informed Architecture
 
 <div align="center">
-  <img src="results/run_20250623_161757/best_design_geometry.png" alt="Advanced Framework Architecture" style="width: 100%; max-width: 800px; margin: 20px 0;">
-  <p><em><strong>Advanced Framework Flow:</strong> Configuration → Multi-Objective NSGA-III → Extended Parameter Space (7D + Constraints) → Physics Feature Engineering → Multi-Fidelity Simulation → Enhanced Disorder Modeling → Active Learning → Automated Design Discovery → Application-Specific Recommendations</em></p>
+  <img src="images/best_design_geometry.png" alt="Best SSH ring resonator design" style="width: 100%; max-width: 800px; margin: 20px 0;">
+  <p><em><strong>Figure:</strong> Best design from the 120-evaluation strong-dimerization run: R = 10.00 µm, w = 0.450 µm, a = 0.400 µm, b = 0.188 µm, r = 0.041 µm, 212 holes. Framework flow: Configuration → Multi-Objective NSGA-III → Extended Parameter Space (7D + Constraints) → Physics Feature Engineering → Multi-Fidelity Simulation → Enhanced Disorder Modeling → Active Learning → Automated Design Discovery → Application-Specific Recommendations</em></p>
 </div>
 
 ## 🔬 Revolutionary Physics Implementation
@@ -148,8 +148,8 @@ The framework automatically discovers physics relationships using ML:
 ### 📈 Advanced Analysis Capabilities
 
 <div align="center">
-  <img src="results/run_20250623_161757/optimization_plots.png" alt="Advanced Analysis Results" style="width: 100%; max-width: 700px; margin: 20px 0;">
-  <p><em><strong>Figure:</strong> Multi-objective optimization results showing Pareto front discovery, trade-off analysis, and automated design rule extraction. The framework simultaneously optimizes all physics objectives while discovering interpretable design principles.</em></p>
+  <img src="images/optimization_plots.png" alt="Bayesian optimization progress" style="width: 100%; max-width: 700px; margin: 20px 0;">
+  <p><em><strong>Figure:</strong> Bayesian optimization of the strong-dimerization config over 120 evaluations: score per evaluation (blue), best so far (red), and parameter values. Scores come from the analytical stand-in model, not MEEP; see the <a href="OPTIMIZATION_REPORT.md">optimization report</a>.</em></p>
 </div>
 
 ## 🧠 Machine Learning Innovation
