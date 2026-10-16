@@ -10,6 +10,29 @@ import matplotlib.pyplot as plt
 import numpy as np
 from glob import glob
 
+# Labels for runs whose run_config.yaml records the config file used
+CONFIG_LABELS = {
+    'strong_dimerization_v1.yaml': 'Strong Dimerization',
+    'test_meep_v1.yaml': 'Short Test Run',
+    'explore_large_rings.yaml': 'Large Rings',
+    'explore_small_compact.yaml': 'Compact Designs',
+    'explore_extreme_dimerization.yaml': 'Extreme Dimerization',
+    'explore_fabrication_limits.yaml': 'Fabrication Limits',
+}
+
+
+def config_label(result_dir):
+    """Label from run_config.yaml's run_info.config_file, or None for older runs."""
+    run_config_path = os.path.join(result_dir, 'run_config.yaml')
+    if not os.path.exists(run_config_path):
+        return None
+    with open(run_config_path, 'r') as f:
+        config_file = (yaml.safe_load(f).get('run_info') or {}).get('config_file')
+    if config_file is None:
+        return None
+    return CONFIG_LABELS.get(config_file, os.path.splitext(config_file)[0])
+
+
 def load_exploration_results():
     """Load results from all exploration runs."""
     results = {}
@@ -34,12 +57,16 @@ def load_exploration_results():
         if len(df) < 10:
             continue
             
-        # Analyze parameter ranges to classify
+        exploration_type = config_label(result_dir)
+
+        # Older runs have no config record: classify by parameter ranges
         R_range = df['R'].max() - df['R'].min()
         a_range = df['a'].max() - df['a'].min()
         r_min = df['r'].min()
         
-        if R_range > 8:  # Large rings
+        if exploration_type is not None:
+            pass
+        elif R_range > 8:  # Large rings
             exploration_type = "Large Rings"
         elif df['R'].max() < 13:  # Compact
             exploration_type = "Compact Designs"
