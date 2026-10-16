@@ -31,10 +31,12 @@ For detailed optimization results, design recommendations, and visualizations, s
 
 | Design Type | Q-factor | Robustness Ratio | Application |
 |-------------|----------|------------------|-------------|
-| Maximum Q-Factor | 55,700 | 68.5 | Biological sensing |
-| Maximum Robustness | 54,023 | 165.7 | Mass production |
-| Maximum Topological | 35,968 | 82.2 | Research |
-| Balanced Performance | 48,859 | 135.2 | Telecommunications |
+| Maximum Q-Factor | 37,361 | 48.8 | Biological sensing |
+| Maximum Robustness | 34,167 | 110.3 | Mass production |
+| Maximum Topological | 15,400 | 17.8 | Research |
+| Balanced Performance | 15,297 | 47.1 | Telecommunications |
+
+*From the seeded NSGA-III run in `results/multi_obj_20261016_015430/`. Q-factors come from the analytical stand-in model, not MEEP; see the report for caveats.*
 
 ## Features
 
