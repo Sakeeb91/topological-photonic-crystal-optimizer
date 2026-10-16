@@ -172,8 +172,9 @@ class PhysicsInformedConstraints:
 class EnhancedDisorderModel:
     """Enhanced disorder modeling with multiple fabrication error types."""
     
-    def __init__(self, config: Dict[str, Any]):
-        """Initialize disorder model from configuration."""
+    def __init__(self, config: Dict[str, Any], rng: Optional[np.random.Generator] = None):
+        """Initialize disorder model from configuration; rng drives the disorder draws."""
+        self.rng = rng if rng is not None else np.random.default_rng()
         self.hole_radius_std = config.get('hole_radius_disorder_std', 0.05)
         self.sidewall_roughness_std = config.get('sidewall_roughness_std', 0.01)
         self.enable_sidewall_roughness = config.get('enable_sidewall_roughness', False)
@@ -191,8 +192,7 @@ class EnhancedDisorderModel:
         Returns:
             List of parameter sets with disorder applied
         """
-        if random_seed is not None:
-            np.random.seed(random_seed)
+        rng = np.random.default_rng(random_seed) if random_seed is not None else self.rng
             
         disorder_params = []
         
@@ -209,13 +209,13 @@ class EnhancedDisorderModel:
             )
             
             # Apply hole radius disorder (primary error from thesis)
-            r_disorder = np.random.normal(0, self.hole_radius_std * base_params.r)
+            r_disorder = rng.normal(0, self.hole_radius_std * base_params.r)
             disordered.r = max(0.01, base_params.r + r_disorder)  # Ensure positive radius
             
             # Apply sidewall roughness (if enabled)
             if self.enable_sidewall_roughness:
                 # Model as effective reduction in hole radius
-                sidewall_effect = np.random.normal(0, self.sidewall_roughness_std)
+                sidewall_effect = rng.normal(0, self.sidewall_roughness_std)
                 disordered.r = max(0.01, disordered.r + sidewall_effect)
             
             # Recalculate derived parameters
@@ -242,7 +242,8 @@ class TopologicalPhotonicCrystalProblem(Problem):
         self.constraints = PhysicsInformedConstraints(
             min_feature_size=get_min_feature_size(config)
         )
-        self.disorder_model = EnhancedDisorderModel(config.get('disorder', {}))
+        self.disorder_model = EnhancedDisorderModel(
+            config.get('disorder', {}), rng=np.random.default_rng(config.get('seed')))
         
         # Define variable bounds from config
         bounds = config['design_space']
@@ -406,6 +407,7 @@ class MultiObjectiveOptimizer:
             self.problem,
             self.algorithm,
             termination=('n_gen', n_generations),
+            seed=self.config.get('seed'),
             verbose=True
         )
         

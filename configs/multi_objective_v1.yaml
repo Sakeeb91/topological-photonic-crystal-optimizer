@@ -1,6 +1,10 @@
 # Multi-Objective Optimization Configuration
 # Based on AlexisHK thesis analysis and physics-informed constraints
 
+# Random seed: drives NSGA-III, the disorder model and the simulated noise.
+# Same seed + same config = identical run. Set to null for an unseeded run.
+seed: 123
+
 # Extended design space with discrete variables
 design_space:
   # Core geometric parameters (continuous)

@@ -39,9 +39,13 @@ def make_simulation_function(config):
     """
     comprehensive = config.get('simulation', {}).get('return_comprehensive_objectives', True)
 
+    # One Generator for the whole run, on a stream separate from the disorder model's
+    seed = config.get('seed')
+    rng = np.random.default_rng(None if seed is None else (seed, 1))
+
     def simulation_function(design_vector, sim_config):
         full_config = {**config, **sim_config, 'return_comprehensive_objectives': comprehensive}
-        return evaluate_design_mock(design_vector, full_config)
+        return evaluate_design_mock(design_vector, full_config, rng=rng)
 
     return simulation_function
 

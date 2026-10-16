@@ -66,3 +66,36 @@ def test_empty_pareto_front_when_nothing_feasible(mo_config):
     optimizer = MultiObjectiveOptimizer(mo_config, _stub_simulation)
     pareto_df = optimizer.analyze_pareto_front(SimpleNamespace(X=None, F=None))
     assert pareto_df.empty
+
+
+def _radius_dependent_simulation(design_vector, config):
+    """Deterministic in the design, so run-to-run differences come from seeding"""
+    a, b, r, R, w = design_vector
+    return {'q_factor': 30000.0 * r / 0.05, 'q_std': 500.0 * a, 'bandgap_size': 10.0 * b,
+            'mode_volume': r}
+
+
+def _run_optimizer(mo_config, seed):
+    import contextlib
+    import io
+    from src.multi_objective_optimizer import MultiObjectiveOptimizer
+
+    mo_config = {**mo_config, 'seed': seed, 'disorder': {'num_disorder_runs': 2}}
+    mo_config['optimizer'] = {**mo_config['optimizer'], 'population_size': 8, 'n_partitions': 2}
+    optimizer = MultiObjectiveOptimizer(mo_config, _radius_dependent_simulation)
+    with contextlib.redirect_stdout(io.StringIO()):
+        return optimizer.optimize(2)
+
+
+def test_same_seed_gives_same_pareto_front(mo_config):
+    import numpy as np
+
+    first, second = _run_optimizer(mo_config, 5), _run_optimizer(mo_config, 5)
+    np.testing.assert_array_equal(first.X, second.X)
+    np.testing.assert_array_equal(first.F, second.F)
+
+
+def test_different_seeds_give_different_fronts(mo_config):
+    import numpy as np
+
+    assert not np.array_equal(_run_optimizer(mo_config, 5).F, _run_optimizer(mo_config, 6).F)

@@ -46,3 +46,13 @@ def test_setup_directories_creates_subdirectories(tmp_path):
     assert setup_directories(str(results_dir)) == str(results_dir)
     assert (results_dir / 'plots').is_dir()
     assert (results_dir / 'designs').is_dir()
+
+
+def test_seeded_simulation_function_replays_noise():
+    config = {**_config({}), 'seed': 11}
+    first = make_simulation_function(config)
+    second = make_simulation_function(config)
+    run1 = [first(DESIGN, config)['q_factor'] for _ in range(3)]
+    run2 = [second(DESIGN, config)['q_factor'] for _ in range(3)]
+    assert run1 == run2
+    assert len(set(run1)) == 3  # draws advance between calls
