@@ -1,0 +1,34 @@
+design_space:
+  R:
+  - 15.0
+  - 25.0
+  a:
+  - 0.35
+  - 0.45
+  b:
+  - 0.12
+  - 0.18
+  r:
+  - 0.03
+  - 0.06
+  w:
+  - 0.5
+  - 0.7
+objective:
+  disorder_std_dev_percent: 4.0
+  num_disorder_runs: 6
+  q_penalty_factor: 1.5
+optimizer:
+  acquisition_function: gp_hedge
+  n_initial_points: 8
+  n_iterations: 15
+run_info:
+  config_file: explore_large_rings.yaml
+  git_commit: 92a9964ca456018af5e14fddb37ff5508aab34ad
+  timestamp: '2026-10-16T01:56:07.511727'
+seed: 123
+simulation:
+  pml_width: 3.0
+  resolution: 25
+  sim_time: 150
+  target_wavelength: 1.547

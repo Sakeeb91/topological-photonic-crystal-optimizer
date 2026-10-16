@@ -1,0 +1,34 @@
+design_space:
+  R:
+  - 6.0
+  - 12.0
+  a:
+  - 0.25
+  - 0.35
+  b:
+  - 0.08
+  - 0.15
+  r:
+  - 0.03
+  - 0.045
+  w:
+  - 0.35
+  - 0.5
+objective:
+  disorder_std_dev_percent: 6.0
+  num_disorder_runs: 7
+  q_penalty_factor: 2.5
+optimizer:
+  acquisition_function: gp_hedge
+  n_initial_points: 8
+  n_iterations: 15
+run_info:
+  config_file: explore_small_compact.yaml
+  git_commit: 92a9964ca456018af5e14fddb37ff5508aab34ad
+  timestamp: '2026-10-16T01:56:16.368552'
+seed: 123
+simulation:
+  pml_width: 1.5
+  resolution: 40
+  sim_time: 120
+  target_wavelength: 1.547
