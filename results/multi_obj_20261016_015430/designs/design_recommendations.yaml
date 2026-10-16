@@ -1,0 +1,95 @@
+balanced_performance:
+  application: General-purpose applications, telecommunications
+  description: Best overall balance of all objectives
+  parameters:
+    N_cells: 89.0
+    R: 10.578096384165333
+    a: 0.587471760196263
+    b: 0.1593163272073003
+    bandgap_size: 21.680156530734735
+    composite_score: 0.16288294717209195
+    coupling_gap: 0.19926652599437536
+    coupling_width: 0.38112979078759
+    dimerization_ratio: 3.6874548296098526
+    mode_volume: 0.09987084171198604
+    q_avg: 15296.52641720777
+    q_robustness: 47.10783715016934
+    q_std: 324.71298498476665
+    r: 0.033039374031694824
+    w: 0.4694462354833804
+maximum_q_factor:
+  application: Biological sensing, frequency references
+  description: Highest Q-factor for ultra-sensitive applications
+  parameters:
+    N_cells: 84.0
+    R: 7.061033760656496
+    a: 0.3345782236087565
+    b: 0.1935858666109568
+    bandgap_size: 6.560938022769967
+    composite_score: -0.18810814186619895
+    coupling_gap: 0.14895564094161556
+    coupling_width: 0.6644190729631735
+    dimerization_ratio: 1.7283194763445588
+    mode_volume: 0.10245413981585709
+    q_avg: 37361.37255282242
+    q_robustness: 48.805006145106454
+    q_std: 765.5233654051807
+    r: 0.06631971062143831
+    w: 0.6088147139324094
+maximum_robustness:
+  application: Commercial manufacturing, mass production
+  description: Most fabrication-tolerant design
+  parameters:
+    N_cells: 94.0
+    R: 8.457785436461672
+    a: 0.3660291660122457
+    b: 0.1993094848989612
+    bandgap_size: 8.665548767024298
+    composite_score: 0.06746899401164197
+    coupling_gap: 0.11421881206480888
+    coupling_width: 0.5432064956913802
+    dimerization_ratio: 1.8364864381532175
+    mode_volume: 0.1076242240365253
+    q_avg: 34167.4993555361
+    q_robustness: 110.25198779522815
+    q_std: 309.9037036773945
+    r: 0.03306263087773569
+    w: 0.4056263199822118
+maximum_topological_protection:
+  application: Research into topological phenomena
+  description: Strongest topological protection
+  parameters:
+    N_cells: 93.0
+    R: 11.03242386638125
+    a: 0.5994805843236384
+    b: 0.14588246449167425
+    bandgap_size: 24.17797009858439
+    composite_score: -0.1343992417008516
+    coupling_gap: 0.18745632615529934
+    coupling_width: 0.3788741497587984
+    dimerization_ratio: 4.109339572871363
+    mode_volume: 0.10463844448293257
+    q_avg: 15399.584596346376
+    q_robustness: 17.776138249944044
+    q_std: 866.3065273130878
+    r: 0.04705813151128955
+    w: 0.46944298510818383
+minimum_mode_volume:
+  application: Quantum optics, single-photon sources
+  description: Tightest light confinement (highest Purcell factor)
+  parameters:
+    N_cells: 80.0
+    R: 8.14791313635143
+    a: 0.44631529978335194
+    b: 0.19362030149788365
+    bandgap_size: 13.363622495347556
+    composite_score: -0.2532603682802186
+    coupling_gap: 0.45630202305492595
+    coupling_width: 0.4229780040338987
+    dimerization_ratio: 2.3051059022766287
+    mode_volume: 0.0939870344029583
+    q_avg: 18030.307099366422
+    q_robustness: 28.78343006329125
+    q_std: 626.4127332885614
+    r: 0.03573030511507848
+    w: 0.48838392995923513
