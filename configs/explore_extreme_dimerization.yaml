@@ -7,8 +7,8 @@ seed: 123
 
 design_space:
   a: [0.40, 0.60]      # Very large 'a' spacing
-  b: [0.05, 0.12]      # Very small 'b' spacing  
-  r: [0.10, 0.18]      
+  b: [0.08, 0.15]      # Small 'b' spacing; must still fit two holes plus a gap
+  r: [0.025, 0.045]    # 50-90 nm holes fit inside the small b spacing
   R: [12.0, 18.0]      
   w: [0.45, 0.60]      
 

@@ -1,5 +1,11 @@
 # Optimization Results Report
 
+> **Note (2026-10-10): these results predate two fixes and need regenerating.**
+> 1. Every design space used here let neighboring holes overlap (`b <= 2r`; `a` and `b` are center-to-center spacings), so the reported designs cannot be fabricated. Config bounds now keep a gap of at least the minimum feature size.
+> 2. The multi-objective run never received the simulator's full objectives, so the Q-factor, bandgap and mode volume below are proxies: Q = score + 20000, bandgap = a - b, mode volume = pi * r^2.
+>
+> All values also come from the analytical mock model, not MEEP. See `docs/HANDOFF.md`.
+
 This report presents the results from multi-objective optimization of topological photonic crystal ring resonators using the NSGA-III algorithm.
 
 ---
@@ -140,8 +146,8 @@ The Bayesian optimization process efficiently explores the design space.
 ### Top Panel: Objective Score Evolution
 - **Blue line**: Raw objective score at each iteration
 - **Red line**: Best score found so far (monotonically improving)
-- Rapid initial improvement followed by refinement phase
-- Final convergence to optimal region around iteration 10
+- Best score of 20,468 reached at iteration 8, with no further improvement over the remaining 6 of 15 evaluations
+- This short run is a smoke test; the 120-evaluation run (`results/run_20250623_161133`) reaches 62,813
 
 ### Bottom Panel: Parameter Evolution
 - Tracks how design parameters evolve during optimization

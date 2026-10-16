@@ -38,6 +38,7 @@ from .utils import (
     create_parameter_summary,
     estimate_num_holes,
     check_fabrication_constraints,
+    hole_clearance_violations,
     load_yaml_safe,
 )
 
@@ -68,5 +69,6 @@ __all__ = [
     "create_parameter_summary",
     "estimate_num_holes",
     "check_fabrication_constraints",
+    "hole_clearance_violations",
     "load_yaml_safe",
 ]

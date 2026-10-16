@@ -12,6 +12,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from src.utils import (
     validate_config,
     validate_multi_objective_config,
+    get_min_feature_size,
+    hole_clearance_violations,
     create_parameter_summary,
     estimate_num_holes,
     check_fabrication_constraints,
@@ -29,7 +31,7 @@ class TestUtils:
             'design_space': {
                 'a': [0.30, 0.40],
                 'b': [0.10, 0.20],
-                'r': [0.10, 0.18],
+                'r': [0.03, 0.07],
                 'R': [10.0, 15.0],
                 'w': [0.45, 0.55],
             },
@@ -71,6 +73,18 @@ class TestUtils:
         """Test that invalid bounds raise error"""
         valid_config['design_space']['a'] = [0.40, 0.30]  # min > max
         with pytest.raises(ValueError, match="min bound must be less than max"):
+            validate_config(valid_config)
+
+    def test_validate_config_rejects_overlapping_holes(self, valid_config):
+        """r >= 0.10 with b <= 0.20 leaves no gap between neighboring holes anywhere"""
+        valid_config['design_space']['r'] = [0.10, 0.18]
+        valid_config['design_space']['w'] = [0.45, 0.55]
+        with pytest.raises(ValueError, match="No feasible designs: b_max - 2\\*r_min"):
+            validate_config(valid_config)
+
+    def test_validate_config_uses_fabrication_min_feature_size(self, valid_config):
+        valid_config['fabrication'] = {'min_feature_size': 0.15}  # b_max - 2*r_min = 0.14
+        with pytest.raises(ValueError, match="min_feature_size = 0.15"):
             validate_config(valid_config)
 
     @pytest.mark.parametrize("seed", [0, 123, None])
@@ -124,6 +138,24 @@ class TestUtils:
 
         assert len(violations) > 0
         assert any('diameter' in v.lower() for v in violations)
+
+    def test_check_fabrication_constraints_overlapping_holes(self):
+        """b = 0.15 with r = 0.14 puts neighboring holes 0.28 wide 0.15 apart"""
+        violations = check_fabrication_constraints([0.35, 0.15, 0.14, 12.0, 0.50])
+        assert any("spacing 'b'" in v for v in violations)
+
+    def test_check_fabrication_constraints_small_holes_fit(self):
+        """r = 0.03 leaves b - 2r = 0.09 and has a 60 nm diameter, both above 50 nm"""
+        assert check_fabrication_constraints([0.35, 0.15, 0.03, 12.0, 0.50]) == []
+
+    @pytest.mark.parametrize("a, b, r, w, expected", [
+        (0.35, 0.15, 0.04, 0.50, 0),   # all gaps > 0.05
+        (0.35, 0.15, 0.05, 0.50, 1),   # b - 2r = 0.05, not strictly greater
+        (0.12, 0.15, 0.04, 0.50, 1),   # a - 2r = 0.04
+        (0.35, 0.15, 0.04, 0.17, 1),   # edge clearance (0.17 - 0.08)/2 = 0.045
+    ])
+    def test_hole_clearance_violations(self, a, b, r, w, expected):
+        assert len(hole_clearance_violations(a, b, r, w, 0.05)) == expected
 
     def test_load_yaml_safe(self):
         """Test safe YAML loading"""
@@ -250,7 +282,32 @@ class TestValidateMultiObjectiveConfig:
         with pytest.raises(ValueError, match=f"optimizer.{key} must be a positive integer"):
             validate_multi_objective_config(mo_config)
 
+    def test_uses_constraints_min_feature_size(self, mo_config):
+        """A box feasible at the 0.05 default is rejected under constraints.min_feature_size"""
+        mo_config['design_space']['r'] = [0.04, 0.18]  # b_max - 2*r_min = 0.12
+        assert validate_multi_objective_config(mo_config) is True
+        mo_config['constraints'] = {'min_feature_size': 0.13}
+        with pytest.raises(ValueError, match="min_feature_size = 0.13"):
+            validate_multi_objective_config(mo_config)
+
     def test_invalid_seed(self, mo_config):
         mo_config['seed'] = -3
         with pytest.raises(ValueError, match="seed must be"):
             validate_multi_objective_config(mo_config)
+
+
+class TestGetMinFeatureSize:
+    """Tests for get_min_feature_size"""
+
+    def test_default(self):
+        assert get_min_feature_size({}) == 0.05
+
+    @pytest.mark.parametrize("config, expected", [
+        ({'min_feature_size': 0.06}, 0.06),
+        ({'fabrication': {'min_feature_size': 0.07}, 'min_feature_size': 0.06}, 0.07),
+        ({'constraints': {'min_feature_size': 0.08},
+          'fabrication': {'min_feature_size': 0.07}}, 0.08),
+        ({'constraints': {'max_ring_radius': 25.0}, 'fabrication': None}, 0.05),
+    ])
+    def test_precedence(self, config, expected):
+        assert get_min_feature_size(config) == expected

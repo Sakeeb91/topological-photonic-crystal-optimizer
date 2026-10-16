@@ -81,6 +81,15 @@ class TestGeometryUtils:
         assert len(violations) > 0
         assert any('diameter' in v.lower() or 'width' in v.lower() for v in violations)
 
+    def test_validate_geometry_constraints_overlapping_holes(self, basic_config):
+        """Holes 0.28 wide at 0.15 center-to-center spacing overlap"""
+        violations = validate_geometry_constraints([0.35, 0.15, 0.14, 12.0, 0.50], basic_config)
+        assert any("spacing 'b'" in v for v in violations)
+
+    def test_validate_geometry_constraints_fabricable_design(self, basic_config):
+        violations = validate_geometry_constraints([0.35, 0.15, 0.04, 12.0, 0.50], basic_config)
+        assert violations == []
+
     def test_geometry_properties_edge_cases(self):
         """Test geometry analysis with edge case parameters"""
         # Very small ring

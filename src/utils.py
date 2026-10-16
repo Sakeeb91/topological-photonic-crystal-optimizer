@@ -35,8 +35,47 @@ def validate_config(config):
     
     if design_space['r'][1] * 2 >= design_space['w'][0]:
         raise ValueError("Hole diameter (2*r) cannot be larger than waveguide width (w)")
+
+    # run_optimization.py scores designs that fail hole_clearance_violations as
+    # infeasible; reject boxes where that is every design
+    _check_feasible_corner(design_space, get_min_feature_size(config))
     
     return True
+
+DEFAULT_MIN_FEATURE_SIZE = 0.05  # μm
+
+
+def get_min_feature_size(config):
+    """
+    Minimum fabricable feature size (μm) from a config.
+
+    Configs use different sections for this setting, so check them in order:
+    constraints.min_feature_size (multi-objective configs),
+    fabrication.min_feature_size (MEEP configs), then a top-level key.
+    """
+    for section in ('constraints', 'fabrication'):
+        value = (config.get(section) or {}).get('min_feature_size')
+        if value is not None:
+            return value
+    return config.get('min_feature_size', DEFAULT_MIN_FEATURE_SIZE)
+
+
+def _check_feasible_corner(design_space, min_feature):
+    """
+    Raise if no design in the box can satisfy hole_clearance_violations.
+
+    The gaps a - 2r, b - 2r and (w - 2r)/2 are largest at the a_max, b_max,
+    w_max, r_min corner; if that corner fails, every design fails.
+    """
+    a_max, b_max, w_max = design_space['a'][1], design_space['b'][1], design_space['w'][1]
+    r_min = design_space['r'][0]
+    for label, gap in (("a_max - 2*r_min", a_max - 2 * r_min),
+                       ("b_max - 2*r_min", b_max - 2 * r_min),
+                       ("(w_max - 2*r_min)/2", (w_max - 2 * r_min) / 2)):
+        if gap <= min_feature:
+            raise ValueError(f"No feasible designs: {label} = {gap:.3f} must exceed "
+                             f"min_feature_size = {min_feature}")
+
 
 def _validate_seed(config):
     """Check the optional top-level seed used for reproducible runs."""
@@ -77,20 +116,10 @@ def validate_multi_objective_config(config):
     if not all(_is_positive_int(v) for v in design_space['N_cells']):
         raise ValueError("Parameter N_cells bounds must be positive integers")
 
-    # Every design must satisfy b - 2r > min_feature_size and (w - 2r)/2 > min_feature_size
-    # (PhysicsInformedConstraints). If even the most favorable corner of the box fails,
-    # every design is penalized and the Pareto front is empty. The lookup mirrors
-    # MultiObjectiveProblem, which reads min_feature_size from the top level.
-    min_feature = config.get('min_feature_size', 0.05)
-    b_max, r_min, w_max = design_space['b'][1], design_space['r'][0], design_space['w'][1]
-    if b_max - 2 * r_min <= min_feature:
-        raise ValueError(
-            f"No feasible designs: b_max - 2*r_min = {b_max - 2 * r_min:.3f} must exceed "
-            f"min_feature_size = {min_feature}")
-    if (w_max - 2 * r_min) / 2 <= min_feature:
-        raise ValueError(
-            f"No feasible designs: (w_max - 2*r_min)/2 = {(w_max - 2 * r_min) / 2:.3f} must exceed "
-            f"min_feature_size = {min_feature}")
+    # Every design must satisfy the PhysicsInformedConstraints gaps. If even the most
+    # favorable corner of the box fails, every design is penalized and the Pareto
+    # front is empty.
+    _check_feasible_corner(design_space, get_min_feature_size(config))
 
     # evaluate_design_mock indexes this key directly
     if not _is_positive_int(config['objective'].get('num_disorder_runs')):
@@ -176,15 +205,37 @@ def format_time_duration(seconds):
     else:
         return f"{seconds/3600:.1f} hours"
 
+def hole_clearance_violations(a, b, r, w, min_feature_size=DEFAULT_MIN_FEATURE_SIZE):
+    """
+    Gaps that must exceed min_feature_size for a fabricable ring.
+
+    a and b are center-to-center hole spacings, so the material left between
+    neighboring holes is a - 2r and b - 2r. The holes must also leave
+    (w - 2r)/2 of waveguide on each side.
+    """
+    violations = []
+    for name, spacing in (('a', a), ('b', b)):
+        gap = spacing - 2 * r
+        if gap <= min_feature_size:
+            violations.append(f"Gap between holes at spacing '{name}' is {gap:.3f} μm "
+                              f"(must exceed {min_feature_size} μm)")
+    edge_clearance = (w - 2 * r) / 2
+    if edge_clearance <= min_feature_size:
+        violations.append(f"Edge clearance {edge_clearance:.3f} μm "
+                          f"(must exceed {min_feature_size} μm)")
+    return violations
+
+
 def check_fabrication_constraints(design_vector, min_feature_size=0.05):
     """Check if design parameters meet fabrication constraints."""
     a, b, r, R, w = design_vector[:5]
     
     violations = []
     
-    # Minimum feature size check
-    if r < min_feature_size:
-        violations.append(f"Hole radius {r:.3f} μm below minimum feature size {min_feature_size} μm")
+    # Minimum feature size applies to the printed hole, i.e. its diameter
+    if 2 * r < min_feature_size:
+        violations.append(f"Hole radius {r:.3f} μm (diameter {2*r:.3f} μm) below "
+                          f"minimum feature size {min_feature_size} μm")
     
     if a < min_feature_size:
         violations.append(f"Spacing 'a' {a:.3f} μm below minimum feature size {min_feature_size} μm")
@@ -195,6 +246,8 @@ def check_fabrication_constraints(design_vector, min_feature_size=0.05):
     # Physical constraints
     if 2 * r >= w:
         violations.append(f"Hole diameter {2*r:.3f} μm >= waveguide width {w:.3f} μm")
+
+    violations.extend(hole_clearance_violations(a, b, r, w, min_feature_size))
     
     # Practical constraints
     if a <= b:
