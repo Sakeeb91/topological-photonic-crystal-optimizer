@@ -264,14 +264,34 @@ These were produced on the Modal branch. The MPB numbers below were run locally 
 - **`q_rad_plateau` flag.** It flags a design as not usable when Q_rad changes by more than 20% between the two longest Nside. On E3-bighole, Nside 30 -> 40: A +56%, B +24%, tanh +59%. All are flagged.
 - **Local backend.** `python research/modal/app.py --local E3` runs light jobs and small 3D jobs (under `--max-job-hours`, default 0.5) on the local machine. It uses the same keys and writes to `research/modal/results_local/` (git-ignored).
 
-## E3 v2, run 1 (running)
+## E3 v2: graded mirror and tuned QL control (code `f01de21`)
 
-- Code `f01de21`, `e3.yaml` as committed: 14 jobs, of which 10 were already on the Volume from E3-bighole. 4 run:
-  - the parity check;
-  - the QL period-tuning job;
-  - the graded-mirror wall at Nside 20 (and 30);
-  - the mirror-cell check.
-- Estimate $0.44. The guard projected $7.34 against the $10 cap. App `ap-wxwldJOowdYawo61BP5VRj`; watchdog cap $8.
+- Run 1: 4 new jobs, all ok; the 10 SSH jobs came from the cache. App `ap-wxwldJOowdYawo61BP5VRj`. Log: `research/results/logs/e3_v2_run1.log`.
+- Run 2: 2 QL nanobeams, **both failed**. Log: `e3_v2_run2.log`.
+- Spend after both runs: **$7.09** of the $10 cap.
+
+**QL period tuning (`ql_tune`, MPB res 32):**
+- period 461.6 nm, r_center 96.9 nm, r_end 138.5 nm;
+- centre air band edge **1547.08 nm**, mirror gap 1336-1738 nm;
+- fab ok (webs 185 nm, rails 112 nm); converged in 5 MPB solves.
+
+**Graded-mirror SSH wall (`ssh_graded`, M = 4, cell L = 381.5 nm, res 29):**
+
+| Nside | Q_total | Q_rad | Q_axial | Detuning from 1547 nm |
+|---|---|---|---|---|
+| 20 | 787 | 1.98e5 | 790 | -5.3 nm |
+| 30 | 6475 | 5.54e5 | 6552 | -4.9 nm |
+
+- Q_axial grows **8.3x per 10 periods** against about 3.6x for uniform mirrors. That gives xi ≈ 9.5 periods ≈ **3.6 um**, the value predicted from the 1.6x larger mirror-cell gap.
+- At Nside 30, Q_axial is already 6.7-8x that of the uniform-mirror walls (A 980, tanh 820).
+- Projected Nside for Q_axial >= 10 x Q_rad: about 62, against about 90 for uniform mirrors.
+- **Ring consequence:** the wall separation needed for isolated walls shrinks in proportion, to about 5 xi ≈ 18 um. That brings an R of about 6 um into reach, down from about 10 um.
+- Q_rad has not plateaued yet (+64% from Nside 20 to 30), so it is not yet a clean cavity metric.
+
+**QL nanobeams at the tuned period: failed with NaN fields at res 16.**
+- `px_on_r` 1.5 / r_min 96.9 nm sets res 16. That is about 5.6 px per wavelength in Si, too coarse for 3D MEEP with PML.
+- The run is also not comparable with the SSH walls at res 29.
+- Fix requested on the Modal branch: one common resolution for every design compared on a cell, with a floor of at least 10 px per lambda/n. The records are in `E3/_failed/`.
 
 ## Open issues (owner: the next person to touch the code)
 
