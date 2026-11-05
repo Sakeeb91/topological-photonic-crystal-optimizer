@@ -52,7 +52,16 @@ There are two caps:
 Suggested settings:
 - Start with a **$40 workspace budget**.
 - Set a **$10 spend limit**.
-- The program cap is $10 in total (`EXPERIMENT_LOG.md`). Check spend with `modal billing report` before each experiment.
+- The program cap is $10 in total (`EXPERIMENT_LOG.md`).
+- **The dispatcher enforces it.**
+  - Every `e0`-`e5` run reads program spend from the workspace billing report. Only the `tpc-experiments` and `ssh-ring-smoke` apps since 2026-11-05 count.
+  - It refuses to launch if spend + 1.6 x the estimate would exceed `--budget-usd` (default 10). The 1.6 is the worst measured/model ratio so far.
+  - If billing can't be read, it refuses unless `--spent-usd` is given.
+  - Check the current position with:
+
+```bash
+SSL_CERT_FILE=/root/.ccr/ca-bundle.crt modal run research/modal/app.py::spend
+```
 
 ### 3. Cloud-session setup (Claude does this; nothing for you to configure)
 
@@ -246,14 +255,15 @@ Two methods, each for what it can do:
   - The FDTD realizations at sigma 5 and 10 nm fit C in <1/Q - 1/Q_nom> = C sigma^2 (Minkov et al., Opt. Express 21, 28233, 2013) per class, which extrapolates the loss to 1-3 nm.
   - The same realizations check the perturbation-theory shifts (`pt_check`: slope and correlation).
 
-**Budget.** The program is capped at $10 of Modal spend (`EXPERIMENT_LOG.md`), so the E4 defaults are sized to it: N = 1 FDTD realization at sigma = 10 nm per class, which is 19 jobs and about $5.5 on a big-hole cell. Options from `e4.yaml`:
+**Budget.** The program is capped at $10 of Modal spend (`EXPERIMENT_LOG.md`), so E4 runs at E3-bighole's resolution (`px_on_r: 1.5`). By default it reuses E3's mode frequencies (`pt.mode_from: E3`), so each `sens3d` job is a single pass. Options from `e4.yaml`, estimated for an r = 53.5 nm cell:
 
 | Setting | Jobs | Estimated cost |
 |---|---|---|
-| perturbation theory only (`ensemble.N: 0`) | 7 | ~$1.9 |
-| default: N = 1, sigma 10 nm, 4 classes | 19 | ~$5.5 |
-| N = 2, sigma 10 nm, 4 classes | 31 | ~$9.2 |
-| N = 8, sigma 5 and 10 nm (beyond the budget) | 199 | ~$60 |
+| perturbation theory only (`ensemble.N: 0`) | 7 | ~$0.7, less with reused modes |
+| default: N = 1, sigma 10 nm, 4 classes | 19 | ~$1.8 |
+| N = 2, sigma 10 nm, 4 classes | 31 | ~$2.9 |
+
+1.5 px on the hole radius is below the 2 px convergence rule; at this budget, treat E4 sensitivities as first estimates.
 
 Check the remaining budget, then preview and run:
 
@@ -376,7 +386,7 @@ These are computed by `tpc_plan.cost()` from the manifests, except the row marke
 | E3 (first run, res 20/30, done) | 18 | 1.04 (measured job wall time) | 0.83 (from measured wall time × list price) | 0.17 h | superseded: unconverged on Si holes |
 | E3 stage 1 + 2, r = 35.6 nm | 29 | 39 | 65 | 6.3 h | see "Cost problem" under E3 |
 | E3 stage 1 + 2, r = 50 nm | 29 | 12 | 15 | 1.5 h | |
-| E4 default (PT + N = 1 at 10 nm), r = 53.5 nm cell | 19 | 5.6 | 5.5 | 0.7 h | within the $10 budget; FDTD-only N = 48 would be $352 |
+| E4 default (PT + N = 1 at 10 nm, px 1.5), r = 53.5 nm cell | 19 | ~2 | 1.8 | 0.3 h | within the $10 budget; FDTD-only N = 48 at px 2 would be $352 |
 
 **What the cost scales with.**
 
@@ -390,7 +400,7 @@ Resolution:
 
 Free credit:
 - Starter's $30 covers E0-E2, E3 stage 1 on either cell, and stage 2 on a large-hole cell.
-- **The program budget is $10** (`EXPERIMENT_LOG.md`). E4 at its default is about $5.5 on a big-hole cell; perturbation theory alone is about $1.9. FDTD-only N = 48 would be $352 there and about $1,500 on the r = 36 nm cell.
+- **The program budget is $10** (`EXPERIMENT_LOG.md`). E4 at its default is about $1.8 on a big-hole cell; perturbation theory alone is about $0.7. FDTD-only N = 48 would be $352 there and about $1,500 on the r = 36 nm cell.
 
 ---
 
