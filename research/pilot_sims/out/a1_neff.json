@@ -1,0 +1,100 @@
+[
+ {
+  "clad": "air_top",
+  "w": 0.5,
+  "t": 0.4,
+  "neff_TE0": 1.429467816584716,
+  "guided": false
+ },
+ {
+  "clad": "air_top",
+  "w": 0.5,
+  "t": 0.8,
+  "neff_TE0": 1.4409750454443606,
+  "guided": false
+ },
+ {
+  "clad": "air_top",
+  "w": 0.7,
+  "t": 0.4,
+  "neff_TE0": 1.4719097866266406,
+  "guided": true
+ },
+ {
+  "clad": "air_top",
+  "w": 1.0,
+  "t": 0.4,
+  "neff_TE0": 1.5766970094549624,
+  "guided": true
+ },
+ {
+  "clad": "air_top",
+  "w": 1.2,
+  "t": 0.4,
+  "neff_TE0": 1.6155760283827252,
+  "guided": true
+ },
+ {
+  "clad": "air_top",
+  "w": 1.0,
+  "t": 0.8,
+  "neff_TE0": 1.7395188724405397,
+  "guided": true
+ },
+ {
+  "clad": "air_top",
+  "w": 1.6,
+  "t": 0.8,
+  "neff_TE0": 1.8226135531358594,
+  "guided": true
+ },
+ {
+  "clad": "oxide",
+  "w": 0.5,
+  "t": 0.4,
+  "neff_TE0": 1.522966909881139,
+  "guided": true
+ },
+ {
+  "clad": "oxide",
+  "w": 0.5,
+  "t": 0.8,
+  "neff_TE0": 1.6152776338435963,
+  "guided": true
+ },
+ {
+  "clad": "oxide",
+  "w": 0.7,
+  "t": 0.4,
+  "neff_TE0": 1.5846201023781823,
+  "guided": true
+ },
+ {
+  "clad": "oxide",
+  "w": 1.0,
+  "t": 0.4,
+  "neff_TE0": 1.6467837000752943,
+  "guided": true
+ },
+ {
+  "clad": "oxide",
+  "w": 1.2,
+  "t": 0.4,
+  "neff_TE0": 1.6718772809994518,
+  "guided": true
+ },
+ {
+  "clad": "oxide",
+  "w": 1.0,
+  "t": 0.8,
+  "neff_TE0": 1.7807129115875775,
+  "guided": true
+ },
+ {
+  "clad": "oxide",
+  "w": 1.6,
+  "t": 0.8,
+  "neff_TE0": 1.8398168025522703,
+  "guided": true
+ }
+]

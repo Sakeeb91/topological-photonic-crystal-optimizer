@@ -1,0 +1,75 @@
+-----------
+Initializing structure...
+Warning: grid volume is not an integer number of pixels; cell size will be rounded to nearest pixel.
+time for choose_chunkdivision = 9.89437e-05 s
+Working in Cylindrical dimensions.
+Computational cell is 13.7667 x 0 x 5.4 with resolution 30
+     block, center = (10,0,0)
+          size (0.5,1e+20,0.4)
+          axes (1,0,0), (0,1,0), (0,0,1)
+          dielectric constant epsilon diagonal = (4,4,4)
+time for set_epsilon = 0.0414131 s
+-----------
+Meep: using complex fields.
+Meep progress: 33.31666666666666/661.8800010681152 = 5.0% done in 4.0s, 75.5s to go
+on time step 1999 (time=33.3167), 0.00200168 s/step
+Meep progress: 66.43333333333334/661.8800010681152 = 10.0% done in 8.0s, 71.7s to go
+on time step 3986 (time=66.4333), 0.00201312 s/step
+Meep progress: 100.4/661.8800010681152 = 15.2% done in 12.0s, 67.1s to go
+on time step 6024 (time=100.4), 0.00196328 s/step
+Meep progress: 134.75/661.8800010681152 = 20.4% done in 16.0s, 62.6s to go
+on time step 8085 (time=134.75), 0.0019414 s/step
+Meep progress: 169.0/661.8800010681152 = 25.5% done in 20.0s, 58.3s to go
+on time step 10140 (time=169), 0.0019471 s/step
+Meep progress: 203.21666666666667/661.8800010681152 = 30.7% done in 24.0s, 54.2s to go
+on time step 12193 (time=203.217), 0.00194871 s/step
+Meep progress: 237.76666666666665/661.8800010681152 = 35.9% done in 28.0s, 50.0s to go
+on time step 14266 (time=237.767), 0.00193002 s/step
+Meep progress: 272.1666666666667/661.8800010681152 = 41.1% done in 32.0s, 45.8s to go
+on time step 16330 (time=272.167), 0.00193883 s/step
+Meep progress: 306.8/661.8800010681152 = 46.4% done in 36.0s, 41.7s to go
+on time step 18408 (time=306.8), 0.00192583 s/step
+Meep progress: 341.31666666666666/661.8800010681152 = 51.6% done in 40.0s, 37.6s to go
+on time step 20479 (time=341.317), 0.0019316 s/step
+Meep progress: 375.6/661.8800010681152 = 56.7% done in 44.0s, 33.5s to go
+on time step 22536 (time=375.6), 0.0019451 s/step
+Meep progress: 410.1166666666667/661.8800010681152 = 62.0% done in 48.0s, 29.5s to go
+on time step 24607 (time=410.117), 0.00193197 s/step
+Meep progress: 440.68333333333334/661.8800010681152 = 66.6% done in 52.0s, 26.1s to go
+on time step 26441 (time=440.683), 0.00218214 s/step
+Meep progress: 470.5/661.8800010681152 = 71.1% done in 56.0s, 22.8s to go
+on time step 28230 (time=470.5), 0.00223713 s/step
+Meep progress: 500.09999999999997/661.8800010681152 = 75.6% done in 60.0s, 19.4s to go
+on time step 30006 (time=500.1), 0.00225267 s/step
+Meep progress: 529.7333333333333/661.8800010681152 = 80.0% done in 64.0s, 16.0s to go
+on time step 31784 (time=529.733), 0.00225004 s/step
+Meep progress: 559.5/661.8800010681152 = 84.5% done in 68.0s, 12.4s to go
+on time step 33570 (time=559.5), 0.00223992 s/step
+Meep progress: 589.3166666666666/661.8800010681152 = 89.0% done in 72.0s, 8.9s to go
+on time step 35359 (time=589.317), 0.00223675 s/step
+Meep progress: 619.1166666666667/661.8800010681152 = 93.5% done in 76.0s, 5.3s to go
+on time step 37147 (time=619.117), 0.0022372 s/step
+Meep progress: 648.9166666666666/661.8800010681152 = 98.0% done in 80.0s, 1.6s to go
+on time step 38935 (time=648.917), 0.00223761 s/step
+harminv0:, frequency, imag. freq., Q, |amp|, amplitude, error
+harminv0:, 0.6401593046957547, -0.004301575110392687, 74.40987176407981, 2.3446474500530927, -1.4960713425532342-1.8053094479981633i, 4.721129081276738e-10+0.0i
+run 0 finished at t = 661.8833333333333 (39713 timesteps)
+CYL R=10.0 w=0.5 t=0.4 oxide m=62: lam=1.5621 um Q=74.41 |amp|=2.34 err=5e-10+0j
+Traceback (most recent call last):
+  File "<sim>/e_meep_cyl_bare_ring_Q.py", line 43, in <module>
+    print("RESULT " + json.dumps(out))
+                      ^^^^^^^^^^^^^^^
+  File "<sim>/mamba/envs/pmp/lib/python3.11/json/__init__.py", line 231, in dumps
+    return _default_encoder.encode(obj)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<sim>/mamba/envs/pmp/lib/python3.11/json/encoder.py", line 200, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<sim>/mamba/envs/pmp/lib/python3.11/json/encoder.py", line 258, in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+  File "<sim>/mamba/envs/pmp/lib/python3.11/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type complex is not JSON serializable
+
+Elapsed run time = 81.8538 s

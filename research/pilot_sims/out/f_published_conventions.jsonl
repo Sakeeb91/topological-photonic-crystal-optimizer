@@ -1,0 +1,18 @@
+{"nbg": 1.0, "conv": "i", "design": "weak", "L": 0.47, "lightline_nm": 940.0, "guided_X_edges_nm": {"yodd": [1092.3, 994.8], "yeven": []}}
+{"nbg": 1.0, "conv": "i", "design": "moderate", "L": 0.4775, "lightline_nm": 955.0, "guided_X_edges_nm": {"yodd": [1131.8, 1010.8], "yeven": []}}
+{"nbg": 1.0, "conv": "i", "design": "strong", "L": 0.485, "lightline_nm": 970.0, "guided_X_edges_nm": {"yodd": [1168.1, 1027.2], "yeven": []}}
+{"nbg": 1.0, "conv": "ii", "design": "weak", "L": 1.07, "lightline_nm": 2140.0, "guided_X_edges_nm": {"yodd": [2338.7, 2297.3], "yeven": []}}
+{"nbg": 1.0, "conv": "ii", "design": "moderate", "L": 1.0775, "lightline_nm": 2155.0, "guided_X_edges_nm": {"yodd": [2355.6, 2310.0], "yeven": []}}
+{"nbg": 1.0, "conv": "ii", "design": "strong", "L": 1.085, "lightline_nm": 2170.0, "guided_X_edges_nm": {"yodd": [2372.4, 2322.7], "yeven": []}}
+{"nbg": 1.0, "conv": "iii", "design": "weak", "L": 0.77, "lightline_nm": 1540.0, "guided_X_edges_nm": {"yodd": [1847.9, 1816.0], "yeven": []}}
+{"nbg": 1.0, "conv": "iii", "design": "moderate", "L": 0.7775, "lightline_nm": 1555.0, "guided_X_edges_nm": {"yodd": [1863.1, 1828.3], "yeven": []}}
+{"nbg": 1.0, "conv": "iii", "design": "strong", "L": 0.785, "lightline_nm": 1570.0, "guided_X_edges_nm": {"yodd": [1878.1, 1840.5], "yeven": []}}
+{"nbg": 1.46, "conv": "i", "design": "weak", "L": 0.47, "lightline_nm": 1372.4, "guided_X_edges_nm": {"yodd": [], "yeven": []}}
+{"nbg": 1.46, "conv": "i", "design": "moderate", "L": 0.4775, "lightline_nm": 1394.3, "guided_X_edges_nm": {"yodd": [], "yeven": []}}
+{"nbg": 1.46, "conv": "i", "design": "strong", "L": 0.485, "lightline_nm": 1416.2, "guided_X_edges_nm": {"yodd": [1418.6], "yeven": []}}
+{"nbg": 1.46, "conv": "ii", "design": "weak", "L": 1.07, "lightline_nm": 3124.4, "guided_X_edges_nm": {"yodd": [3167.1, 3134.3], "yeven": []}}
+{"nbg": 1.46, "conv": "ii", "design": "moderate", "L": 1.0775, "lightline_nm": 3146.3, "guided_X_edges_nm": {"yodd": [3191.6, 3154.9], "yeven": []}}
+{"nbg": 1.46, "conv": "ii", "design": "strong", "L": 1.085, "lightline_nm": 3168.2, "guided_X_edges_nm": {"yodd": [3216.0, 3175.4], "yeven": []}}
+{"nbg": 1.46, "conv": "iii", "design": "weak", "L": 0.77, "lightline_nm": 2248.4, "guided_X_edges_nm": {"yodd": [2328.1, 2304.7], "yeven": []}}
+{"nbg": 1.46, "conv": "iii", "design": "moderate", "L": 0.7775, "lightline_nm": 2270.3, "guided_X_edges_nm": {"yodd": [2351.4, 2325.7], "yeven": []}}
+{"nbg": 1.46, "conv": "iii", "design": "strong", "L": 0.785, "lightline_nm": 2292.2, "guided_X_edges_nm": {"yodd": [2374.6, 2346.8], "yeven": []}}

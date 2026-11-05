@@ -1,0 +1,107 @@
+-----------
+Initializing structure...
+time for choose_chunkdivision = 0.00137019 s
+Working in 2D dimensions.
+Computational cell is 24.5 x 24.5 x 0 with resolution 20
+     cylinder, center = (0,0,0)
+          radius 10.25, height 1e+20, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (2.89,2.89,2.89)
+     cylinder, center = (0,0,0)
+          radius 9.75, height 1e+20, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (2.1316,2.1316,2.1316)
+     cylinder, center = (10,0,0)
+          radius 0.05, height 1e+20, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (9.99381,0.351786,0)
+          radius 0.05, height 1e+20, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (9.98737,0.502443,0)
+          radius 0.05, height 1e+20, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (9.96351,0.853474,0)
+          radius 0.05, height 1e+20, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (9.94951,1.00362,0)
+          radius 0.05, height 1e+20, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (9.90805,1.35301,0)
+          radius 0.05, height 1e+20, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (9.88652,1.50226,0)
+          radius 0.05, height 1e+20, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (9.82755,1.84912,0)
+          radius 0.05, height 1e+20, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     ...(+ 242 objects not shown)...
+time for set_epsilon = 0.79062 s
+-----------
+run 0 finished at t = 5.0 (200 timesteps)
+BENCH2D res=20 pix=2.4e+05 init=0.8s  1.52 ms/step  0.06 s per MEEP time unit  (6.3 ns/pixel/step)
+on time step 2739 (time=68.475), 0.00146076 s/step
+Meep progress: 68.3/2103.133331298828 = 3.2% done in 4.0s, 119.2s to go
+on time step 5457 (time=136.425), 0.00147212 s/step
+Meep progress: 136.57500000000002/2103.133331298828 = 6.5% done in 8.0s, 115.2s to go
+on time step 8156 (time=203.9), 0.00148259 s/step
+Meep progress: 204.025/2103.133331298828 = 9.7% done in 12.0s, 111.7s to go
+on time step 10850 (time=271.25), 0.00148485 s/step
+Meep progress: 271.35/2103.133331298828 = 12.9% done in 16.0s, 108.0s to go
+on time step 13512 (time=337.8), 0.00150289 s/step
+Meep progress: 337.55/2103.133331298828 = 16.0% done in 20.0s, 104.6s to go
+on time step 16046 (time=401.15), 0.00157878 s/step
+Meep progress: 401.375/2103.133331298828 = 19.1% done in 24.0s, 101.8s to go
+on time step 18815 (time=470.375), 0.00144465 s/step
+Meep progress: 470.77500000000003/2103.133331298828 = 22.4% done in 28.0s, 97.1s to go
+on time step 21651 (time=541.275), 0.00141044 s/step
+Meep progress: 541.7/2103.133331298828 = 25.8% done in 32.0s, 92.3s to go
+on time step 24305 (time=607.625), 0.00150749 s/step
+Meep progress: 607.4/2103.133331298828 = 28.9% done in 36.0s, 88.7s to go
+on time step 26762 (time=669.05), 0.00162806 s/step
+Meep progress: 668.7/2103.133331298828 = 31.8% done in 40.0s, 85.8s to go
+on time step 29203 (time=730.075), 0.00163876 s/step
+Meep progress: 729.6750000000001/2103.133331298828 = 34.7% done in 44.0s, 82.8s to go
+on time step 31650 (time=791.25), 0.00163473 s/step
+Meep progress: 790.9000000000001/2103.133331298828 = 37.6% done in 48.0s, 79.7s to go
+on time step 34105 (time=852.625), 0.00162948 s/step
+Meep progress: 852.325/2103.133331298828 = 40.5% done in 52.0s, 76.3s to go
+on time step 36547 (time=913.675), 0.00163841 s/step
+Meep progress: 913.35/2103.133331298828 = 43.4% done in 56.0s, 73.0s to go
+on time step 38973 (time=974.325), 0.00164932 s/step
+Meep progress: 973.85/2103.133331298828 = 46.3% done in 60.0s, 69.6s to go
+on time step 41403 (time=1035.08), 0.00164643 s/step
+Meep progress: 1034.675/2103.133331298828 = 49.2% done in 64.0s, 66.1s to go
+on time step 43829 (time=1095.73), 0.00164885 s/step
+Meep progress: 1095.425/2103.133331298828 = 52.1% done in 68.0s, 62.6s to go
+on time step 46260 (time=1156.5), 0.00164546 s/step
+Meep progress: 1156.3500000000001/2103.133331298828 = 55.0% done in 72.0s, 59.0s to go
+on time step 48760 (time=1219), 0.00160023 s/step
+Meep progress: 1218.675/2103.133331298828 = 57.9% done in 76.0s, 55.2s to go
+on time step 51216 (time=1280.4), 0.00162898 s/step
+Meep progress: 1280.275/2103.133331298828 = 60.9% done in 80.0s, 51.4s to go
+on time step 53802 (time=1345.05), 0.00154724 s/step
+Meep progress: 1345.5500000000002/2103.133331298828 = 64.0% done in 84.0s, 47.3s to go
+on time step 56620 (time=1415.5), 0.00141946 s/step
+Meep progress: 1416.025/2103.133331298828 = 67.3% done in 88.0s, 42.7s to go
+on time step 59484 (time=1487.1), 0.00139679 s/step
+Meep progress: 1487.625/2103.133331298828 = 70.7% done in 92.0s, 38.1s to go
+on time step 62341 (time=1558.53), 0.00140043 s/step
+Meep progress: 1559.025/2103.133331298828 = 74.1% done in 96.0s, 33.5s to go
+on time step 65201 (time=1630.03), 0.00139901 s/step
+Meep progress: 1630.525/2103.133331298828 = 77.5% done in 100.0s, 29.0s to go
+on time step 68064 (time=1701.6), 0.00139734 s/step
+Meep progress: 1702.125/2103.133331298828 = 80.9% done in 104.0s, 24.5s to go
+on time step 70914 (time=1772.85), 0.00140397 s/step
+Meep progress: 1773.3500000000001/2103.133331298828 = 84.3% done in 108.0s, 20.1s to go
+on time step 73777 (time=1844.43), 0.00139748 s/step
+Meep progress: 1844.9250000000002/2103.133331298828 = 87.7% done in 112.0s, 15.7s to go
+on time step 76558 (time=1913.95), 0.00143868 s/step
+Meep progress: 1914.275/2103.133331298828 = 91.0% done in 116.0s, 11.4s to go
+on time step 79341 (time=1983.53), 0.00143772 s/step
+Meep progress: 1983.825/2103.133331298828 = 94.3% done in 120.0s, 7.2s to go
+on time step 82120 (time=2053), 0.00143968 s/step
+Meep progress: 2053.3/2103.133331298828 = 97.6% done in 124.0s, 3.0s to go
+harminv1:, frequency, imag. freq., Q, |amp|, amplitude, error
+run 1 finished at t = 2103.15 (84126 timesteps)
+RESULT {"res": 20, "n_ring": 1.7, "n_holes": 250, "cell_um": 24.5, "npix": 240100.0, "t_init": 0.7972447872161865, "sec_per_step": 0.0015207886695861816, "sec_per_time_unit": 0.060831546783447266, "ns_per_pixel_step": 6.333980298151527, "hours_for_T=tau_Q1e+04": 0.04160416442775923, "hours_for_T=tau_Q1e+05": 0.4160416442775922, "hours_for_T=tau_Q1e+06": 4.160416442775922, "harminv_wall_s": 126.72859334945679, "T_harm": 2000.0, "modes": []}
+
+Elapsed run time = 127.8312 s

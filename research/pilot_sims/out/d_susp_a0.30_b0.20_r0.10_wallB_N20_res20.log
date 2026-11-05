@@ -1,0 +1,182 @@
+Using MPI version 4.1, 2 processes
+-----------
+Initializing structure...
+Halving computational cell along direction y
+Halving computational cell along direction z
+Splitting into 2 chunks by voxels
+time for choose_chunkdivision = 0.00042351 s
+Working in 3D dimensions.
+Computational cell is 24 x 4.5 x 4 with resolution 20
+     block, center = (0,0,0)
+          size (1e+20,0.5,0.4)
+          axes (1,0,0), (0,1,0), (0,0,1)
+          dielectric constant epsilon diagonal = (4,4,4)
+     cylinder, center = (0,0,0)
+          radius 0.1, height 0.4, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (0.2,0,0)
+          radius 0.1, height 0.4, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (-0.2,0,0)
+          radius 0.1, height 0.4, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (0.5,0,0)
+          radius 0.1, height 0.4, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (-0.5,0,0)
+          radius 0.1, height 0.4, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (0.7,0,0)
+          radius 0.1, height 0.4, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (-0.7,0,0)
+          radius 0.1, height 0.4, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (1,0,0)
+          radius 0.1, height 0.4, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     cylinder, center = (-1,0,0)
+          radius 0.1, height 0.4, axis (0, 0, 1)
+          dielectric constant epsilon diagonal = (1,1,1)
+     ...(+ 72 objects not shown)...
+time for set_epsilon = 1.19223 s
+-----------
+run 0 finished at t = 2.0 (80 timesteps)
+BENCH3D clad=susp wall=B N=20 res=20 vox(full)=3.46e+06 np=2 init=1.2s 24.0 ms/step 0.96 s/time-unit
+on time step 315 (time=7.875), 0.012724 s/step
+Meep progress: 10.55/450.0 = 2.3% done in 4.0s, 167.0s to go
+on time step 705 (time=17.625), 0.0102768 s/step
+Meep progress: 20.275000000000002/450.0 = 4.5% done in 8.0s, 169.8s to go
+on time step 1094 (time=27.35), 0.0103016 s/step
+Meep progress: 30.0/450.0 = 6.7% done in 12.0s, 168.2s to go
+on time step 1484 (time=37.1), 0.0102759 s/step
+Meep progress: 39.725/450.0 = 8.8% done in 16.0s, 165.4s to go
+on time step 1871 (time=46.775), 0.0103626 s/step
+Meep progress: 49.300000000000004/450.0 = 11.0% done in 20.0s, 162.7s to go
+on time step 2234 (time=55.85), 0.0110408 s/step
+Meep progress: 57.425000000000004/450.0 = 12.8% done in 24.0s, 164.2s to go
+on time step 2523 (time=63.075), 0.0138895 s/step
+Meep progress: 64.175/450.0 = 14.3% done in 28.0s, 168.6s to go
+on time step 2804 (time=70.1), 0.0142418 s/step
+Meep progress: 72.85000000000001/450.0 = 16.2% done in 32.0s, 165.9s to go
+on time step 3209 (time=80.225), 0.00989477 s/step
+Meep progress: 83.075/450.0 = 18.5% done in 36.1s, 159.2s to go
+on time step 3617 (time=90.425), 0.0098147 s/step
+Meep progress: 93.25/450.0 = 20.7% done in 40.1s, 153.2s to go
+on time step 3977 (time=99.425), 0.0111266 s/step
+Meep progress: 101.15/450.0 = 22.5% done in 44.1s, 152.0s to go
+on time step 4260 (time=106.5), 0.0141555 s/step
+Meep progress: 107.55000000000001/450.0 = 23.9% done in 48.1s, 153.0s to go
+on time step 4492 (time=112.3), 0.0172567 s/step
+Meep progress: 113.275/450.0 = 25.2% done in 52.1s, 154.8s to go
+on time step 4769 (time=119.225), 0.0144996 s/step
+Meep progress: 120.025/450.0 = 26.7% done in 56.1s, 154.2s to go
+on time step 5031 (time=125.775), 0.0152931 s/step
+Meep progress: 127.525/450.0 = 28.3% done in 60.1s, 151.9s to go
+on time step 5324 (time=133.1), 0.0136695 s/step
+Meep progress: 134.32500000000002/450.0 = 29.9% done in 64.1s, 150.6s to go
+on time step 5604 (time=140.1), 0.014329 s/step
+Meep progress: 141.32500000000002/450.0 = 31.4% done in 68.1s, 148.7s to go
+on time step 5862 (time=146.55), 0.0155089 s/step
+Meep progress: 147.625/450.0 = 32.8% done in 72.1s, 147.7s to go
+on time step 6125 (time=153.125), 0.0152215 s/step
+Meep progress: 154.07500000000002/450.0 = 34.2% done in 76.1s, 146.2s to go
+on time step 6384 (time=159.6), 0.0154918 s/step
+Meep progress: 160.925/450.0 = 35.8% done in 80.1s, 143.9s to go
+on time step 6636 (time=165.9), 0.0159094 s/step
+Meep progress: 167.22500000000002/450.0 = 37.2% done in 84.1s, 142.3s to go
+on time step 6907 (time=172.675), 0.0148296 s/step
+Meep progress: 172.9/450.0 = 38.4% done in 88.2s, 141.3s to go
+on time step 7149 (time=178.725), 0.0165703 s/step
+Meep progress: 181.15/450.0 = 40.3% done in 92.2s, 136.8s to go
+on time step 7533 (time=188.325), 0.0104409 s/step
+Meep progress: 190.9/450.0 = 42.4% done in 96.2s, 130.5s to go
+on time step 7925 (time=198.125), 0.0102065 s/step
+Meep progress: 201.10000000000002/450.0 = 44.7% done in 100.2s, 124.0s to go
+on time step 8344 (time=208.6), 0.0095569 s/step
+Meep progress: 211.32500000000002/450.0 = 47.0% done in 104.2s, 117.6s to go
+on time step 8747 (time=218.675), 0.00993012 s/step
+Meep progress: 221.375/450.0 = 49.2% done in 108.2s, 111.7s to go
+on time step 9152 (time=228.8), 0.00989205 s/step
+Meep progress: 231.45000000000002/450.0 = 51.4% done in 112.2s, 105.9s to go
+on time step 9557 (time=238.925), 0.00988288 s/step
+Meep progress: 241.75/450.0 = 53.7% done in 116.2s, 100.1s to go
+on time step 9937 (time=248.425), 0.0105484 s/step
+Meep progress: 250.525/450.0 = 55.7% done in 120.2s, 95.7s to go
+on time step 10289 (time=257.225), 0.0113942 s/step
+Meep progress: 259.35/450.0 = 57.6% done in 124.2s, 91.3s to go
+on time step 10641 (time=266.025), 0.0113783 s/step
+Meep progress: 268.15000000000003/450.0 = 59.6% done in 128.2s, 86.9s to go
+on time step 10989 (time=274.725), 0.0115025 s/step
+Meep progress: 276.90000000000003/450.0 = 61.5% done in 132.2s, 82.6s to go
+on time step 11346 (time=283.65), 0.0112245 s/step
+Meep progress: 285.8/450.0 = 63.5% done in 136.2s, 78.3s to go
+on time step 11695 (time=292.375), 0.0114795 s/step
+Meep progress: 294.52500000000003/450.0 = 65.5% done in 140.2s, 74.0s to go
+on time step 12059 (time=301.475), 0.0110051 s/step
+Meep progress: 304.3/450.0 = 67.6% done in 144.2s, 69.1s to go
+on time step 12470 (time=311.75), 0.0097453 s/step
+Meep progress: 314.57500000000005/450.0 = 69.9% done in 148.2s, 63.8s to go
+on time step 12880 (time=322), 0.00975649 s/step
+Meep progress: 324.85/450.0 = 72.2% done in 152.2s, 58.7s to go
+on time step 13291 (time=332.275), 0.00974441 s/step
+Meep progress: 335.1/450.0 = 74.5% done in 156.2s, 53.6s to go
+on time step 13699 (time=342.475), 0.00980438 s/step
+Meep progress: 345.32500000000005/450.0 = 76.7% done in 160.3s, 48.6s to go
+on time step 14110 (time=352.75), 0.00975551 s/step
+Meep progress: 355.6/450.0 = 79.0% done in 164.3s, 43.6s to go
+on time step 14521 (time=363.025), 0.0097521 s/step
+Meep progress: 365.85/450.0 = 81.3% done in 168.3s, 38.7s to go
+on time step 14932 (time=373.3), 0.00974499 s/step
+Meep progress: 376.125/450.0 = 83.6% done in 172.3s, 33.8s to go
+on time step 15343 (time=383.575), 0.00973386 s/step
+Meep progress: 386.40000000000003/450.0 = 85.9% done in 176.3s, 29.0s to go
+on time step 15754 (time=393.85), 0.0097511 s/step
+Meep progress: 396.675/450.0 = 88.2% done in 180.3s, 24.2s to go
+on time step 16165 (time=404.125), 0.00974667 s/step
+Meep progress: 406.6/450.0 = 90.4% done in 184.3s, 19.7s to go
+on time step 16546 (time=413.65), 0.0105092 s/step
+Meep progress: 416.15000000000003/450.0 = 92.5% done in 188.3s, 15.3s to go
+on time step 16927 (time=423.175), 0.0105199 s/step
+Meep progress: 425.55/450.0 = 94.6% done in 192.3s, 11.0s to go
+on time step 17305 (time=432.625), 0.0105964 s/step
+Meep progress: 435.07500000000005/450.0 = 96.7% done in 196.3s, 6.7s to go
+on time step 17686 (time=442.15), 0.0105265 s/step
+Meep progress: 444.57500000000005/450.0 = 98.8% done in 200.3s, 2.4s to go
+harminv1:, frequency, imag. freq., Q, |amp|, amplitude, error
+harminv1:, 0.8063034631379634, -0.006000682317058221, 67.18431509412468, 0.03591279407248682, 0.0014407473702886327+0.03588388252555527i, 3.8341831419264e-05+0.0i
+harminv1:, 0.851553793033022, -0.0004959864878157541, 858.4445483415587, 3.692423343650869, 1.5255478555588016-3.3625427713469764i, 8.594250942850778e-09+0.0i
+harminv1:, 0.8855114434984684, -0.002526254383420426, 175.26173320272065, 0.2526468363195812, -0.13179046016398807+0.21554975878450322i, 7.677235182488072e-07+0.0i
+harminv1:, frequency, imag. freq., Q, |amp|, amplitude, error
+harminv1:, 0.8121905082890477, -0.0029592288198554387, 137.2300956991768, 0.03424122521801881, -0.012045392936578645-0.03205261320757652i, 1.8946502607885058e-06+0.0i
+harminv1:, 0.8515540135034165, -0.0004955343685770301, 859.2280046576061, 1.0813300303715883, 0.5265594914540056+0.9444626708044733i, 3.6920454162060163e-09+0.0i
+harminv1:, 0.8805503451491012, -0.002292472924988475, 192.0525070440097, 0.2171114814400447, 0.2166371114925237+0.014344242652253281i, 1.5697770106827649e-07+0.0i
+harminv1:, 0.9008147228672433, -0.006530787085569207, 68.96678080791625, 0.14046895566494982, -0.14005642159973955-0.010757614711340254i, 1.963335459831875e-06+0.0i
+harminv1:, 0.9264179662995004, -0.007491699867068389, 61.82962363266837, 0.021560259632561196, 0.017660076823554235-0.012367961918182416i, 6.97060957629411e-06+0.0i
+run 1 finished at t = 450.0 (18000 timesteps)
+  MODE f=0.85155 lam=1.17432um Q=858.4 |amp|=3.69 err=8.6e-09+0j
+  MODE f=0.85155 lam=1.17432um Q=859.2 |amp|=1.08 err=3.7e-09+0j
+  MODE f=0.88551 lam=1.12929um Q=175.3 |amp|=0.253 err=7.7e-07+0j
+  MODE f=0.88055 lam=1.13565um Q=192.1 |amp|=0.217 err=1.6e-07+0j
+  MODE f=0.90082 lam=1.11011um Q=68.97 |amp|=0.14 err=2e-06+0j
+  MODE f=0.80630 lam=1.24023um Q=67.18 |amp|=0.0359 err=3.8e-05+0j
+  MODE f=0.81219 lam=1.23124um Q=137.2 |amp|=0.0342 err=1.9e-06+0j
+  MODE f=0.92642 lam=1.07943um Q=61.83 |amp|=0.0216 err=7e-06+0j
+Traceback (most recent call last):
+  File "<sim>/c_meep3d_nanobeam.py", line 78, in <module>
+    print("RESULT " + json.dumps(out))
+                      ^^^^^^^^^^^^^^^
+  File "<sim>/mamba/envs/pmpi/lib/python3.11/json/__init__.py", line 231, in dumps
+    return _default_encoder.encode(obj)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<sim>/mamba/envs/pmpi/lib/python3.11/json/encoder.py", line 200, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^
+Elapsed run time = 211.4484 s
+^^^^^^^^^^^^^^^^^^^^^
+  File "<sim>/mamba/envs/pmpi/lib/python3.11/json/encoder.py", line 258, in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+  File "<sim>/mamba/envs/pmpi/lib/python3.11/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type complex is not JSON serializable
