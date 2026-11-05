@@ -132,8 +132,8 @@ def test_selection_manifests_expand_from_e2():
     assert len({j["params"]["res"] for j in e3c if j["tag"].startswith("ssh_A")}) == 3
     assert P.expand(P.load_manifest("E4"), lambda e: _fake_e2()) == []  # r = 35 nm fails min_r_nm 50
     e4 = P.expand(P.load_manifest("E4"), lambda e: _fake_e2_bighole())
-    # parity check + 3 designs x (nominal + sens3d + 4 classes x 2 sigmas x N=4)
-    assert len(e4) == 1 + 3 * (2 + 4 * 2 * 4)
+    # parity check + 3 designs x (nominal + sens3d + 4 classes x 1 sigma x N=1)  (budget default)
+    assert len(e4) == 1 + 3 * (2 + 4 * 1 * 1)
     assert sum(j["kernel"] == "sens3d" for j in e4) == 3  # 3 designs x (nominal + 4 classes x 2 sigmas x N=4)
     e5 = P.expand(P.load_manifest("E5"), lambda e: _fake_e2())
     assert [j["kernel"] for j in e5] == ["mpb_cell", "supercell3d", "supercell3d", "ring3d"]
