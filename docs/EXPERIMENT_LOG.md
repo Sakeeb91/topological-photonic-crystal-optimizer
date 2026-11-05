@@ -226,8 +226,8 @@ Larger holes force weaker dimerization (smaller delta), so the gap trades agains
 3. Mirror length per design: an Nside scan is in E3-bighole, and `mirror_limited` is flagged when Q_axial < 10 x Q_rad.
 4. ~~Resolution policy.~~ `px_on_r` was added in `175db31`; gonogo needs at least 3 resolutions and at least 2 px on r_min.
 5. ~~Fabrication-margin grid.~~ Done in E2b (r >= 50 nm with a margin of at least 10 nm exists).
-7. E4 sensitivities by perturbation theory (Johnson et al., PRE 65, 066611, 2002), with FDTD spot checks: requested from the Modal thread.
-6. E4 (disorder ensembles) waits until E3 is converged and the control is fair. Running E4 on the current settings would mostly measure numerical noise.
+6. E4 sensitivities by perturbation theory (Johnson et al., PRE 65, 066611, 2002), with FDTD spot checks: requested from the Modal thread.
+7. E4 (disorder ensembles) waits until E3 is converged and the control is fair. Running E4 on the current settings would mostly measure numerical noise.
 
 ## Changelog
 
