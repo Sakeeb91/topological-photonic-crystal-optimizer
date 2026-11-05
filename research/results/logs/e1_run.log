@@ -1,0 +1,660 @@
+œ“ Initialized. View run at 
+https://modal.com/apps/sakeeb91/main/ap-Q1l2JlUsEcxgW6ftCsc3k3
+œ“ Created objects.
+œ œ“ Uploaded 
+   <checkout>/wt-
+   modal/research/modal/app.py
+œ œ“ Uploaded 
+   <checkout>/wt-
+   modal/research/modal
+œ œ“ Created Function run_light.
+œ œ“ Created Function run_3d.
+œ œ“ Created Function run_3d_big.
+ œ“ Created Function run_ring.
+[plan] 44 jobs by tier {'light': 44}; estimated 1.71 container-h, ~$0.11, longest job 0.17 h (estimates; see docs/MODAL_RUNBOOK.md)
+   3ea527502a511afa2df1 bend_q      light      1.3 min $0.001  si220
+   381bd875c0da42b9d03f bend_q      light      1.4 min $0.002  si220
+   ab0478438efee4ec0554 bend_q      light      1.7 min $0.002  si220
+   79e792f52d486ef4d61b bend_q      light      2.4 min $0.003  si220
+   cde91558f5782ebadff2 bend_q      light      1.3 min $0.001  si220
+   e52a4b316f8138717dc9 bend_q      light      1.4 min $0.002  si220
+   03e4a8ada7181eace243 bend_q      light      1.7 min $0.002  si220
+   b0c7ceaf01bf71cccbf2 bend_q      light      2.4 min $0.003  si220
+   bebcbe989b0079d6011c bend_q      light      1.3 min $0.001  si220
+   0475ef39634d1bae9806 bend_q      light      1.4 min $0.002  si220
+   ea7a4491797b92deffb3 bend_q      light      1.7 min $0.002  si220
+   f9d8621ce511a92c73cd bend_q      light      2.4 min $0.003  si220
+   ... 32 more
+[skip] 0 already on the Volume; 44 to run
+[run] 44 x light {'cpu': 1.0, 'memory': 2048, 'timeout': 3600, 'np': 1}
+ Modal Deprecation Warning (2026-03-24) 
+ The `wrap_returned_exceptions` parameter of `Function.map` no longer has any 
+ effect and can be removed from your code. Exceptions are no longer wrapped   
+ before being returned from `Function.map`.                                   
+ Source:                                                                      
+ <checkout>/wt- 
+ modal/research/modal/app.py:193                                              
+   for r in FN[tier].map(group, order_outputs=False, return_exceptions=True,  
+ wrap_returned_exceptions=False):                                             
+   ok           75ce021f2a48826915bb si220 
+   ok           e52a4b316f8138717dc9 si220 
+   ok           3ea527502a511afa2df1 si220 
+   ok           bebcbe989b0079d6011c si220 
+   ok           cde91558f5782ebadff2 si220 
+   ok           be6364755f5e72bf60d4 si220 
+   ok           64007b3722d90a4539ab sin400 
+   ok           99e47ea29cbd3bfab6e5 sin400 
+   ok           a5444cee263fe0cc09d2 sin400 
+   ok           b001dd1a23848b4a1816 sin400 
+   ok           4ffda3dfad4f66a5ddc6 si220 
+   ok           c93f2b796dedb71a57ee sin400 
+   ok           f70b2cddcead66652119 si220 
+   ok           a96d8492dcca2c4c37b6 si220 
+   ok           381bd875c0da42b9d03f si220 
+   ok           0475ef39634d1bae9806 si220 
+   ok           563c557ffeca273df7fd si220 
+   ok           2e6a5e417be94aab1d8b sin400 
+   ok           84501ff28ed023bbeb4d sin400 
+   ok           03e4a8ada7181eace243 si220 
+   ok           949ebf1cddfb309db222 si220 
+   ok           39137c37fc1845f5cddb si220 
+   ok           01c9381f9297fa19f276 sin400 
+   ok           ef14ea3351115ce77de2 sin400 
+   ok           ea5be9280accc2659c80 si220 
+   ok           43900b274d3abb747b32 sin400 
+   ok           0f1cc0a95d54a68b2d01 sin400 
+   ok           ea7a4491797b92deffb3 si220 
+   ok           ab0478438efee4ec0554 si220 
+   ok           fc1a308ec1ba3719ffe5 sin400 
+   ok           b0c7ceaf01bf71cccbf2 si220 
+   ok           f9d8621ce511a92c73cd si220 
+   ok           79e792f52d486ef4d61b si220 
+   ok           fca614e4485f23ea8fe6 si220 
+   ok           99280d0790b334330d06 si220 
+   ok           d39f50c6513c8e1fb31c si220 
+   ok           6e91d7b19e736c3ee477 sin400 
+   ok           b071543c25c009278bf1 sin400 
+   ok           7fe3ac194cdc1b1fbcc7 sin400 
+   ok           ea2564179c3288feee0d sin400 
+   ok           8f16718e4a00ad863209 sin400-conv 
+   ok           fa5f663e34d8d9c1bcb5 si220-conv 
+   ok           dc5b6e614841cb1b2671 si220-conv 
+   ok           28fb5d1e4b6bc8d75ca9 sin400-conv 
+{
+ "exp": "E1",
+ "go": false,
+ "smallest_R_with_Qbend_ge_1e5": {
+  "si220": {
+   "clad": "oxide",
+   "w": 0.45,
+   "R": 2.0,
+   "res": 40,
+   "Q_bend": 290543.43344144634,
+   "dQ_half": 5.222384740125627e-05
+  },
+  "sin400": {
+   "clad": "oxide",
+   "w": 1.2,
+   "R": 15.0,
+   "res": 30,
+   "Q_bend": 139477.46903234406,
+   "dQ_half": 0.00016828216115554446
+  }
+ },
+ "resolution_convergence": {
+  "si220|oxide|w0.5|R3.0": {
+   "res": [
+    40,
+    60
+   ],
+   "T": [
+    2000.0,
+    4000.0
+   ],
+   "Q": [
+    1222810084.222626,
+    798683733.7618266
+   ],
+   "dQ_rel": 0.5310316618859261,
+   "dlam_nm": 12.239449198486074
+  },
+  "si220|oxide|w0.5|R5.0": {
+   "res": [
+    40,
+    60
+   ],
+   "T": [
+    2000.0,
+    4000.0
+   ],
+   "Q": [
+    44002402354.458115,
+    190858101.44235304
+   ],
+   "dQ_rel": 229.55035139678702,
+   "dlam_nm": 17.526930064157398
+  },
+  "sin400|oxide|w1.0|R10.0": {
+   "res": [
+    30,
+    45
+   ],
+   "T": [
+    2000.0,
+    4000.0
+   ],
+   "Q": [
+    2021.631231607729,
+    1743.4466892478965
+   ],
+   "dQ_rel": 0.15956010818996602,
+   "dlam_nm": 4.339633334913051
+  },
+  "sin400|oxide|w1.0|R20.0": {
+   "res": [
+    30,
+    45
+   ],
+   "T": [
+    2000.0,
+    4000.0
+   ],
+   "Q": [
+    647568.5385697779,
+    471962.37095740094
+   ],
+   "dQ_rel": 0.3720766281772642,
+   "dlam_nm": 4.559008589688052
+  }
+ },
+ "table": [
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.45,
+   "R": 2.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 290543.43344144634,
+   "lam_um": 1.5653189226329625,
+   "dQ_half": 5.222384740125627e-05
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.45,
+   "R": 3.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 145538799.13071784,
+   "lam_um": 1.5483934492084612,
+   "dQ_half": 5.136519508004377e-05
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.45,
+   "R": 5.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 2447731045065.7573,
+   "lam_um": 1.5538282433988886,
+   "dQ_half": 0.2739885271991941
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.45,
+   "R": 10.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 85714959.20860286,
+   "lam_um": 1.5716082142308283,
+   "dQ_half": 264048.79313229636
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.5,
+   "R": 2.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 1596359.099590563,
+   "lam_um": 1.554317241622037,
+   "dQ_half": 2.3352388148916233e-05
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.5,
+   "R": 3.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 1222810084.222626,
+   "lam_um": 1.552440101981447,
+   "dQ_half": 0.003804892690771379
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.5,
+   "R": 3.0,
+   "res": 60,
+   "T_after": 4000.0,
+   "Q_bend": 798683733.7618266,
+   "lam_um": 1.540200652782961,
+   "dQ_half": 0.0008662633069763313
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.5,
+   "R": 5.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 44002402354.458115,
+   "lam_um": 1.5587488160293683,
+   "dQ_half": 44.90830139204145
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.5,
+   "R": 5.0,
+   "res": 60,
+   "T_after": 4000.0,
+   "Q_bend": 190858101.44235304,
+   "lam_um": 1.541221885965211,
+   "dQ_half": 7298.222376075983
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.5,
+   "R": 10.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 5681312725.562201,
+   "lam_um": 1.5718354611612755,
+   "dQ_half": 392.12742141822565
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.6,
+   "R": 2.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 8857130.04478896,
+   "lam_um": 1.557160234209335,
+   "dQ_half": 3.5316282020795498e-06
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.6,
+   "R": 3.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 12038739480.63177,
+   "lam_um": 1.5695891763271215,
+   "dQ_half": 0.016588705830503436
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.6,
+   "R": 5.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 960113655804.0876,
+   "lam_um": 1.561043503203527,
+   "dQ_half": 1.4055033504511267
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.6,
+   "R": 10.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 104358722.08262444,
+   "lam_um": 1.5689316474132167,
+   "dQ_half": 1179.667324099836
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.45,
+   "R": 2.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 957670.3265605151,
+   "lam_um": 1.5790727754069334,
+   "dQ_half": 1.9357886405174747e-07
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.45,
+   "R": 3.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 559701499.404097,
+   "lam_um": 1.5492153758386034,
+   "dQ_half": 0.0015344234577672601
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.45,
+   "R": 5.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": -501437234408.0631,
+   "lam_um": 1.5606109203465246,
+   "dQ_half": 1.486742265940623e+42
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.45,
+   "R": 10.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 77615645.8814138,
+   "lam_um": 1.571869046739828,
+   "dQ_half": 38426.562481130386
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.5,
+   "R": 2.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 6422089.984867279,
+   "lam_um": 1.5763016961323428,
+   "dQ_half": 6.556971326616286e-05
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.5,
+   "R": 3.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 5818831460.823389,
+   "lam_um": 1.5602126053468734,
+   "dQ_half": 0.025085401649088936
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.5,
+   "R": 5.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": -493194953804.4517,
+   "lam_um": 1.5659055143428944,
+   "dQ_half": 8.46080712849182e+39
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.5,
+   "R": 10.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": -1183496180262.5933,
+   "lam_um": 1.556616274127048,
+   "dQ_half": 2.366874012374321e+41
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.6,
+   "R": 2.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 155438142.13334253,
+   "lam_um": 1.5398668021300586,
+   "dQ_half": 5.107327036611949e-05
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.6,
+   "R": 3.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 406725957234.0832,
+   "lam_um": 1.5529581023128372,
+   "dQ_half": 0.34194242078242726
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.6,
+   "R": 5.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": -856415787679.2115,
+   "lam_um": 1.564447754609087,
+   "dQ_half": 1.2660110668167294e+42
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.6,
+   "R": 10.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 98842428252.26175,
+   "lam_um": 1.5640485487905462,
+   "dQ_half": 3.8572628554164896
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 0.8,
+   "R": 10.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 657.0476574623348,
+   "lam_um": 1.573702632965066,
+   "dQ_half": 0.0011472687427793464
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 0.8,
+   "R": 15.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 5968.769100382961,
+   "lam_um": 1.5632564980748038,
+   "dQ_half": 4.0136186322394176e-05
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 0.8,
+   "R": 20.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 57628.562267032634,
+   "lam_um": 1.5590808010489179,
+   "dQ_half": 2.3524122389543582e-05
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 0.8,
+   "R": 30.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 4122476.3776597735,
+   "lam_um": 1.561397684378366,
+   "dQ_half": 0.00012558715434373127
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.0,
+   "R": 10.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 2021.631231607729,
+   "lam_um": 1.5658078536760105,
+   "dQ_half": 5.087593594219683e-05
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.0,
+   "R": 10.0,
+   "res": 45,
+   "T_after": 4000.0,
+   "Q_bend": 1743.4466892478965,
+   "lam_um": 1.5614682203410974,
+   "dQ_half": 1.2730035096895913e-05
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.0,
+   "R": 15.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 37568.671720171,
+   "lam_um": 1.5681120785737142,
+   "dQ_half": 0.00011148157703247478
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.0,
+   "R": 20.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 647568.5385697779,
+   "lam_um": 1.5604409463972024,
+   "dQ_half": 0.00013327564151977909
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.0,
+   "R": 20.0,
+   "res": 45,
+   "T_after": 4000.0,
+   "Q_bend": 471962.37095740094,
+   "lam_um": 1.5558819378075144,
+   "dQ_half": 5.732992919234544e-05
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.0,
+   "R": 30.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 164099205.34794813,
+   "lam_um": 1.5595133597132944,
+   "dQ_half": 0.03249813558486792
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.2,
+   "R": 10.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 3777.420593717956,
+   "lam_um": 1.5685644268037677,
+   "dQ_half": 0.00011199506880317757
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.2,
+   "R": 15.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 139477.46903234406,
+   "lam_um": 1.5633836509191064,
+   "dQ_half": 0.00016828216115554446
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.2,
+   "R": 20.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 3226664.7733916715,
+   "lam_um": 1.561818982595598,
+   "dQ_half": 0.002463582081819224
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.2,
+   "R": 30.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 360779260.8164513,
+   "lam_um": 1.5605884306936133,
+   "dQ_half": 0.018403746426958977
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.6,
+   "R": 10.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 5983.851802000832,
+   "lam_um": 1.5815843398381808,
+   "dQ_half": 0.00016829682572040607
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.6,
+   "R": 15.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 439556.9972872999,
+   "lam_um": 1.5654245883614388,
+   "dQ_half": 0.00029841429545706863
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.6,
+   "R": 20.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 17471845.394813903,
+   "lam_um": 1.5683852345160891,
+   "dQ_half": 0.00604375940810062
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.6,
+   "R": 30.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 1912718635.480699,
+   "lam_um": 1.5658313780866489,
+   "dQ_half": 74.2727649826684
+  }
+ ],
+ "criterion": "some (platform, w, clad) reaches Q_bend >= 1e5 at a usable R, AND every high-res/long-T convergence pair agrees within |dQ|/Q < 0.2 (Harminv T/2 vs T within 10%)"
+}
+Stopping app - local entrypoint completed.
+œ“ App completed. View run at 
+https://modal.com/apps/sakeeb91/main/ap-Q1l2JlUsEcxgW6ftCsc3k3
