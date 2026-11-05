@@ -254,6 +254,12 @@ The three runs are, in order:
 - The goal is to shorten the localization length. E3-bighole measured about 5.9 um, which would need Nside around 90.
 - A `mirror_cell_check` MPB job confirms that the strong-mirror gap still contains 1547 nm.
 
+**Resolution is shared per cell.**
+- Every design compared on a cell runs at the same resolution list: for each `px_on_r`, the max over designs of ceil(px / r_min).
+- That list is raised to a floor of 10 px per wavelength in the core (`res_floor`: 23 for Si, 13 for SiN).
+- Why: the tuned control's large holes alone gave res 16, which aborted on Modal with NaN fields.
+- Runs that abort that way are stored as status `unstable` with their resolution, and `report --exp E3` lists them.
+
 **Q_rad plateau:** `q_rad_plateau` compares Q_rad at the two longest Nside. A change of more than 20% means the flux split still feels the mirrors, and the variant does not count as usable.
 
 Go if every (cell, design) pair, including the Quan-Loncar control, has a variant that is:
