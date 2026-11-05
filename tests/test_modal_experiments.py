@@ -184,3 +184,26 @@ def test_e3_gonogo_groups_by_cell_and_flags_mirror_limit():
     u = g["design_usable"]
     assert u["L356.0nm|ssh_A"] is True and u["L360.0nm|ssh_A"] is False
     assert not g["go"]  # no Quan-Loncar control yet
+
+
+SNAPSHOT_E3 = os.path.join(os.path.dirname(__file__), "..", "research", "results", "modal_volume_2026-11-05", "E3")
+
+
+@pytest.mark.skipif(not os.path.isdir(SNAPSHOT_E3), reason="Modal results snapshot not present")
+def test_e3_report_on_modal_snapshot_keeps_both_cells():
+    # issue 1 in docs/EXPERIMENT_LOG.md: the first E3 run (top_k 2) had two cells whose results
+    # collapsed to 4 entries when keyed by design name only
+    import glob
+    import json
+    rows = [json.load(open(f)) for f in glob.glob(os.path.join(SNAPSHOT_E3, "**", "*.json"), recursive=True)]
+    # the snapshot grows as later runs land; this test covers the first-run design kinds
+    rows = [r for r in rows if (r.get("design") or {}).get("kind", "ssh") in ("ssh", "quan_loncar")]
+    g = P.gonogo("E3", rows)
+    cells = {v["cell"] for v in g["variants"].values()}
+    assert len(cells) >= 2
+    first = {k: v for k, v in g["variants"].items()
+             if ("Nside=20" in k or "quan_loncar" in k) and {20, 30} <= set(v["by_res"])}
+    # the first run: 2 cells x (A, B, tanh at Nside 20, Quan-Loncar), each at res 20 and 30
+    assert sum(1 for k in first if set(first[k]["by_res"]) >= {20, 30}) == 8
+    assert g["go"] is False  # not converged over 3 resolutions; mirror-limited
+    assert all(first[k]["mirror_limited"] for k in first)
