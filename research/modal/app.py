@@ -180,11 +180,9 @@ def _print_plan(jobs: list[dict]) -> None:
 
 
 def _spent_usd() -> float:
-    """Program spend so far, from the workspace billing report (apps in P.PROGRAM_APPS)."""
-    from datetime import datetime, timezone
-    start = datetime.fromisoformat(P.PROGRAM_START).replace(tzinfo=timezone.utc)
-    items = modal.Workspace.from_context().billing.report(start=start, resolution="d")
-    return P.program_spend(items)
+    """Program spend so far (apps in P.PROGRAM_APPS), hourly rows up to now + 1 h. Raises
+    P.SpendUnknown when the total is zero or the report cannot be read: callers refuse (fail closed)."""
+    return P.read_program_spend(modal.Workspace.from_context().billing)
 
 
 def _dispatch(exp_name: str, manifest: str, dry_run: bool, n: int = 0, force: bool = False,
@@ -212,11 +210,12 @@ def _dispatch(exp_name: str, manifest: str, dry_run: bool, n: int = 0, force: bo
         try:
             spent_usd = _spent_usd()
             src = "workspace billing report"
-        except Exception as e:  # noqa: BLE001
-            print(f"[budget] could not read billing ({type(e).__name__}: {e}); pass --spent-usd")
+        except Exception as e:  # noqa: BLE001  (SpendUnknown or an API error: fail closed)
+            print(f"[budget] spend unknown ({type(e).__name__}: {e}). Refusing to launch; check "
+                  "`modal billing report --for today --resolution h --json` and pass --spent-usd.")
             if not dry_run:
                 return []
-            spent_usd, src = 0.0, "unknown"
+            spent_usd, src = float("nan"), "unknown"
     else:
         src = "--spent-usd"
     b = P.budget_check(spent_usd, est, budget_usd)
@@ -305,7 +304,12 @@ def _summarize_e4(manifest: str, n: int) -> None:
 @app.local_entrypoint()
 def spend():
     """Print program spend against the cap (apps in tpc_plan.PROGRAM_APPS since PROGRAM_START)."""
-    s = _spent_usd()
+    try:
+        s = _spent_usd()
+    except Exception as e:  # noqa: BLE001
+        print(f"program spend UNKNOWN ({type(e).__name__}: {e}); launches are refused until it can be read "
+              "or --spent-usd is given")
+        return
     print(f"program spend ${s:.2f} of ${P.BUDGET_USD:.2f} cap ({', '.join(P.PROGRAM_APPS)} since {P.PROGRAM_START})")
 
 

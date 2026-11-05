@@ -54,9 +54,16 @@ Suggested settings:
 - Set a **$10 spend limit**.
 - The program cap is $10 in total (`EXPERIMENT_LOG.md`).
 - **The dispatcher enforces it.**
-  - Every `e0`-`e5` run reads program spend from the workspace billing report. Only the `tpc-experiments` and `ssh-ring-smoke` apps since 2026-11-05 count.
+  - Every `e0`-`e5` run reads program spend from the workspace billing report. It uses hourly rows up to now + 1 h, because daily rows and open-ended hourly rows omit the in-progress day and hour. Only the `tpc-experiments` and `ssh-ring-smoke` apps since 2026-11-05 count.
   - It refuses to launch if spend + 1.6 x the estimate would exceed `--budget-usd` (default 10). The 1.6 is the worst measured/model ratio so far.
-  - If billing can't be read, it refuses unless `--spent-usd` is given.
+  - If billing can't be read, or reads $0.00 (this program has spent before, so zero means an incomplete report), it refuses unless `--spent-usd` is given.
+  - Billing lags usage by a few minutes, which the 1.6x margin covers.
+  - Manual check, matching the CLI:
+
+```bash
+SSL_CERT_FILE=/root/.ccr/ca-bundle.crt modal billing report --for today --resolution h --json
+```
+
   - Check the current position with:
 
 ```bash

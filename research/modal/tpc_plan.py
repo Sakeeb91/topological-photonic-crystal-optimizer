@@ -347,6 +347,29 @@ def program_spend(items, apps=PROGRAM_APPS) -> float:
     return tot
 
 
+class SpendUnknown(RuntimeError):
+    """Program spend could not be established; launches must be refused (fail closed)."""
+
+
+def read_program_spend(billing, now=None, apps=PROGRAM_APPS) -> float:
+    """Program spend from a Modal workspace billing manager (modal.Workspace.from_context().billing).
+
+    Verified against modal 1.6.3 (2026-11-05): resolution="d" omits the in-progress day, and
+    resolution="h" without `end` omits the in-progress hour ($4.68 reported vs $6.63 true). So: hourly
+    rows with end = now + 1 h. Rows are BillingReportItem objects (.description, .cost as Decimal).
+    A zero total is treated as unknown: this program has spent money before, so 0 means the report is
+    incomplete, and the caller must refuse unless the user passes --spent-usd."""
+    from datetime import datetime, timedelta, timezone
+    now = now or datetime.now(timezone.utc)
+    start = datetime.fromisoformat(PROGRAM_START).replace(tzinfo=timezone.utc)
+    items = list(billing.report(start=start, end=now + timedelta(hours=1), resolution="h"))
+    total = program_spend(items, apps)
+    if total <= 0.0:
+        raise SpendUnknown(f"billing report returned ${total:.2f} for {', '.join(apps)} since {PROGRAM_START} "
+                           f"({len(items)} rows); treating spend as unknown")
+    return total
+
+
 def budget_check(spent_usd: float, est_usd: float, cap_usd: float = BUDGET_USD, safety: float = BUDGET_SAFETY) -> dict:
     """Refuse when already-spent + safety x estimate would exceed the cap."""
     worst = spent_usd + safety * est_usd

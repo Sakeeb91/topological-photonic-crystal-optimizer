@@ -353,3 +353,37 @@ def test_local_backend_planning(tmp_path):
     big = P.expand(P.load_manifest("E3"), lambda e: _fake_e2_bighole() if e == "E2" else [])
     nb = [j for j in big if j["kernel"] == "nanobeam3d"]
     assert all(RL.local_hours(j, 4) > 0.5 for j in nb)  # E3 3D jobs go to Modal, not the 4-core box
+
+
+class _FakeBilling:
+    """Mimics modal 1.6.3 billing.report as measured on 2026-11-05: daily rows omit the in-progress
+    day; hourly rows include the in-progress hour only when `end` is passed past it."""
+
+    def __init__(self, now):
+        from decimal import Decimal
+        from types import SimpleNamespace as NS
+        self.now = now
+        h = now.replace(minute=0, second=0, microsecond=0)
+        self.rows = [NS(description="tpc-experiments", cost=Decimal("4.682"), interval_start=h.replace(hour=h.hour - 2)),
+                     NS(description="tpc-experiments", cost=Decimal("1.951"), interval_start=h),  # in-progress hour
+                     NS(description="hf-physics-x", cost=Decimal("9.0"), interval_start=h)]
+        self.calls = []
+
+    def report(self, *, start, end=None, resolution="d", tag_names=None):
+        self.calls.append(dict(start=start, end=end, resolution=resolution))
+        if resolution == "d":
+            return []  # in-progress day omitted
+        cutoff = end if end is not None else self.now.replace(minute=0, second=0, microsecond=0)
+        return [r for r in self.rows if r.interval_start < cutoff]
+
+
+def test_read_program_spend_includes_current_hour_and_fails_closed():
+    from datetime import datetime, timezone
+    now = datetime(2026, 11, 5, 22, 31, tzinfo=timezone.utc)
+    fb = _FakeBilling(now)
+    assert P.read_program_spend(fb, now=now) == pytest.approx(6.633)  # matches the CLI figure
+    assert fb.calls[-1]["resolution"] == "h" and fb.calls[-1]["end"] > now
+    assert P.program_spend(fb.report(start=now, resolution="h")) == pytest.approx(4.682)  # the old bug
+    empty = _FakeBilling(now); empty.rows = []
+    with pytest.raises(P.SpendUnknown):
+        P.read_program_spend(empty, now=now)
