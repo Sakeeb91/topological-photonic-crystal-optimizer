@@ -97,7 +97,29 @@ export SSL_CERT_FILE=/root/.ccr/ca-bundle.crt
 ~/.venv-modal/bin/modal token new --source claude-code
 ```
 
-### 4. Alternative: run from your own laptop
+### 4. Free alternative: run cheap jobs locally (no Modal, no credits)
+
+The local backend uses the same manifests, job keys and result layout as the Modal Volume:
+- MPB jobs (`mpb_cell`, `ql_period`, `bend_q`) always run.
+- A 3D job runs only if the local cost model (measured on the 4-core container) puts it under `--max-job-hours`, default 0.5.
+- Jobs already on the committed Volume snapshot (`research/results/modal_volume_*`) are skipped, and selections read that snapshot too.
+- Results go to `research/modal/results_local/`, which git ignores.
+
+```bash
+S=$PWD/scratch bash research/pilot_sims/setup_env.sh
+```
+
+```bash
+TPC_ENV=$PWD/scratch/mamba/envs/pmpi python research/modal/app.py --local E3 --dry-run
+```
+
+```bash
+TPC_ENV=$PWD/scratch/mamba/envs/pmpi python research/modal/app.py --local E3
+```
+
+On the current E3 manifest this runs the two MPB jobs (`ql_tune`, `mirror_cell_check`) in about 30 s. It skips the nine E3-bighole SSH jobs, which are already in the snapshot, and lists the graded-mirror 3D jobs (1.8-2.6 h locally each) for Modal.
+
+### 4b. Alternative: run on Modal from your own laptop
 
 This path needs no change to the Claude Code environment. Python 3.10+ is enough locally; MEEP runs only in the Modal container.
 
@@ -213,9 +235,23 @@ The three runs are, in order:
    - first edit Nside / `period_scale` / `n_mirror` to the stage-1 picks;
    - three resolutions at 1.5 / 2 / 2.5 px on the smallest hole radius.
 
+**Trivial control: target-driven period** (`tune: true`, replacing the `period_scale` scan):
+- Run E3 twice.
+  - Run 1 creates one `ql_tune` MPB job (`ql_period`). It does a secant search on the period, with radii scaling with it, until the centre segment's cavity band edge sits at 1547 nm. It also checks that the mirror gap contains 1547 nm.
+  - Run 2 builds the Quan-Loncar nanobeams at that period.
+- With r_center < r_end, the cavity is an **air-mode** cavity at the centre's upper band edge. The lower (dielectric) edge lies outside the mirror gap.
+- If the 3D mode lands off target, set `edge_offset_nm` to the measured detuning and rerun.
+
+**Graded-mirror SSH** (`kind: ssh_graded`):
+- Weak dimerization at the wall, ramping by tanh over M cells to the largest dimerization the fab rule allows in the mirrors (web = 60 nm + `mirror_margin_nm`).
+- The goal is to shorten the localization length. E3-bighole measured about 5.9 um, which would need Nside around 90.
+- A `mirror_cell_check` MPB job confirms that the strong-mirror gap still contains 1547 nm.
+
+**Q_rad plateau:** `q_rad_plateau` compares Q_rad at the two longest Nside. A change of more than 20% means the flux split still feels the mirrors, and the variant does not count as usable.
+
 Go if every (cell, design) pair, including the Quan-Loncar control, has a variant that is:
 - **converged** over at least 3 resolutions: at the top two, |dQ_rad|/Q_rad < 0.2 and |d lambda| < 2 nm, with at least 2 px on the smallest hole radius;
-- **not mirror-limited:** Q_axial >= 10 x Q_rad;
+- **not mirror-limited:** Q_axial >= 10 x Q_rad, and Q_rad plateaued across the two longest Nside (within 20%);
 - **resonant inside the source window.**
 
 Compare designs on **Q_rad**, not Q_total. Results are keyed by (cell, design variant), so two selected cells no longer overwrite each other.
@@ -410,7 +446,7 @@ Free credit:
 |---|---|
 | `research/modal/app.py` | Modal App: micromamba image (conda-forge `pymeep=1.35.0=mpi_mpich*`, `mpb=1.12.0=mpi_mpich*`, `mpich=4.3.2`, numpy/scipy/h5py, python 3.11), Volume `tpc-results`, functions `run_light` / `run_3d` / `run_3d_big` / `run_ring` (each runs `mpirun -np <cores>`), entrypoints `e0`-`e5`, `report` |
 | `research/modal/tpc_physics.py` | Kernels: `mpb_cell`, `bend_q`, `nanobeam3d`, `sens3d` (perturbation-theory sensitivities), `supercell3d`, `ring3d`. MEEP/MPB only, no `modal` import |
-| `research/modal/tpc_geometry.py` | SSH wall none/A/B/tanh, Quan-Loncar Gaussian mirror, unrolled-ring supercell, fab rules, CRN disorder |
+| `research/modal/tpc_geometry.py` | SSH wall none/A/B/tanh, graded-mirror SSH, Quan-Loncar Gaussian mirror, unrolled-ring supercell, fab rules, CRN disorder |
 | `research/modal/tpc_plan.py` | Manifest expansion, E2 → E3/E4/E5 selection, hash keys, tier routing, cost model, ensemble statistics, go/no-go checks |
 | `research/modal/manifests/e0.yaml` … `e5.yaml` | Experiment definitions |
 | `research/modal/validate_local.py` | Runs every experiment at validation scale with a local MEEP env, with no Modal |
