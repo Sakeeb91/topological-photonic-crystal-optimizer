@@ -241,6 +241,38 @@ Cheapest next steps that fit the remaining $3.37, or that cost nothing locally:
 
 ---
 
+## Code fixes after E3-bighole (Modal branch `f01de21`)
+
+These were produced on the Modal branch. The MPB numbers below were run locally in that session's container, at the resolution stated. They are not in `research/results/`.
+
+- **Spend guard fixed and verified live.** `modal run research/modal/app.py::spend` prints $6.63, matching `modal billing report`.
+  - It reads hourly billing up to now + 1 h.
+  - It fails closed: a $0.00 total or an API error refuses the launch unless `--spent-usd` is passed.
+  - All entry points take `--budget-usd` (default 10) and refuse when spent + 1.6 x estimate exceeds the cap.
+- **The Quan-Loncar control was aimed at the wrong band edge.** With r_center < r_end, the cavity is an air-mode cavity at the centre cell's *upper* (air) band edge.
+  - At L = 381.5 nm (MPB, res 16): centre air edge 1402 nm, dielectric edge 1641 nm, mirror gap 1199-1584 nm. Only the air edge is confined.
+  - The 1.57-1.62 um QL resonances in E3 and E3-bighole were therefore probably not the intended cavity mode. The fields were not saved, so this cannot be checked from the snapshot.
+  - The new `ql_period` kernel does an MPB secant search on L, with radii scaled with L. At production resolution it gives:
+    - period 461.6 nm (21% *longer*);
+    - r_center 96.9 nm, r_end 138.5 nm;
+    - centre air edge 1547.1 nm, mirror gap 1336-1738 nm;
+    - fabrication ok.
+  - `e3.yaml` now has `tune: true`. Run 1 creates the tuning job; run 2 builds the QL nanobeams at the tuned period.
+- **Graded-mirror SSH wall (`ssh_graded`).** A tanh ramp from delta 0 at the wall to the largest fab-allowed delta in the mirrors (web = 60 nm + margin).
+  - Local MPB of the mirror cell (r 53.4 nm, delta 0.0997 vs the cell's 0.060, res 48): gap 1512.4-1567.5 nm (55.1 nm, 3.6%), below the light line, fab ok at a 65.0 nm web.
+  - That is about 1.6x the uniform cell's 33.5 nm gap. If xi scales as 1/gap, expect xi of about 3.6 um and Nside of about 55 instead of 90. **Estimate, not measured.**
+- **`q_rad_plateau` flag.** It flags a design as not usable when Q_rad changes by more than 20% between the two longest Nside. On E3-bighole, Nside 30 -> 40: A +56%, B +24%, tanh +59%. All are flagged.
+- **Local backend.** `python research/modal/app.py --local E3` runs light jobs and small 3D jobs (under `--max-job-hours`, default 0.5) on the local machine. It uses the same keys and writes to `research/modal/results_local/` (git-ignored).
+
+## E3 v2, run 1 (running)
+
+- Code `f01de21`, `e3.yaml` as committed: 14 jobs, of which 10 were already on the Volume from E3-bighole. 4 run:
+  - the parity check;
+  - the QL period-tuning job;
+  - the graded-mirror wall at Nside 20 (and 30);
+  - the mirror-cell check.
+- Estimate $0.44. The guard projected $7.34 against the $10 cap. App `ap-wxwldJOowdYawo61BP5VRj`; watchdog cap $8.
+
 ## Open issues (owner: the next person to touch the code)
 
 1. ~~The E3 report keys by design only.~~ Fixed in `175db31` (keyed by cell L plus design).
