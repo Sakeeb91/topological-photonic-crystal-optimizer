@@ -127,6 +127,71 @@ def mpb_cell(p):
     return out
 
 
+def _mpb_single_once(L, r, w, t, plat, clad, res, Ly, Lz, num_bands=4):
+    """Zone-edge TE-like bands of a one-hole cell (period L, radius r): a Quan-Loncar segment."""
+    mp = _meep()
+    from meep import mpb
+    core, ox, bg, hole = _materials(mp, plat, clad)
+    geo = []
+    if clad == "sub":
+        geo.append(mp.Block(center=mp.Vector3(0, 0, -t / 2 - Lz / 4), size=mp.Vector3(mp.inf, mp.inf, Lz / 2), material=ox))
+    geo.append(mp.Block(center=mp.Vector3(), size=mp.Vector3(mp.inf, w, t), material=core))
+    if r > 0:
+        geo.append(mp.Cylinder(radius=r, height=t, center=mp.Vector3(), material=hole))
+    ms = mpb.ModeSolver(geometry_lattice=mp.Lattice(size=mp.Vector3(L, Ly, Lz)), geometry=geo, default_material=bg,
+                        k_points=[mp.Vector3(0.5)], resolution=int(res), num_bands=num_bands, tolerance=1e-7)
+    ms.run_yodd()
+    f = [float(v) for v in ms.all_freqs[-1]]
+    return dict(L=L, r=r, f1=f[0], f2=f[1], lambda1_um=1 / f[0], lambda2_um=1 / f[1])
+
+
+def ql_period(p):
+    """Target-driven period for the Quan-Loncar trivial control (Quan & Loncar, Opt. Express 19, 18529 (2011)).
+
+    The cavity mode sits at a zone-edge band edge of the CENTRE segment, inside the gap of the mirror
+    segments. Which edge depends on the taper direction:
+      r_center < r_end  (holes grow outward; what _ql_design builds): AIR-mode cavity, upper edge (f2);
+      r_center > r_end  (holes shrink outward):                       DIELECTRIC-mode cavity, lower edge (f1).
+    A secant search on the period L (radii scale with L; w, t fixed) puts that edge at
+    target + edge_offset_nm. The 3D mode sits slightly inside the gap from the edge, so set
+    edge_offset_nm from one 3D run's measured detuning. Reports whether the mirror gap contains the
+    target, and the fab checks of both segments."""
+    plat = G.platform(p["platform"], t=p.get("t"))
+    w, t, clad, res = p["w"], plat["t"], p["clad"], int(p["res"])
+    Ly, Lz = p.get("Ly", 2.0), p.get("Lz", 2.0)
+    rcL, reL = float(p["rc_over_L"]), float(p["re_over_L"])
+    mode = p.get("mode_type", "auto")
+    if mode == "auto":
+        mode = "air" if rcL < reL else "dielectric"
+    edge = "lambda2_um" if mode == "air" else "lambda1_um"
+    tgt = float(p["target_lambda_um"])
+    goal = tgt + 1e-3 * float(p.get("edge_offset_nm", 0.0))
+    tol = 1e-3 * float(p.get("tol_nm", 0.5))
+    solve = lambda L: _mpb_single_once(L, rcL * L, w, t, plat, clad, res, Ly, Lz)
+    L0 = float(p["L0"])
+    c0 = solve(L0); hist = [c0]
+    c1 = solve(L0 * goal / c0[edge]); hist.append(c1)
+    for _ in range(int(p.get("max_iters", 6))):
+        if abs(c1[edge] - goal) < tol:
+            break
+        dl = c1[edge] - c0[edge]
+        L2 = c1["L"] + (goal - c1[edge]) * (c1["L"] - c0["L"]) / dl if abs(dl) > 1e-9 else c1["L"] * goal / c1[edge]
+        c0, c1 = c1, solve(L2)
+        hist.append(c1)
+    L = c1["L"]
+    mirror = _mpb_single_once(L, reL * L, w, t, plat, clad, res, Ly, Lz)
+    fab_m = G.fab_check([dict(x=-L / 2, y=0.0, r=reL * L, ord=0), dict(x=L / 2, y=0.0, r=reL * L, ord=1)], w, plat, periodic_length=2 * L)
+    fab_c = G.fab_check([dict(x=0.0, y=0.0, r=rcL * L, ord=0)], w, plat, periodic_length=L)
+    return dict(platform=plat["name"], w=w, t=t, clad=clad, res=res, rc_over_L=rcL, re_over_L=reL, mode_type=mode,
+                target_lambda_um=tgt, edge_offset_nm=float(p.get("edge_offset_nm", 0.0)),
+                period=L, r_center=rcL * L, r_end=reL * L, centre_edge_lambda_um=c1[edge],
+                centre_band_um=[c1["lambda2_um"], c1["lambda1_um"]],
+                converged=abs(c1[edge] - goal) < tol, n_mpb_solves=len(hist) + 1,
+                mirror_gap_um=[mirror["lambda2_um"], mirror["lambda1_um"]],
+                mirror_gap_contains_target=bool(mirror["lambda2_um"] <= tgt <= mirror["lambda1_um"]),
+                fab_mirror=fab_m, fab_centre=fab_c, fab_ok=bool(fab_m["ok"] and fab_c["ok"]),
+                history=[dict(L=h["L"], edge_lambda_um=h[edge]) for h in hist])
+
 def mpb_neff(plat, w, t, clad, lam=LAM0, res=40, Ly=4.0, Lz=4.0):
     """TE0 effective index of a bare strip (a1_mpb_waveguide_neff.py)."""
     mp = _meep()
@@ -569,7 +634,7 @@ def sens3d(p):
     return out
 
 
-KERNELS = dict(mpb_cell=mpb_cell, bend_q=bend_q, nanobeam3d=nanobeam3d, supercell3d=supercell3d, ring3d=ring3d, sens3d=sens3d)
+KERNELS = dict(mpb_cell=mpb_cell, bend_q=bend_q, nanobeam3d=nanobeam3d, supercell3d=supercell3d, ring3d=ring3d, sens3d=sens3d, ql_period=ql_period)
 
 
 def _json_default(o):

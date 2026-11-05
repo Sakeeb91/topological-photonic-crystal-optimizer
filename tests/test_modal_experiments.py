@@ -123,9 +123,16 @@ def _fake_e2_bighole():
 
 def test_selection_manifests_expand_from_e2():
     e3 = P.expand(P.load_manifest("E3"), lambda e: _fake_e2())
-    # 3 SSH walls x 3 Nside + Quan-Loncar 2 n_mirror x 3 period_scale, one resolution, + parity check
-    assert len(e3) == 16 and {j["tier"] for j in e3} <= {"light", "3d", "3d_big", "3d_xl"}
+    # 3 SSH walls x 3 Nside at one resolution + parity check + one ql_tune MPB job (QL nanobeams wait for it)
+    assert len(e3) == 11 and {j["tier"] for j in e3} <= {"light", "3d", "3d_big", "3d_xl"}
     assert sum(j["params"].get("check_other_parity", False) for j in e3) == 1
+    tune = [j for j in e3 if j["kernel"] == "ql_period"]
+    assert len(tune) == 1 and tune[0]["params"]["mode_type"] == "auto"
+    hit = dict(kernel="ql_period", converged=True, fab_ok=True, period=0.46, r_center=0.097, r_end=0.139,
+               job=dict(key=tune[0]["key"]))
+    e3b = P.expand(P.load_manifest("E3"), lambda e: _fake_e2() if e == "E2" else [hit])
+    ql = [j for j in e3b if j["kernel"] == "nanobeam3d" and j["tag"].startswith("quan_loncar")]
+    assert len(ql) == 2 and all(j["params"]["design"]["period"] == 0.46 for j in ql)  # n_mirror 15 / 25
     nb = [j for j in e3 if j["kernel"] == "nanobeam3d"]
     assert all(j["params"]["res"] * min(h["r"] for h in G.build_design(j["params"]["design"])) >= 1.5 for j in nb)
     e3c = P.expand(P.load_manifest(os.path.join(os.path.dirname(P.__file__), "manifests", "e3c.yaml")), lambda e: _fake_e2())

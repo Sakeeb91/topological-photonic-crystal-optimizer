@@ -145,6 +145,17 @@ def _cell_geometry(cell: dict) -> dict:
     return dict(platform=cell["platform"], w=cell["w"], clad=cell["clad"], a=cell["a"], b=cell["b"], r=cell["r"], L=cell["L"])
 
 
+def ql_tune_params(cell: dict, ql: dict) -> dict:
+    """Params of the ql_period MPB job for one QL design entry (dimensionless radii from _ql_design)."""
+    plat = G.platform(cell["platform"])
+    d = _ql_design(cell, dict(ql, period_scale=1.0), plat)
+    L = d["period"]
+    return dict(platform=cell["platform"], w=cell["w"], clad=cell["clad"], res=int(ql.get("tune_res", 32)),
+                L0=L, rc_over_L=d["r_center"] / L, re_over_L=d["r_end"] / L,
+                target_lambda_um=float(ql.get("target_lambda_um", 1.547)), edge_offset_nm=float(ql.get("edge_offset_nm", 0.0)),
+                mode_type=ql.get("mode_type", "auto"))
+
+
 def _ql_design(cell: dict, ql: dict, plat: dict) -> dict:
     """Quan-Loncar trivial control at the same period and platform. r_end is the largest
     radius the web rule allows (minus a margin), r_center = ratio * r_end."""
@@ -172,7 +183,7 @@ def _variants(d: dict) -> list[tuple[dict, str]]:
     return out
 
 
-def _designs_for_cell(cell: dict, man: dict) -> list[tuple[str, dict]]:
+def _designs_for_cell(cell: dict, man: dict, tuned: list[dict] | None = None) -> list[tuple[str, dict]]:
     plat = G.platform(cell["platform"])
     out = []
     for d0 in man.get("designs", []):
@@ -183,6 +194,19 @@ def _designs_for_cell(cell: dict, man: dict) -> list[tuple[str, dict]]:
                     dd["M"] = float(d.get("M", 6))
                 out.append((d.get("name", f"ssh_{d['wall']}") + sfx, dd))
             elif d["kind"] == "quan_loncar":
+                if d.get("tune"):
+                    # target-driven period from a ql_period MPB job in the same experiment (run 1 creates
+                    # the job; run 2 finds its result and builds the nanobeam at the tuned period)
+                    tp = ql_tune_params(cell, d)
+                    tj = make_job("", "ql_period", tp)
+                    hit = next((r for r in (tuned or []) if r.get("kernel") == "ql_period"
+                                and r.get("job", {}).get("key") == tj["key"]), None)
+                    out.append(("__ql_tune__", tp))
+                    if hit and hit.get("converged") and hit.get("fab_ok"):
+                        out.append((d.get("name", "quan_loncar") + sfx,
+                                    dict(kind="quan_loncar", period=hit["period"], r_center=hit["r_center"], r_end=hit["r_end"],
+                                         n_taper=int(d.get("n_taper", 10)), n_mirror=int(d.get("n_mirror", 10)))))
+                    continue
                 out.append((d.get("name", "quan_loncar") + sfx, _ql_design(cell, d, plat)))
     return out
 
@@ -211,6 +235,14 @@ def resolutions(man: dict, design: dict) -> list[int]:
 
 
 def expand(man: dict, load_results: Callable[[str], list[dict]] | None = None) -> list[dict]:
+    seen, out = set(), []
+    for j in _expand(man, load_results):  # identical jobs (e.g. one ql_tune for several n_mirror variants) run once
+        if j["key"] not in seen:
+            seen.add(j["key"]); out.append(j)
+    return out
+
+
+def _expand(man: dict, load_results: Callable[[str], list[dict]] | None = None) -> list[dict]:
     exp = man["experiment"]
     jobs = _grids(man, exp)
     sel = man.get("select")
@@ -235,7 +267,11 @@ def expand(man: dict, load_results: Callable[[str], list[dict]] | None = None) -
         base = dict(platform=geo["platform"], w=geo["w"], clad=geo["clad"], fcen=fcen, df=df, **sim)
         kind = man.get("kind", "nanobeam")
         if kind == "nanobeam":
-            for name, design in _designs_for_cell(cell, man):
+            tuned = load_results(exp) if any(d.get("tune") for d in man.get("designs", [])) else None
+            for name, design in _designs_for_cell(cell, man, tuned):
+                if name == "__ql_tune__":
+                    jobs.append(make_job(exp, "ql_period", design, tag="ql_tune"))
+                    continue
                 for res in resolutions(man, design):
                     p = dict(base, res=int(res), design=design)
                     if not man.get("ensemble"):
@@ -311,7 +347,7 @@ def estimate(job: dict) -> dict:
     res = int(p.get("res", 20))
     dpml = 1.0
     z_sym = p.get("clad") in ("oxide", "oxide_fill", "susp")
-    if k == "mpb_cell":
+    if k in ("mpb_cell", "ql_period"):
         return dict(kind="mpb", vox_reduced=0, steps=0)
     if k == "bend_q":
         R = p["R"]; sr = R + w / 2 + 2.5 + dpml; sz = t + 3 + 2 * dpml
@@ -351,7 +387,7 @@ def estimate(job: dict) -> dict:
 
 def route(job: dict) -> str:
     k = job["kernel"]
-    if k in ("mpb_cell", "bend_q"):
+    if k in ("mpb_cell", "bend_q", "ql_period"):
         return "light"
     if k == "ring3d":
         return "ring"
