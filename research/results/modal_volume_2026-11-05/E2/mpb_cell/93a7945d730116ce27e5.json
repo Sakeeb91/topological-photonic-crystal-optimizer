@@ -1,0 +1,93 @@
+{
+ "a": 0.1817699450640922,
+ "b": 0.16445852172465483,
+ "r": 0.04154741601464964,
+ "L": 0.346228466788747,
+ "freqs_edge": [
+  0.6420238269409051,
+  0.6480838974176403,
+  0.8336073255830811,
+  0.8347465174587099
+ ],
+ "edge_f1": 0.6420238269409051,
+ "edge_f2": 0.6480838974176403,
+ "gap_abs": 0.00606007047673518,
+ "gap_mid_ratio": 0.009394673580066048,
+ "lambda1_um": 1.5575745915299881,
+ "lambda2_um": 1.5430101009832324,
+ "lambda_mid_um": 1.5502581390979735,
+ "dlambda_nm": 14.564490546755682,
+ "f_lightline": 1.0000921964134937,
+ "below_lightline": true,
+ "wall_s": 2.098623275756836,
+ "platform": "si220",
+ "w": 0.5,
+ "t": 0.22,
+ "clad": "oxide_fill",
+ "res": 40,
+ "Ly": 2.0,
+ "Lz": 2.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 4,
+ "history": [
+  {
+   "L": 0.36,
+   "lambda_mid_um": 1.5843015418024426,
+   "dlambda_nm": 13.121713484190112
+  },
+  {
+   "L": 0.351523990418136,
+   "lambda_mid_um": 1.5637395359043385,
+   "dlambda_nm": 13.095487822105012
+  },
+  {
+   "L": 0.3477609926018548,
+   "lambda_mid_um": 1.5538475520076869,
+   "dlambda_nm": 14.56179216159259
+  },
+  {
+   "L": 0.346228466788747,
+   "lambda_mid_um": 1.5502581390979735,
+   "dlambda_nm": 14.564490546755682
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": true,
+  "violations": [],
+  "platform": "si220",
+  "min_hole_diameter_nm": 83.09483202929928,
+  "min_web_nm": 81.36368969535556,
+  "min_rail_nm": 208.45258398535034
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 10.292294979095459,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "si220",
+   "res": 40,
+   "Ly": 2.0,
+   "Lz": 2.0,
+   "L0": 0.36,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "clad": "oxide_fill",
+   "w": 0.5,
+   "delta": 0.05,
+   "r_over_L": 0.12
+  },
+  "tag": "si220",
+  "key": "93a7945d730116ce27e5",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 10.685947895050049,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

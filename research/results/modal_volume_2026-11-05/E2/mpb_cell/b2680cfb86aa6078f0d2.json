@@ -1,0 +1,95 @@
+{
+ "a": 0.1984215159214736,
+ "b": 0.14665938133326314,
+ "r": 0.02760647178037894,
+ "L": 0.3450808972547368,
+ "freqs_edge": [
+  0.6397051081682436,
+  0.6500167779821976,
+  0.8568829306048085,
+  0.8597529079599853
+ ],
+ "edge_f1": 0.6397051081682436,
+ "edge_f2": 0.6500167779821976,
+ "gap_abs": 0.010311669813954039,
+ "gap_mid_ratio": 0.015990532415840884,
+ "lambda1_um": 1.5632202826446686,
+ "lambda2_um": 1.5384218282860809,
+ "lambda_mid_um": 1.5507219203433038,
+ "dlambda_nm": 24.79845435858774,
+ "f_lightline": 1.0034180117366127,
+ "below_lightline": true,
+ "wall_s": 2.824946641921997,
+ "platform": "si220",
+ "w": 0.5,
+ "t": 0.22,
+ "clad": "sub",
+ "res": 40,
+ "Ly": 2.0,
+ "Lz": 2.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 4,
+ "history": [
+  {
+   "L": 0.36,
+   "lambda_mid_um": 1.5866210579919766,
+   "dlambda_nm": 25.494033533079996
+  },
+  {
+   "L": 0.3510100897720571,
+   "lambda_mid_um": 1.5652755553123232,
+   "dlambda_nm": 25.09329405283678
+  },
+  {
+   "L": 0.3469118309772772,
+   "lambda_mid_um": 1.5552080882810475,
+   "dlambda_nm": 24.867741268363773
+  },
+  {
+   "L": 0.3450808972547368,
+   "lambda_mid_um": 1.5507219203433038,
+   "dlambda_nm": 24.79845435858774
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": false,
+  "violations": [
+   "hole diameter 55.2 nm < min feature 60 nm"
+  ],
+  "platform": "si220",
+  "min_hole_diameter_nm": 55.21294356075788,
+  "min_web_nm": 91.4464377725053,
+  "min_rail_nm": 222.39352821962106
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 13.704283237457275,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "si220",
+   "res": 40,
+   "Ly": 2.0,
+   "Lz": 2.0,
+   "L0": 0.36,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "clad": "sub",
+   "w": 0.5,
+   "delta": 0.15,
+   "r_over_L": 0.08
+  },
+  "tag": "si220",
+  "key": "b2680cfb86aa6078f0d2",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 14.02522087097168,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

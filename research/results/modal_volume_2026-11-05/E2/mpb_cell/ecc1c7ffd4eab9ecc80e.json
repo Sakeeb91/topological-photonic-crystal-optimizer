@@ -1,0 +1,93 @@
+{
+ "a": 0.18570632536374337,
+ "b": 0.15194153893397186,
+ "r": 0.03376478642977152,
+ "L": 0.3376478642977152,
+ "freqs_edge": [
+  0.6405253118332201,
+  0.6484349271016477,
+  0.8386062878842392,
+  0.8398221914661791
+ ],
+ "edge_f1": 0.6405253118332201,
+ "edge_f2": 0.6484349271016477,
+ "gap_abs": 0.007909615268427594,
+ "gap_mid_ratio": 0.012272861535222692,
+ "lambda1_um": 1.561218552219182,
+ "lambda2_um": 1.5421747938066288,
+ "lambda_mid_um": 1.5516382426603788,
+ "dlambda_nm": 19.043758412553125,
+ "f_lightline": 1.0255074129724844,
+ "below_lightline": true,
+ "wall_s": 2.1339054107666016,
+ "platform": "si220",
+ "w": 0.5,
+ "t": 0.22,
+ "clad": "oxide_fill",
+ "res": 40,
+ "Ly": 2.0,
+ "Lz": 2.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 4,
+ "history": [
+  {
+   "L": 0.36,
+   "lambda_mid_um": 1.610051549169339,
+   "dlambda_nm": 20.01437008798157
+  },
+  {
+   "L": 0.3459019683483595,
+   "lambda_mid_um": 1.573510380820035,
+   "dlambda_nm": 19.374392924215613
+  },
+  {
+   "L": 0.3400742388213793,
+   "lambda_mid_um": 1.5581169113890758,
+   "dlambda_nm": 19.142588696671847
+  },
+  {
+   "L": 0.3376478642977152,
+   "lambda_mid_um": 1.5516382426603788,
+   "dlambda_nm": 19.043758412553125
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": true,
+  "violations": [],
+  "platform": "si220",
+  "min_hole_diameter_nm": 67.52957285954304,
+  "min_web_nm": 84.4119660744288,
+  "min_rail_nm": 216.2352135702285
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 9.939056873321533,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "si220",
+   "res": 40,
+   "Ly": 2.0,
+   "Lz": 2.0,
+   "L0": 0.36,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "clad": "oxide_fill",
+   "w": 0.5,
+   "delta": 0.1,
+   "r_over_L": 0.1
+  },
+  "tag": "si220",
+  "key": "ecc1c7ffd4eab9ecc80e",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 10.192890882492065,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

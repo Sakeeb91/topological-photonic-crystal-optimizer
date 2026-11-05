@@ -1,0 +1,95 @@
+{
+ "a": 0.26066314062604046,
+ "b": 0.21326984233039673,
+ "r": 0.07582927727302995,
+ "L": 0.47393298295643715,
+ "freqs_edge": [
+  0.6445358099058888,
+  0.6479837893821627,
+  0.7119477523428027,
+  0.7119506007907037
+ ],
+ "edge_f1": 0.6445358099058888,
+ "edge_f2": 0.6479837893821627,
+ "gap_abs": 0.0034479794762739546,
+ "gap_mid_ratio": 0.005335283856698464,
+ "lambda1_um": 1.5515041749907021,
+ "lambda2_um": 1.5432484830422633,
+ "lambda_mid_um": 1.5473653174014879,
+ "dlambda_nm": 8.255691948438892,
+ "f_lightline": 0.7226037556793895,
+ "below_lightline": true,
+ "wall_s": 9.373486518859863,
+ "platform": "sin400",
+ "w": 1.2,
+ "t": 0.4,
+ "clad": "oxide_fill",
+ "res": 32,
+ "Ly": 3.0,
+ "Lz": 3.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 4,
+ "history": [
+  {
+   "L": 0.5,
+   "lambda_mid_um": 1.617292080267627,
+   "dlambda_nm": 8.65500289825949
+  },
+  {
+   "L": 0.47826858823917723,
+   "lambda_mid_um": 1.5590315237845702,
+   "dlambda_nm": 8.318412741048054
+  },
+  {
+   "L": 0.4745776430549234,
+   "lambda_mid_um": 1.5491042831122175,
+   "dlambda_nm": 8.265438642159673
+  },
+  {
+   "L": 0.47393298295643715,
+   "lambda_mid_um": 1.5473653174014879,
+   "dlambda_nm": 8.255691948438892
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": false,
+  "violations": [
+   "web 61.6 nm < min web 120 nm (2 of 2 webs)"
+  ],
+  "platform": "sin400",
+  "min_hole_diameter_nm": 151.6585545460599,
+  "min_web_nm": 61.61128778433679,
+  "min_rail_nm": 524.1707227269701
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 43.05988430976868,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "sin400",
+   "clad": "oxide_fill",
+   "res": 32,
+   "Ly": 3.0,
+   "Lz": 3.0,
+   "L0": 0.5,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "w": 1.2,
+   "delta": 0.1,
+   "r_over_L": 0.16
+  },
+  "tag": "sin400",
+  "key": "53409c325ec839891925",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 43.404080867767334,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

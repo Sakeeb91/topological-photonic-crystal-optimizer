@@ -5,6 +5,11 @@
 
 A physics-informed multi-objective machine learning framework for designing disorder-robust topological photonic crystal ring resonators.
 
+
+> **Status (2026-11-05): read this first.**
+> - The Q values and design tables below come from an analytical mock, not electromagnetic simulation, and the ring geometry in `src/` has no SSH domain wall. See [`docs/LITERATURE_REVIEW.md`](docs/LITERATURE_REVIEW.md), sections 1-2.
+> - Real MEEP/MPB experiments now run on Modal. What has run, the results and how to reproduce them are in [`docs/EXPERIMENT_LOG.md`](docs/EXPERIMENT_LOG.md) (start there). The raw outputs are in [`research/results/`](research/results/).
+
 ## Overview
 
 This framework implements a comprehensive machine learning approach to address fundamental physics trade-offs in topological photonics. The system leverages the Su-Schrieffer-Heeger (SSH) model with sophisticated ML techniques to discover optimal designs across a seven-dimensional parameter space.

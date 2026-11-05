@@ -1,0 +1,80 @@
+{
+ "a": 0.22499999999999998,
+ "b": 0.135,
+ "r": 0.0504,
+ "L": 0.36,
+ "freqs_edge": [
+  0.6249211740505662,
+  0.6667529937736264,
+  0.8216256694619987,
+  0.829630695656256
+ ],
+ "edge_f1": 0.6249211740505662,
+ "edge_f2": 0.6667529937736264,
+ "gap_abs": 0.04183181972306016,
+ "gap_mid_ratio": 0.06477147374329748,
+ "lambda1_um": 1.6002018198843808,
+ "lambda2_um": 1.499805789157831,
+ "lambda_mid_um": 1.5483781048040717,
+ "dlambda_nm": 100.3960307265499,
+ "f_lightline": 0.9618344105878732,
+ "below_lightline": true,
+ "wall_s": 2.4488613605499268,
+ "platform": "si220",
+ "w": 0.5,
+ "t": 0.22,
+ "clad": "oxide_fill",
+ "res": 40,
+ "Ly": 2.0,
+ "Lz": 2.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 1,
+ "history": [
+  {
+   "L": 0.36,
+   "lambda_mid_um": 1.5483781048040717,
+   "dlambda_nm": 100.3960307265499
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": false,
+  "violations": [
+   "web 34.2 nm < min web 60 nm (1 of 2 webs)"
+  ],
+  "platform": "si220",
+  "min_hole_diameter_nm": 100.8,
+  "min_web_nm": 34.20000000000001,
+  "min_rail_nm": 199.6
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 3.7201383113861084,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "si220",
+   "res": 40,
+   "Ly": 2.0,
+   "Lz": 2.0,
+   "L0": 0.36,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "clad": "oxide_fill",
+   "w": 0.5,
+   "delta": 0.25,
+   "r_over_L": 0.14
+  },
+  "tag": "si220",
+  "key": "8a5424c502548a555698",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 4.01478910446167,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

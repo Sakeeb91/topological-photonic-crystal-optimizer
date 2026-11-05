@@ -1,0 +1,91 @@
+{
+ "a": 0.2747082401005235,
+ "b": 0.2030452209438652,
+ "r": 0.05733041532532665,
+ "L": 0.47775346104438876,
+ "freqs_edge": [
+  0.6438244713827672,
+  0.6473718898986766,
+  0.7225877942009776,
+  0.7226810446002311
+ ],
+ "edge_f1": 0.6438244713827672,
+ "edge_f2": 0.6473718898986766,
+ "gap_abs": 0.0035474185159093397,
+ "gap_mid_ratio": 0.005494777746103181,
+ "lambda1_um": 1.5532183762016074,
+ "lambda2_um": 1.5447071700263586,
+ "lambda_mid_um": 1.548951081317412,
+ "dlambda_nm": 8.511206175248809,
+ "f_lightline": 0.716825269409903,
+ "below_lightline": true,
+ "wall_s": 13.350889205932617,
+ "platform": "sin400",
+ "w": 1.0,
+ "t": 0.4,
+ "clad": "oxide_fill",
+ "res": 32,
+ "Ly": 3.0,
+ "Lz": 3.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 3,
+ "history": [
+  {
+   "L": 0.5,
+   "lambda_mid_um": 1.607805277927621,
+   "dlambda_nm": 8.760052241679084
+  },
+  {
+   "L": 0.4810905963668697,
+   "lambda_mid_um": 1.5578058837137307,
+   "dlambda_nm": 8.551573806471868
+  },
+  {
+   "L": 0.47775346104438876,
+   "lambda_mid_um": 1.548951081317412,
+   "dlambda_nm": 8.511206175248809
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": false,
+  "violations": [
+   "hole diameter 114.7 nm < min feature 120 nm",
+   "web 88.4 nm < min web 120 nm (1 of 2 webs)"
+  ],
+  "platform": "sin400",
+  "min_hole_diameter_nm": 114.6608306506533,
+  "min_web_nm": 88.38439029321194,
+  "min_rail_nm": 442.66958467467333
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 30.72105646133423,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "sin400",
+   "clad": "oxide_fill",
+   "res": 32,
+   "Ly": 3.0,
+   "Lz": 3.0,
+   "L0": 0.5,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "w": 1.0,
+   "delta": 0.15,
+   "r_over_L": 0.12
+  },
+  "tag": "sin400",
+  "key": "e50a0d510fbd5606e34b",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 31.156479835510254,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

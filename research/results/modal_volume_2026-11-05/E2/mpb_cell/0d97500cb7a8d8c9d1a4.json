@@ -1,0 +1,93 @@
+{
+ "a": 0.20015035930509004,
+ "b": 0.18108842032365288,
+ "r": 0.053373429148024,
+ "L": 0.3812387796287429,
+ "freqs_edge": [
+  0.6434362876622435,
+  0.6544994882625177,
+  0.8446543808560442,
+  0.8464410360287575
+ ],
+ "edge_f1": 0.6434362876622435,
+ "edge_f2": 0.6544994882625177,
+ "gap_abs": 0.011063200600274214,
+ "gap_mid_ratio": 0.017047377544380942,
+ "lambda1_um": 1.5541554294881892,
+ "lambda2_um": 1.5278850754408888,
+ "lambda_mid_um": 1.5409082923036217,
+ "dlambda_nm": 26.27035404730038,
+ "f_lightline": 0.9082506982863309,
+ "below_lightline": true,
+ "wall_s": 3.162374496459961,
+ "platform": "si220",
+ "w": 0.5,
+ "t": 0.22,
+ "clad": "sub",
+ "res": 40,
+ "Ly": 2.0,
+ "Lz": 2.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 4,
+ "history": [
+  {
+   "L": 0.36,
+   "lambda_mid_um": 1.4975001828743164,
+   "dlambda_nm": 25.785713304461666
+  },
+  {
+   "L": 0.371899787638785,
+   "lambda_mid_um": 1.5212780026266677,
+   "dlambda_nm": 26.95832966421974
+  },
+  {
+   "L": 0.3781879252075073,
+   "lambda_mid_um": 1.5346201686663472,
+   "dlambda_nm": 26.049730786581904
+  },
+  {
+   "L": 0.3812387796287429,
+   "lambda_mid_um": 1.5409082923036217,
+   "dlambda_nm": 26.27035404730038
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": true,
+  "violations": [],
+  "platform": "si220",
+  "min_hole_diameter_nm": 106.746858296048,
+  "min_web_nm": 74.34156202760484,
+  "min_rail_nm": 196.626570851976
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 13.306203603744507,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "si220",
+   "res": 40,
+   "Ly": 2.0,
+   "Lz": 2.0,
+   "L0": 0.36,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "clad": "sub",
+   "w": 0.5,
+   "delta": 0.05,
+   "r_over_L": 0.14
+  },
+  "tag": "si220",
+  "key": "0d97500cb7a8d8c9d1a4",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 13.566871881484985,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}
