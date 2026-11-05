@@ -443,7 +443,126 @@ def ring3d(p):
     return out
 
 
-KERNELS = dict(mpb_cell=mpb_cell, bend_q=bend_q, nanobeam3d=nanobeam3d, supercell3d=supercell3d, ring3d=ring3d)
+# ==========================================================================
+# First-order sensitivities (shifting-boundary perturbation theory)
+# ==========================================================================
+def _nanobeam_sim(mp, p, holes, plat, with_source=True):
+    """Same cell, geometry, source and symmetries as nanobeam3d (no disorder)."""
+    w, t, clad, res = p["w"], plat["t"], p["clad"], int(p["res"])
+    core, ox, bg, hole_mat = _materials(mp, plat, clad)
+    dpml = 1.0
+    pad_y, pad_z = p.get("pad_y", 1.0), p.get("pad_z", 0.8)
+    xmax = max(abs(h["x"]) for h in holes)
+    sx, sy, sz = 2 * (xmax + 1.0) + 2 * dpml, w + 2 * pad_y + 2 * dpml, t + 2 * pad_z + 2 * dpml
+    geo = []
+    if clad == "sub":
+        geo.append(mp.Block(center=mp.Vector3(0, 0, -t / 2 - sz / 4), size=mp.Vector3(mp.inf, mp.inf, sz / 2), material=ox))
+    geo.append(mp.Block(center=mp.Vector3(), size=mp.Vector3(mp.inf, w, t), material=core))
+    geo += _geo_holes(mp, holes, t, hole_mat)
+    fcen, df = float(p["fcen"]), float(p["df"])
+    xs_src = p.get("src_x", 0.07)
+    src = [mp.Source(mp.GaussianSource(fcen, fwidth=df), component=mp.Ey, center=mp.Vector3(xs_src, 0, 0))]
+    sym = [mp.Mirror(mp.Y, phase=-1)] + ([mp.Mirror(mp.Z, phase=+1)] if _z_symmetric(clad) else [])
+    if not p.get("use_symmetry", True):
+        sym = []
+    sim = mp.Simulation(cell_size=mp.Vector3(sx, sy, sz), geometry=geo, sources=src, resolution=res,
+                        symmetries=sym, boundary_layers=[mp.PML(dpml)], default_material=bg)
+    return sim, dict(sx=sx, sy=sy, sz=sz, xmax=xmax, xs_src=xs_src, fcen=fcen, df=df, nsym=len(sym))
+
+
+def sens3d(p):
+    """Shifting-boundary perturbation theory (Johnson et al., PRE 65, 066611, 2002) for every hole:
+
+        d(omega) = -(omega/2) * oint dh [ d_eps |E_par|^2 - d(1/eps) |D_perp|^2 ] dA / int eps |E|^2 dV
+
+    with d_eps = eps_hole - eps_core and d(1/eps) = 1/eps_hole - 1/eps_core for a sidewall moving
+    into the core by dh. Per hole i: radius (dh = dr), x shift (dh = dx cos th), y shift (dh = dy sin th).
+    E_par and D_perp are continuous across the sidewall, so they are interpolated from the DFT of E and D
+    at the mode frequency. First order in the displacement: frequencies only, no loss.
+
+    Pass 1 finds the mode with Harminv; pass 2 re-runs and accumulates DFT(E, D) at that frequency
+    after the source has ended (ringdown), over the slab region."""
+    mp = _meep()
+    import numpy as np
+    from scipy.interpolate import RegularGridInterpolator
+    plat = G.platform(p["platform"], t=p.get("t"))
+    w, t, clad, res = p["w"], plat["t"], p["clad"], int(p["res"])
+    holes = G.build_design(p["design"])
+    fab = G.fab_check(holes, w, plat)
+    out = dict(platform=plat["name"], w=w, t=t, clad=clad, res=res, design=p["design"], nholes=len(holes), fab_nominal=fab)
+    if not fab["ok"] and not p.get("allow_fab_violation", False):
+        out.update(status="refused_fab", reason="; ".join(fab["violations"]))
+        return out
+    # pass 1: mode frequency
+    sim, g = _nanobeam_sim(mp, p, holes, plat)
+    pts = [mp.Vector3(g["xs_src"], 0, 0), mp.Vector3(-0.21, 0, 0)]
+    h_res, _ = _two_stage_harminv(sim, mp, mp.Ey, pts, g["fcen"], g["df"], float(p.get("T_harm_pass1", p["T_harm"])))
+    pm = _convergence(h_res)["primary"]
+    out.update(pass1=dict(modes=h_res["modes"][:5], t_source_end=h_res["t_source_end"], T_harm=h_res["T_harm"], wall_s=h_res["wall_s"]))
+    if not pm:
+        out.update(status="no_mode")
+        return out
+    f0 = pm["f"]
+    # pass 2: DFT of E and D at f0 during the ringdown
+    sim.reset_meep()
+    sim, g = _nanobeam_sim(mp, p, holes, plat)
+    sim.init_sim()
+    t_src = float(sim.fields.last_source_time())
+    sim.run(until=t_src)
+    ry, rz = w / 2 + float(p.get("dft_pad_y", 0.6)), t / 2 + float(p.get("dft_pad_z", 0.5))
+    rx = g["xmax"] + 0.3
+    comps = [mp.Ex, mp.Ey, mp.Ez, mp.Dx, mp.Dy, mp.Dz]
+    dft = sim.add_dft_fields(comps, f0, 0, 1, center=mp.Vector3(), size=mp.Vector3(2 * rx, 2 * ry, 2 * rz))
+    t0 = time.time()
+    sim.run(until=float(p["T_harm"]))
+    wall2 = time.time() - t0
+    F = {c: np.asarray(sim.get_dft_array(dft, c, 0)) for c in comps}
+    x, y, z, wts = sim.get_array_metadata(dft_cell=dft)
+    x, y, z = (np.asarray(v, float) for v in (x, y, z))
+    wts = np.asarray(wts, float)
+    E = [F[mp.Ex], F[mp.Ey], F[mp.Ez]]
+    D = [F[mp.Dx], F[mp.Dy], F[mp.Dz]]
+    U = float(np.sum(wts * np.real(sum(np.conj(e) * d for e, d in zip(E, D)))))  # int eps |E|^2 dV
+    itp = lambda arr: RegularGridInterpolator((x, y, z), arr, bounds_error=False, fill_value=0.0)
+    iE = [itp(a) for a in E]; iD = [itp(a) for a in D]
+    core, ox, bg, hole_mat = _materials(mp, plat, clad)
+    eps_c = plat["n_core"] ** 2
+    eps_h = plat["n_ox"] ** 2 if clad == "oxide_fill" else 1.0
+    d_eps, d_inv = eps_h - eps_c, 1.0 / eps_h - 1.0 / eps_c
+    nth, nz = int(p.get("n_theta", 32)), int(p.get("n_z", 8))
+    th = (np.arange(nth) + 0.5) * 2 * np.pi / nth
+    zz = (np.arange(nz) + 0.5) / nz * t - t / 2
+    TH, ZZ = np.meshgrid(th, zz, indexing="ij")
+    nx, ny = np.cos(TH), np.sin(TH)
+    w0 = 2 * np.pi * f0
+    per = []
+    for hl in holes:
+        r = hl["r"]
+        P_ = np.stack([hl["x"] + r * nx, hl["y"] + r * ny, ZZ], axis=-1).reshape(-1, 3)
+        Ev = [ie(P_).reshape(nth, nz) for ie in iE]
+        Dv = [idd(P_).reshape(nth, nz) for idd in iD]
+        En = Ev[0] * nx + Ev[1] * ny
+        E2 = sum(np.abs(e) ** 2 for e in Ev)
+        Epar2 = E2 - np.abs(En) ** 2
+        Dperp2 = np.abs(Dv[0] * nx + Dv[1] * ny) ** 2
+        integrand = (d_eps * Epar2 - d_inv * Dperp2) * r * (2 * np.pi / nth) * (t / nz)  # per unit dh
+        k = -(w0 / 2) / U / (2 * np.pi)  # d f per unit displacement (um)
+        per.append(dict(ord=hl["ord"], x=hl["x"], r=r,
+                        df_dr=float(k * integrand.sum()),
+                        df_dx=float(k * (integrand * nx).sum()),
+                        df_dy=float(k * (integrand * ny).sum())))
+    lam0 = 1 / f0
+    tot_r = sum(h["df_dr"] for h in per)
+    out.update(status="ok", f0=f0, lam0_um=lam0, Q_pass1=pm["Q"], U=U, eps_core=eps_c, eps_hole=eps_h,
+               n_theta=nth, n_z=nz, dft_box=[2 * rx, 2 * ry, 2 * rz], T_dft=float(p["T_harm"]), pass2_wall_s=wall2,
+               holes=per, df_dbias_per_um=tot_r,
+               dlam_dbias_nm_per_nm=float(-lam0 ** 2 * tot_r * 1e-3 * 1e3),
+               nproc=mp.count_processors(),
+               note="first-order frequency sensitivities; disorder loss is second order and needs FDTD")
+    return out
+
+
+KERNELS = dict(mpb_cell=mpb_cell, bend_q=bend_q, nanobeam3d=nanobeam3d, supercell3d=supercell3d, ring3d=ring3d, sens3d=sens3d)
 
 
 def _json_default(o):
