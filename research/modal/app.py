@@ -313,3 +313,9 @@ def spend():
 def report(exp: str = "E0"):
     """Print the go/no-go check for one experiment from results already on the Volume."""
     print(json.dumps(P.gonogo(exp.upper(), load_results(exp.upper())), indent=1))
+
+
+if __name__ == "__main__" and "--local" in sys.argv:
+    # Local backend (no Modal account, network or credits):  python research/modal/app.py --local E2 [...]
+    import run_local
+    run_local.main([a for a in sys.argv[1:] if a != "--local"])

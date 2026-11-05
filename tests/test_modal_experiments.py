@@ -338,3 +338,18 @@ def test_e3_bighole_snapshot_not_plateaued():
         pytest.skip("snapshot predates E3-bighole")
     assert all(not v["plateaued"] for v in big.values())  # Nside 30 -> 40 still moves Q_rad by > 20%
 
+
+def test_local_backend_planning(tmp_path):
+    import json
+    import run_local as RL
+    job = P.make_job("E2", "mpb_cell", dict(platform="si220", clad="sub", w=0.5, res=40, L0=0.36, delta=0.1,
+                                            r_over_L=0.1, target_lambda_um=1.547))
+    assert job["tier"] == "light" and RL.local_hours(job, 4) < 0.1
+    d = tmp_path / "E2" / "mpb_cell"
+    d.mkdir(parents=True)
+    (d / f"{job['key']}.json").write_text(json.dumps(dict(kernel="mpb_cell", status="ok")))
+    assert job["key"] in RL.existing_keys([str(tmp_path)], "E2")
+    assert len(RL.make_loader([str(tmp_path)])("E2")) == 1
+    big = P.expand(P.load_manifest("E3"), lambda e: _fake_e2_bighole() if e == "E2" else [])
+    nb = [j for j in big if j["kernel"] == "nanobeam3d"]
+    assert all(RL.local_hours(j, 4) > 0.5 for j in nb)  # E3 3D jobs go to Modal, not the 4-core box
