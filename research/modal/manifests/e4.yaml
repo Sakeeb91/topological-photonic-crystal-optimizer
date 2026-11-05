@@ -1,0 +1,22 @@
+# E4 matched disorder ensembles with common random numbers (same seed and realization index
+# -> same draw for hole k in every design). Classes are run separately at each sigma.
+# Paper scale: N: 48 (pass --n 48). Default N is small so a first run is cheap.
+# Disorder is in absolute nm. 5 nm at res 20 is ~0.1 px: MEEP subpixel averaging makes the
+# response smooth but accuracy at this scale is a known limitation (review section 4).
+experiment: E4
+kind: nanobeam
+select: {from: E2, platform: si220, clad: sub, top_k: 1, rank_by: gap_mid_ratio,
+         require: [fab_ok, gap_contains_target, below_lightline]}
+df_gap_multiple: 3.0
+df_min_rel: 0.03
+res: [20]
+designs:
+  - {kind: ssh, wall: A, Nside: 20, name: ssh_abrupt}
+  - {kind: ssh, wall: tanh, M: 6, Nside: 20, name: ssh_tanh}
+  - {kind: quan_loncar, name: quan_loncar, n_taper: 10, n_mirror: 10, r_end_over_L: 0.30, r_center_ratio: 0.70, margin_nm: 5}
+ensemble:
+  N: 4
+  seed: 2026
+  sigmas_nm: [5, 10]
+  classes: [radius, position_x, offset_y, cd_bias]
+sim: {T_harm: 400, nfreq: 101, flux: true}

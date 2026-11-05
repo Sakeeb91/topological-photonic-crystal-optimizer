@@ -1,0 +1,22 @@
+# E2 fabrication-constrained MPB SSH gap maps. For each dimensionless cell
+# (delta = (a-b)/(a+b), r/L) the in-plane lattice (a, b, r) is rescaled at fixed w, t until
+# the zone-edge TE gap is centred on 1547 nm (up to rescale_iters extra MPB solves).
+# Every result carries fab = {ok, violations, min_web_nm, ...} under its platform's rules
+# (Si 220: 60 nm feature and web; SiN 400: 120 nm). Web = gap - hole diameter.
+experiment: E2
+grids:
+  - kernel: mpb_cell
+    tag: si220
+    base: {platform: si220, res: 40, Ly: 2.0, Lz: 2.0, L0: 0.36, target_lambda_um: 1.547, rescale_iters: 4}
+    sweep:
+      clad: [sub, oxide_fill]
+      w: [0.50, 0.60]
+      delta: [0.05, 0.10, 0.15, 0.20, 0.25, 0.30]
+      r_over_L: [0.06, 0.08, 0.10, 0.12, 0.14]
+  - kernel: mpb_cell
+    tag: sin400
+    base: {platform: sin400, clad: oxide_fill, res: 32, Ly: 3.0, Lz: 3.0, L0: 0.50, target_lambda_um: 1.547, rescale_iters: 4}
+    sweep:
+      w: [1.0, 1.2]
+      delta: [0.02, 0.05, 0.10, 0.15, 0.20]
+      r_over_L: [0.12, 0.14, 0.16, 0.18]
