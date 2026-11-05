@@ -248,12 +248,22 @@ Cheapest next steps that fit the remaining $3.37, or that cost nothing locally:
 3. Mirror length per design. The E3-bighole scan (Nside 20/30/40) is still mirror-limited, with xi ≈ 5.9 um. Next: Nside 60/80, or graded (stronger) mirrors; see the E3-bighole section.
 4. ~~Resolution policy.~~ `px_on_r` was added in `175db31`; gonogo needs at least 3 resolutions and at least 2 px on r_min.
 5. ~~Fabrication-margin grid.~~ Done in E2b (r >= 50 nm with a margin of at least 10 nm exists).
-6. E4 sensitivities by perturbation theory (Johnson et al., PRE 65, 066611, 2002), with FDTD spot checks: requested from the Modal thread.
+6. E4 sensitivities by perturbation theory (Johnson et al., PRE 65, 066611, 2002): **method ready, not run** (kernel `sens3d` on the Modal branch).
+   - Gives d f/d r, d x and d y per hole, from one DFT pass. It can take the mode frequency from a matching E3 result.
+   - Local validation (res 20, suspended SiN, non-overlapping holes): same sign as FDTD in 6/6 perturbations, with ratios 0.59-1.72. FDTD itself is nonlinear at 5 nm (+5/-5 nm radius gives +0.0067/-0.0050).
+   - Results are identical at np 1/2/4, and within 3-6% with symmetry off. Overlapping-hole geometry breaks the sidewall integral (1.8x off).
+   - Perturbation theory gives frequency statistics only. Disorder loss is second order, so Q statistics still need FDTD (a Minkov C fit, plus `pt_check`).
+   - Budget-sized E4 on the r = 53.5 nm cell: perturbation-theory only about $0.7; default N=1 at 10 nm about $1.8.
 7. E4 (disorder ensembles) waits until E3 is converged and the control is fair. Running E4 on the current settings would mostly measure numerical noise.
 
 ## Changelog
 
 - **2026-11-05:** E0-E3 run; probes launched; Volume snapshot and logs committed under `research/results/`.
+- **2026-11-05 (later):** the `--budget-usd` guard and `spend` entry point were added on the Modal branch (`c928eb3`). Tested live, `spend` read **$0.00 against a true $6.63**:
+  - daily billing rows omit the in-progress day;
+  - hourly rows without `end` omit the in-progress hour.
+
+  The fix was sent to the Modal thread. Until it lands, check spend with `modal billing report --for today --resolution h --json`.
 - **2026-11-05 (later):**
   - E2b and E3-bighole run; res-60 probe stopped for budget.
   - $10 budget rule recorded.
