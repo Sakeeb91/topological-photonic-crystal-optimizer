@@ -1,0 +1,176 @@
+Note that running a local entrypoint in detached mode only keeps the last triggered Modal function alive after the parent process has been killed or disconnected.
+œ“ Initialized. View run at 
+https://modal.com/apps/sakeeb91/main/ap-2dbjxsaFCNgF1vekbnApz0
+œ“ Created objects.
+œ œ“ Uploaded 
+   <checkout>/wt-
+   report/research/modal/app.py
+œ œ“ Uploaded 
+   <checkout>/wt-
+   report/research/modal
+œ œ“ Created Function run_light.
+œ œ“ Created Function run_3d.
+œ œ“ Created Function run_3d_big.
+ œ“ Created Function run_ring.
+[plan] 3 jobs by tier {'light': 1, '3d_big': 2}; estimated 20.49 container-h, ~$18.06, longest job 10.23 h (estimates; see docs/MODAL_RUNBOOK.md)
+   aa14d9ab2276bb8dc7d3 mpb_cell    light      1.5 min $0.002  parity_check
+   585acd2e3a46989f769b nanobeam3d  3d_big   613.9 min $9.028  ssh_A|res60|nominal
+   2496f8bbf460ca7ab09a nanobeam3d  3d_big   613.9 min $9.028  ssh_tanh|res60|nominal
+[skip] 1 already on the Volume; 2 to run
+[run] 2 x 3d_big {'cpu': 16.0, 'memory': 16384, 'timeout': 43200, 'np': 16}
+ Modal Deprecation Warning (2026-03-24) 
+ The `wrap_returned_exceptions` parameter of `Function.map` no longer has any 
+ effect and can be removed from your code. Exceptions are no longer wrapped   
+ before being returned from `Function.map`.                                   
+ Source:                                                                      
+ <checkout>/wt- 
+ report/research/modal/app.py:193                                             
+   for r in FN[tier].map(group, order_outputs=False, return_exceptions=True,  
+ wrap_returned_exceptions=False):                                             
+Stopping app - user stopped from CLI.
+   ERROR RemoteError: 
+   ERROR RemoteError: 
+Runner terminated.
+Runner terminated.
+{
+ "exp": "E3",
+ "go": false,
+ "results": {
+  "ssh_A": {
+   "40": {
+    "Q": 8470.44202185561,
+    "Q_rad": 179031.971272349,
+    "Q_axial": 8891.101876166866,
+    "lam_um": 1.5729241951075381,
+    "T_harm": 600.0,
+    "dQ_half": 0.07199247436776958
+   },
+   "30": {
+    "Q": 1090.744167089081,
+    "Q_rad": 118113.33523422873,
+    "Q_axial": 1100.910775324206,
+    "lam_um": 1.573717794165835,
+    "T_harm": 400.0,
+    "dQ_half": 0.0013276623619723608
+   },
+   "20": {
+    "Q": 2615.2746214152517,
+    "Q_rad": 81142.81551887224,
+    "Q_axial": 2702.3735075799163,
+    "lam_um": 1.5640711164948415,
+    "T_harm": 400.0,
+    "dQ_half": 0.008923191653019306
+   }
+  },
+  "ssh_tanh": {
+   "40": {
+    "Q": 9564.024390717117,
+    "Q_rad": 1042287.0428808811,
+    "Q_axial": 9652.5966031192,
+    "lam_um": 1.5542349926204864,
+    "T_harm": 600.0,
+    "dQ_half": 0.017582993104687503
+   },
+   "30": {
+    "Q": 951.8380037348543,
+    "Q_rad": 205011.31264515157,
+    "Q_axial": 956.2778641576355,
+    "lam_um": 1.5555769564375876,
+    "T_harm": 400.0,
+    "dQ_half": 0.027955858420012008
+   },
+   "20": {
+    "Q": 949.5958200803855,
+    "Q_rad": 50073.75494127959,
+    "Q_axial": 967.9520064792077,
+    "lam_um": 1.531477045480849,
+    "T_harm": 400.0,
+    "dQ_half": 0.010163989903450648
+   }
+  },
+  "quan_loncar": {
+   "30": {
+    "Q": 337.45946316948164,
+    "Q_rad": 12928.490970806275,
+    "Q_axial": 346.50390795651634,
+    "lam_um": 1.6153183715316612,
+    "T_harm": 400.0,
+    "dQ_half": 0.0070698591187990135
+   },
+   "20": {
+    "Q": 345.0749503097648,
+    "Q_rad": 13558.270960217253,
+    "Q_axial": 354.0869048166079,
+    "lam_um": 1.6241758015682233,
+    "T_harm": 400.0,
+    "dQ_half": 0.037126930933140234
+   }
+  },
+  "ssh_B": {
+   "30": {
+    "Q": 1259.2272454041108,
+    "Q_rad": 28311.131945023782,
+    "Q_axial": 1317.8424620838562,
+    "lam_um": 1.547457781787107,
+    "T_harm": 400.0,
+    "dQ_half": 0.003966395500595413
+   },
+   "20": {
+    "Q": 2216.476245335059,
+    "Q_rad": 9738.328840415941,
+    "Q_axial": 2869.6088192633806,
+    "lam_um": 1.5327370461518794,
+    "T_harm": 400.0,
+    "dQ_half": 0.0019095319434546199
+   }
+  }
+ },
+ "convergence": {
+  "ssh_A": {
+   "dQ_rel": 0.6912469721571476,
+   "dlam_nm": 8.853078612696574
+  },
+  "ssh_tanh": {
+   "dQ_rel": 0.9007116898403075,
+   "dlam_nm": 22.757947139637302
+  },
+  "quan_loncar": {
+   "dQ_rel": 0.022567116858294926,
+   "dlam_nm": 8.85743003656203
+  },
+  "ssh_B": {
+   "dQ_rel": 0.7601876495483134,
+   "dlam_nm": 14.720735635227467
+  }
+ },
+ "refused": [],
+ "other_parity": [
+  {
+   "a": 0.20218905100569057,
+   "b": 0.17929972447674447,
+   "r": 0.053408428567540904,
+   "w": 0.5,
+   "clear": true,
+   "in_gap": []
+  },
+  {
+   "a": 0.2225339160584389,
+   "b": 0.13352034963506335,
+   "r": 0.03560542656935022,
+   "w": 0.5,
+   "clear": true,
+   "in_gap": []
+  },
+  {
+   "a": 0.207,
+   "b": 0.153,
+   "r": 0.043199999999999995,
+   "w": 0.5,
+   "clear": true,
+   "in_gap": []
+  }
+ ],
+ "criterion": "every design has a mode in the window; res 20 vs 30: |dQ|/Q < 20% and |dlambda| < 2 nm; Quan-Loncar control has a mode in the window"
+}
+œ“ App completed. View run at 
+https://modal.com/apps/sakeeb91/main/ap-2dbjxsaFCNgF1vekbnApz0

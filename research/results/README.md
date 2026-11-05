@@ -20,3 +20,4 @@ modal volume get tpc-results / research/results/modal_volume_<DATE> --force
 ```
 
 Then add an entry to the experiment log.
+- `budget_guard.sh <app-id> [cap_usd]`: polls `modal billing report` every 5 min, sums this program's apps (`tpc-experiments`, `ssh-ring-smoke`), and stops the given app when the cap (default $8) is reached. Run it in the background next to any detached run.

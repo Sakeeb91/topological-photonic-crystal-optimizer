@@ -136,6 +136,6 @@ Experiments run on Modal (workspace `sakeeb91`). Modal is already set up on the 
 - **Budget (set by the user, 2026-11-05): this program may spend at most $10 of Modal credit in total, and must never use up the workspace's credits.**
   - Before any launch, run `--dry-run` and check the real spend so far with `modal billing report --for today --resolution h --json`. Sum the rows whose `description` is `tpc-experiments` or `ssh-ring-smoke`; other apps in the workspace belong to the user's other projects.
   - Do not launch a run whose estimate would take the total over the cap.
-  - Watch long runs and stop them (`modal app stop --yes <app-id>`) before the cap is reached.
+  - Watch long runs and stop them (`modal app stop --yes <app-id>`) before the cap is reached; `research/results/budget_guard.sh <app-id> <cap>` does this automatically.
   - Never touch the user's other apps.
 - **Image:** `modal.Image.micromamba(python_version="3.11").micromamba_install("pymeep=1.35.0=nompi*", "mpb=1.12", ..., channels=["conda-forge"])` builds and runs `research/pilot_sims` scripts. Verified 2026-11-05: the E0 MPB unit-cell run on Modal matched the local result (25.49 nm gap at 1491.9-1517.4 nm), and `research/modal/app.py::e0` (MPICH image) passed its go criterion.

@@ -73,9 +73,9 @@ Run order: E0, E1, E2, E3, then E4 and E5. Each entry point accepts `--dry-run` 
 | E3-probe-40 | Same as E3 at res 40, Nside 30, T 600 (A and tanh walls, best cell) | `d3966b7` | 3 | ~$3.6 | done: lambda converged (<2 nm), Q_rad not converged |
 | E3-probe-60 | Same at res 60 | `d3966b7` | 2 | ~$18 (old model) | **stopped** at about 40 min to respect the budget; no results |
 | E2b | Si 220 cells with larger holes (r/L 0.12-0.15, delta 0.02-0.10) | `175db31` | 40 | ~$0.06 | **go**: 37 fab-ok cells, several with r >= 50 nm and margin >= 10 nm |
-| E3-bighole | E3 stage-1 scan on the best cell with r >= 50 nm and margin >= 10 nm (A/B/tanh at Nside 20/30/40; QL period_scale scan) | `175db31` | 16 | ~$8.9 | running (detached) |
+| E3-bighole | E3 stage-1 scan on the best cell with r >= 50 nm and margin >= 10 nm (A/B/tanh at Nside 20/30/40; QL period_scale scan) | `175db31` | 16 | ~$8.9 (old model); about $2.7 actual | **no-go**: still mirror-limited at Nside 40; walls within 0.2-3.2 nm of 1547 nm; localization length about 6 um |
 
-**Budget:** at most $10 of Modal spend for the whole program (user, 2026-11-05). Measured spend at 21:47 UTC was $3.92 (`modal billing report`, apps `tpc-experiments` and `ssh-ring-smoke`).
+**Budget:** at most $10 of Modal spend for the whole program (user, 2026-11-05). Measured spend after E3-bighole (22:28 UTC) was **$6.63** (`modal billing report`, apps `tpc-experiments` and `ssh-ring-smoke`), leaving $3.37. Nothing is running. `research/results/budget_guard.sh <app-id> [cap]` polls billing every 5 min and stops an app at the cap.
 
 The costs in this table are the app's pre-run estimates. E3's actual wall times came in 2-4x shorter than estimated. Actual spend is shown on the Modal dashboard (workspace `sakeeb91`, app `tpc-experiments`).
 
@@ -210,22 +210,42 @@ Res-40 probe result for the best old cell (a = 0.2225, r = 35.6 nm). Q_rad depen
 
 Larger holes force weaker dimerization (smaller delta), so the gap trades against fabrication margin. Cells with r >= 50 nm and a margin of 10 nm or more have gaps of 11-34 nm.
 
-## E3-bighole (running)
+## E3-bighole: large-hole cell scan (no-go; informative)
 
-- Manifest: `research/results/manifests/e3_bighole.yaml`. This is `e3.yaml` at `175db31` plus `min_r_nm: 50, min_margin_nm: 10` in `select`.
-- Stage 1 of the two-stage E3:
-  - scan Nside 20/30/40 for walls A, B and tanh;
-  - retune the Quan-Loncar control with `period_scale` 0.94/0.955/0.97 and `n_mirror` 15/25;
-  - T_harm 1000, at 1.5 px on r_min.
-- Next: pick the Nside and QL settings where Q_axial >= 10 x Q_rad, then run `e3c.yaml` (px 1.5/2/2.5) for convergence.
+- Manifest: `research/results/manifests/e3_bighole.yaml`. This is `e3.yaml` at `175db31` plus `min_r_nm: 50, min_margin_nm: 10` in `select`. Log: `research/results/logs/e3_bighole.log`.
+- Selected cell (si220, air top, w 0.5): a = 0.2022, b = 0.1793, r = 0.0534 um, L = 381.5 nm.
+- Run at res 29 (1.55 px on r) and T_harm 1000; the Quan-Loncar (QL) control ran at res 20.
+- 16/16 jobs ok. Wall times on 16 ranks were 7-31 min.
+
+| Design | Nside | Q_total | Q_rad | Q_axial | lambda (nm) | Detuning from 1547 nm |
+|---|---|---|---|---|---|---|
+| ssh_A | 20 / 30 / 40 | 270 / 972 / 3590 | 4.3e4 / 1.24e5 / 2.81e5 | 272 / 980 / 3630 | 1548.1 / 1547.4 / 1547.2 | +1.1 / +0.4 / +0.2 |
+| ssh_B | 20 / 30 / 40 | 277 / 981 / 3290 | 4.9e4 / 8.0e4 / 1.05e5 | 278 / 993 / 3400 | 1542.5 / 1543.6 / 1543.8 | -4.5 / -3.4 / -3.2 |
+| ssh_tanh (M=6) | 20 / 30 / 40 | 223 / 815 / 2800 | 6.0e4 / 1.60e5 / 3.91e5 | 224 / 820 / 2820 | 1544.2 / 1545.3 / 1545.5 | -2.8 / -1.7 / -1.5 |
+| QL control, retuned (`period_scale` 0.94-0.97, `n_mirror` 15/25, res 20) | n/a | 114-1560 | 4.5e3-4.6e4 | 117-1630 | 1572.8-1590.2 | +26 to +43 |
+
+What it shows:
+1. **The walls land on target.** On a fabricable cell with a 10+ nm margin, all three SSH walls resonate within 0.2-4.5 nm of 1547 nm. They also converge in wavelength faster than the small-hole cell, as expected for 1.5 px on a 53 nm hole.
+2. **Still mirror-limited, and this sets a length scale.** Q_axial grows by 3.4-3.7x per 10 extra periods for every wall type, so Q_axial ∝ exp(2N/xi). That gives a localization length xi ≈ 15.5 periods ≈ **5.9 um**. The small gap (33.5 nm) that the fabrication margin forces makes the mirrors weak.
+   - Reaching Q_axial >= 10 x Q_rad (about 3e6) would need Nside ≈ 90 per side.
+   - **Ring consequence:** the two walls a ring requires must be separated by several xi to stay isolated. Roughly 5 xi ≈ 30 um each way means a circumference of about 60 um and R of about 10 um. At R = 5 um (about 41 cells between the walls) they hybridize strongly.
+3. **Q_rad is not independent of mirror length.** It rises with Nside: A goes 4.3e4 → 2.8e5 and tanh 6.0e4 → 3.9e5, while B saturates near 1e5. So either the flux-box split attributes part of the mode tail's radiation (at the beam ends or in the mirrors) to "radiation", or the mode is still being shaped by the mirrors. Q_rad is not a clean cavity metric until it is flat in Nside.
+4. **Ordering at Nside 40 (single resolution, unconverged):** tanh 3.9e5 > A 2.8e5 > B 1.05e5. This is the same ordering as the small-hole cells in E3.
+5. **The QL control is still not fair.** Even after `period_scale` retuning it sits 26-43 nm red of the target, with Q_rad ≤ 4.6e4 at res 20. It needs a target-driven tuning loop, for example an MPB band-edge solve for the mirror cell followed by a 1D period search, rather than a fixed 3-point scan.
+6. **E4 gate not met.** No design is mirror-free, so E4, even the perturbation-theory-only variant (~$1.9), was **not run**.
+
+Cheapest next steps that fit the remaining $3.37, or that cost nothing locally:
+- **Nside 60/80 for walls A and tanh at res 29.** About 2x the Nside-40 wall time each, roughly $0.5-0.9 per job on Modal, or free in a 4-core container (2-3 h per job). This tests whether Q_rad plateaus and Q_axial passes 10 x Q_rad.
+- **Stronger mirrors inside the fabrication rules.** Keep a weak dimerization at the wall and grade to the largest fab-allowed delta in the mirrors, using a cell from E2b with a larger gap (for example r = 58.8 nm, gap 54 nm, margin 2.7 nm; or relax the margin to 5 nm in the mirrors only). This shortens xi, and with it the device.
+- **QL control:** fix it in code (target-driven period search) before spending any compute on it.
 
 ---
 
 ## Open issues (owner: the next person to touch the code)
 
 1. ~~The E3 report keys by design only.~~ Fixed in `175db31` (keyed by cell L plus design).
-2. Retune the Quan-Loncar control: `period_scale` was added in `175db31` and is being scanned in E3-bighole.
-3. Mirror length per design: an Nside scan is in E3-bighole, and `mirror_limited` is flagged when Q_axial < 10 x Q_rad.
+2. Retune the Quan-Loncar control. `period_scale` was added in `175db31`, but the 3-point scan in E3-bighole left the control 26-43 nm detuned. It needs a target-driven period search.
+3. Mirror length per design. The E3-bighole scan (Nside 20/30/40) is still mirror-limited, with xi ≈ 5.9 um. Next: Nside 60/80, or graded (stronger) mirrors; see the E3-bighole section.
 4. ~~Resolution policy.~~ `px_on_r` was added in `175db31`; gonogo needs at least 3 resolutions and at least 2 px on r_min.
 5. ~~Fabrication-margin grid.~~ Done in E2b (r >= 50 nm with a margin of at least 10 nm exists).
 6. E4 sensitivities by perturbation theory (Johnson et al., PRE 65, 066611, 2002), with FDTD spot checks: requested from the Modal thread.
@@ -234,3 +254,8 @@ Larger holes force weaker dimerization (smaller delta), so the gap trades agains
 ## Changelog
 
 - **2026-11-05:** E0-E3 run; probes launched; Volume snapshot and logs committed under `research/results/`.
+- **2026-11-05 (later):**
+  - E2b and E3-bighole run; res-60 probe stopped for budget.
+  - $10 budget rule recorded.
+  - Spend $6.63; snapshot refreshed (282 result files).
+  - Perturbation-theory E4 kernel (`sens3d`) is ready on the Modal branch but not run.
