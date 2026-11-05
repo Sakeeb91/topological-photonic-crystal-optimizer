@@ -249,6 +249,28 @@ def resolutions(man: dict, design: dict) -> list[int]:
     return [int(x) for x in man.get("res", [20])]
 
 
+PX_PER_LAMBDA_N_MIN = 10  # MEEP 3D floor: >= 10 px per wavelength in the highest-index material
+
+
+def res_floor(platform: str, lam_um: float = 1.547, px_per_lambda_n: float = PX_PER_LAMBDA_N_MIN) -> int:
+    """Smallest usable resolution: px_per_lambda_n pixels per wavelength inside the core
+    (Si 3.476 -> 23, SiN 2.0 -> 13 at 1.547 um). Below this, 3D runs go unstable or inaccurate:
+    the tuned Quan-Loncar control at res 16 aborted with NaN fields on Modal (2026-11-05)."""
+    n = G.platform(platform)["n_core"]
+    return int(math.ceil(px_per_lambda_n * n / lam_um))
+
+
+def common_resolutions(man: dict, designs: list[dict], platform: str) -> list[int]:
+    """One resolution list for every design compared on the same cell: for each px_on_r value the
+    MAX over designs of ceil(px / r_min), raised to the res_floor. Designs compared at different
+    resolutions would mix discretization error into the comparison."""
+    floor = res_floor(platform, px_per_lambda_n=float(man.get("px_per_lambda_n", PX_PER_LAMBDA_N_MIN)))
+    if not man.get("px_on_r"):
+        return [max(int(x), floor) for x in man.get("res", [20])]
+    rmins = [min(h["r"] for h in G.build_design(d)) for d in designs]
+    return sorted({max(floor, max(int(math.ceil(float(px) / rm)) for rm in rmins)) for px in man["px_on_r"]})
+
+
 def expand(man: dict, load_results: Callable[[str], list[dict]] | None = None) -> list[dict]:
     seen, out = set(), []
     for j in _expand(man, load_results):  # identical jobs (e.g. one ql_tune for several n_mirror variants) run once
@@ -283,14 +305,16 @@ def _expand(man: dict, load_results: Callable[[str], list[dict]] | None = None) 
         kind = man.get("kind", "nanobeam")
         if kind == "nanobeam":
             tuned = load_results(exp) if any(d.get("tune") for d in man.get("designs", [])) else None
-            for name, design in _designs_for_cell(cell, man, tuned):
+            dlist = _designs_for_cell(cell, man, tuned)
+            cell_res = common_resolutions(man, [d for n_, d in dlist if not n_.startswith("__")], geo["platform"])
+            for name, design in dlist:
                 if name == "__ql_tune__":
                     jobs.append(make_job(exp, "ql_period", design, tag="ql_tune"))
                     continue
                 if name == "__mirror_cell__":
                     jobs.append(make_job(exp, "mpb_cell", design, tag="mirror_cell_check"))
                     continue
-                for res in resolutions(man, design):
+                for res in cell_res:
                     p = dict(base, res=int(res), design=design)
                     if not man.get("ensemble"):
                         jobs.append(make_job(exp, "nanobeam3d", p, tag=f"{name}|res{res}|nominal"))

@@ -387,3 +387,19 @@ def test_read_program_spend_includes_current_hour_and_fails_closed():
     empty = _FakeBilling(now); empty.rows = []
     with pytest.raises(P.SpendUnknown):
         P.read_program_spend(empty, now=now)
+
+
+def test_common_resolution_and_floor():
+    assert P.res_floor("si220") == 23 and P.res_floor("sin400") == 13
+    # tuned QL control from E3 v2 (r_c = 96.9 nm) alone would get ceil(1.5 / 0.0969) = 16 -> NaN on Modal
+    tune = [j for j in P.expand(P.load_manifest("E3"), lambda e: _fake_e2_bighole() if e == "E2" else [])
+            if j["kernel"] == "ql_period"][0]
+    hit = dict(kernel="ql_period", converged=True, fab_ok=True, period=0.4616, r_center=0.0969, r_end=0.1385,
+               job=dict(key=tune["key"]))
+    e3 = P.expand(P.load_manifest("E3"), lambda e: _fake_e2_bighole() if e == "E2" else [hit])
+    nb = [j for j in e3 if j["kernel"] == "nanobeam3d"]
+    assert {j["params"]["res"] for j in nb} == {29}  # SSH holes (r 53.5 nm) set it for every design on the cell
+    assert any(j["tag"].startswith("quan_loncar") for j in nb)
+    alone = dict(P.load_manifest("E3"), designs=[d for d in P.load_manifest("E3")["designs"] if d["kind"] == "quan_loncar"])
+    ql_only = [j for j in P.expand(alone, lambda e: _fake_e2_bighole() if e == "E2" else [hit]) if j["kernel"] == "nanobeam3d"]
+    assert {j["params"]["res"] for j in ql_only} == {23}  # floor, not 16
