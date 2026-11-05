@@ -16,16 +16,13 @@ Verified in this container:
   - Fab refusal works: the pilot geometry (a/b/r = 0.35/0.15/0.10) is refused with `web -50.0 nm < min web 60 nm (8 of 16 webs)`.
 - `pytest`: 108 passed, 13 of them new (`tests/test_modal_experiments.py`).
 
-Verified on Modal (run by the parent session from the `topological-photonic-crystal-optimizer` environment, branch commit 0bb888f):
-- E0 passed its go criterion with this app's MPICH image. That covers the image build, Volume writes, `.map()` and local Volume reads.
-- E0 results: MPB cell (SiN 400, oxide-filled, w = 1.0) gap 1540.6-1557.0 nm (16.4 nm). Bend Q (R = 10, w = 1.0, oxide-clad) Q_bend = 2543 at 1571.8 nm, m = 67, 18.8 s. The bend value is not converged; see E1.
+**Results, status and open issues live in [`EXPERIMENT_LOG.md`](EXPERIMENT_LOG.md).** That file is the handoff entry point. Raw result JSONs (a snapshot of the Modal Volume) are in [`research/results/`](../research/results/). This runbook covers how to run the experiments and what they cost; it does not repeat result tables.
 
-Not verified:
-- **E1 to E5 have not run on Modal yet.** This session itself runs in an environment that blocks Modal. This session runs in an environment whose proxy refuses `api.modal.com:443` and `api.modal2.com:443` (policy 403). It also has no Modal credentials.
-- `mpirun` with more than 1 rank inside a Modal container is untested: E0 jobs are single-rank. E3 is its first test.
-- `CLAUDE.md` records a separate, verified Modal path from an earlier session: environment `topological-photonic-crystal-optimizer`, a `nompi` pymeep image, an E0 MPB cell that matched the local result. Section 3 follows that path. This app's image uses the **MPICH** build instead, which E0 will be the first to exercise on Modal.
+Verified on Modal (runs by the parent session from the `topological-photonic-crystal-optimizer` environment):
+- E0, E1, E2 and E3 have run, including multi-rank `mpirun` (8 and 16 ranks) with this app's MPICH image.
+- E4 and E5 have not run yet.
 
-No physics numbers are reported here. The validation runs used res 8-12, where Si holes are 1-2 pixels wide, and they say nothing about real Q.
+The local validation runs used res 8-12, where Si holes are 1-2 pixels wide; they say nothing about real Q.
 
 ---
 
@@ -145,23 +142,12 @@ How a pair is judged (`tpc_plan._gonogo_e1`). E1 reruns 4 rows at higher resolut
   - The pair agrees as "> cap" when neither member is a resolved below-cap value and at least one member is positive and above the cap. Example: Si R = 5 gave 4.4e10 (dQ_half 45) and 1.9e8 (dQ_half 7.3e3).
   - The pair is flagged when a resolved below-cap value meets an unresolved one, or when both members are unresolved and below the cap.
 
-**First E1 run on Modal** (2026-11-05, 44 jobs, about 8 min, run by the parent session):
+E1 results, including the convergence pairs that motivated `Q_cap`, are in [`EXPERIMENT_LOG.md` § E1](EXPERIMENT_LOG.md#e1-bend-loss-map-go).
 
-| Pair | Q (base res) | Q (high res) | Verdict |
-|---|---|---|---|
-| SiN 400, w = 1.0, R = 10 | 2022 (res 30) | 1743 (res 45) | agree, 16% |
-| SiN 400, w = 1.0, R = 20 | 6.48e5 | 4.72e5 | 37%, same side of 1e5 |
-| Si 220, w = 0.5, R = 3 | 1.22e9 | 7.99e8 | > cap |
-| Si 220, w = 0.5, R = 5 | 4.4e10 (dQ_half 45) | 1.9e8 (dQ_half 7.3e3) | > cap |
-
-What this means:
-- E0's Q_bend = 2543 (res 20, T = 300) overestimated. The pilot's 1.6e3 was close to the converged value.
-- **Si 220, oxide-clad:** Q_bend >= 2.9e5 already at R = 2 um (w = 0.45), and > 1e6 for R >= 3. **Bend loss is irrelevant on Si.**
-- **SiN 400, oxide-clad:** Q_bend >= 1e5 needs w >= 1.2 at R = 15 (1.4e5), or w >= 1.0 at R = 20 (4.7e5 to 6.5e5). w = 0.8 needs R = 30.
-- **Multimode warning:** SiN at w >= 1.0 um and 400 nm thickness is likely multimode.
-  - Every E3/E4/E5 run now adds a `parity_check` MPB job per selected cell (`check_other_parity`). It reports opposite-parity (TE1/TM-like) zone-edge bands that fall inside the TE0 SSH gap.
-  - Those bands do not couple in a y-symmetric beam, but transverse disorder (`offset_y`) mixes them.
-  - Treat `other_parity_clear: false` as a no-go for that cell's offset_y ensemble.
+**Multimode check.** SiN at w >= 1.0 um and 400 nm thickness is likely multimode:
+- Every E3/E4/E5 run adds a `parity_check` MPB job per selected cell (`check_other_parity`). It reports opposite-parity (TE1/TM-like) zone-edge bands inside the TE0 SSH gap.
+- Those bands do not couple in a y-symmetric beam, but transverse disorder (`offset_y`) mixes them.
+- Treat `other_parity_clear: false` as a no-go for that cell's offset_y ensemble.
 
 What to record:
 - The output names the smallest such R per platform. Use it as R in `manifests/e5.yaml`.
@@ -189,24 +175,9 @@ No-go:
 - If nothing is feasible on SiN, that confirms the review's prediction that the 120 nm rule removes almost all dimerization. Proceed on Si only.
 - If nothing is feasible on Si, stop. Widen the E2 grid (lower `delta`, larger `r_over_L`, other `w`) before spending on 3D.
 
-**First E2 run on Modal** (2026-11-05, 160 jobs, run by the parent session; go = true):
+E2 results are in [`EXPERIMENT_LOG.md` § E2](EXPERIMENT_LOG.md#e2-fabrication-constrained-ssh-gap-maps-go-for-si-no-for-sin).
 
-SiN 400 (oxide-filled, w = 1.0 and 1.2): **0 of 40 cells pass the ANT 120 nm rules.** An SSH hole lattice at 1547 nm is not realizable on the ANT SiN MPW. This is a clean negative result in its own right.
-
-Si 220: **36 feasible cells.** Best by gap-to-midgap ratio:
-
-| Stack | Best cell (um) | Gap | Mid-gap | Min web |
-|---|---|---|---|---|
-| air top, w = 0.5 | a = 0.2225, b = 0.1335, r = 0.0356, L = 0.3561 | 59.2 nm (3.8%) | 1555 nm | 62.3 nm |
-| air top, w = 0.6 | | 47.7 nm (3.1%) | | |
-| oxide-filled, w = 0.5 | | 42.0 nm (2.7%) | | |
-| oxide-filled, w = 0.6 | | 34.0 nm (2.2%) | | |
-
-**Fabrication margin is the open risk.** Every feasible Si cell has a minimum web of 60-64 nm, right at the 60 nm rule. A few nm of global CD bias would break the rule.
-- E2 now reports `fab_margin_nm` for each stack's best cell.
-- Selections accept `select.min_margin_nm`, which requires that much margin above the rule on both web and feature.
-- No current E2 cell has 10 nm of margin. A tapeout design (Paper B / C0) needs an extended E2 grid first: lower `delta` or smaller `r_over_L` near the gap/margin trade-off.
-- E3 runs on the zero-margin pick; that is fine for physics, but not for a mask.
+**Fabrication margin.** E2 reports `fab_margin_nm` for each stack's best cell: the margin above the platform rule, taking the worse of web and feature. Selections accept `select.min_margin_nm`. A tapeout candidate (Paper B / C0) needs at least 10 nm, which the first E2 grid did not reach; `e2b.yaml` extends the grid.
 
 **E3: 3D wall Q.** E3 now runs in two stages. Both share the `/E3` folder, and `report --exp E3` judges them together.
 
@@ -240,28 +211,18 @@ Go if every (cell, design) pair, including the Quan-Loncar control, has a varian
 
 Compare designs on **Q_rad**, not Q_total. Results are keyed by (cell, design variant), so two selected cells no longer overwrite each other.
 
-**First E3 run on Modal** (2026-11-05, 18 jobs from 9f828c4, run by the parent session; go = false):
-- **Multi-rank `mpirun` works on Modal.**
-- **Not converged.** Going from res 20 to res 30 moved lambda by 9.6 / 14.7 / 24.1 / 8.9 nm (A / B / tanh / Quan-Loncar), and Q by 140% (A) and 76% (B).
-  - The cause: the selected Si holes (r = 36-43 nm) were only 0.7-1.1 px wide.
-  - The old "px per wavelength" comment was the wrong criterion. **Resolution is now set from the smallest hole radius (`px_on_r`).**
-- **Mirror-limited.** Every design had Q_total of about 1e3, with Q_axial of about 1e3, far below Q_rad (1e4 to 2e5).
-  - At Nside = 20 the Q_total comparison measured mirror strength, not cavity quality.
-  - Q_rad at res 30 (not converged): tanh 2.05e5, A 1.18e5, B 2.83e4, Quan-Loncar 1.29e4.
-- **The Quan-Loncar control was not tuned.** It resonated at 1.615-1.624 um, outside the window, with Q_rad of 1.3e4.
-  - Stage 1 retunes it with `period_scale`. The resonance needs to move about 4.5% to the blue, hence 0.955.
-  - A topological-vs-trivial comparison is not fair until the control is tuned.
+E3 results and the diagnosis behind this two-stage design are in [`EXPERIMENT_LOG.md` § E3](EXPERIMENT_LOG.md#e3-3d-domain-wall-cavities-no-go-diagnostic). The four changes: resolution set from the smallest hole radius (`px_on_r`); comparison on Q_rad; a mirror-length scan; and a Quan-Loncar retune via `period_scale`.
 
 **Cost problem.** Resolving 36 nm holes at 2-2.5 px needs res 57-71, and cost scales as res^4.
 
-Estimates (`tpc_plan.cost`, T_harm 1000 for E3 and 400 for E4):
+Estimates (`tpc_plan.cost`, calibrated on the Modal E3 timings; T_harm 1000 for E3 and 400 for E4):
 
 | Run | E2 pick, r = 35.6 nm | Hypothetical cell, r = 50 nm |
 |---|---|---|
-| E3 stage 1 (16 jobs) | $42, 30 container-h | $9, 12 container-h |
-| E3 stage 2 (13 jobs) | $169, 98 container-h, **3 jobs > 24 h** | $40, 31 container-h |
-| E4, N = 4 | $421 | $94 |
-| E4, N = 48 | **$4,940** | $1,100 |
+| E3 stage 1 (16 jobs) | $13, 9 container-h | $3, 3 container-h |
+| E3 stage 2 (13 jobs) | $52, 30 container-h, longest 6.3 h | $12, 9 container-h |
+| E4, N = 4 | $131 | $28 |
+| E4, N = 48 | **$1,535** | $328 |
 
 The r = 50 nm column is a cost figure for that geometry only, not a claim that such a cell has a usable gap. E2b finds out.
 
@@ -336,25 +297,26 @@ modal volume get tpc-results /E4/summary.json ./results_modal/
 
 ### Cost model
 
-**Measured cost.** MEEP 1.35 MPICH on this container (Xeon 2.8 GHz, 4 cores), running `nanobeam3d` with flux monitors and two Harminv points at 6.84e5 reduced voxels, res 20:
+**Measured cost, on Modal.** From the first E3 run (16 `nanobeam3d` jobs; field `ns_core_per_reduced_voxel_step` in `research/results/`):
 
-| Ranks | ns per symmetry-reduced voxel-step | core-ns per voxel-step |
+| Ranks | core-ns per symmetry-reduced voxel-step | Jobs |
 |---|---|---|
-| 2 | 31.3 | 63 |
-| 4 | 23.1 | 92 |
+| 8 | median 26 (range 19-28) | 8 |
+| 16 | median 40 (range 24-69) | 8 |
 
-The parent review quotes about 10 ns at 4 ranks. That figure was not reproduced:
-- The pilot logs show 27-35 ns at **2** ranks without flux monitors.
-- The model therefore uses the measured 92 core-ns at 4 ranks.
+Notes:
+- The 4-core cloud container measured 63 core-ns at 2 ranks and 92 at 4, so Modal cores are about 3x faster per rank.
+- The parent review's figure of about 10 ns at 4 ranks was not reproduced on either machine.
+- Against those 16 jobs, the calibrated model's wall-time estimate has a median measured/model ratio of 0.82 (range 0.56-1.59).
 
-**Formula.** hours = V_reduced × steps × 92 ns / (np × eff(np)), where:
+**Formula.** hours = V_reduced × steps × core_ns(np) / np, where:
 - steps = (10/df + T_harm) × 2 × res. The first term is the Gaussian source duration; Courant number 0.5.
-- eff(4) = 1.
+- core_ns(np) comes from `tpc_plan.CORE_NS_BY_NP`.
 
 **Assumptions, unmeasured:**
-- Parallel efficiency beyond 4 ranks: eff(8) = 0.8, eff(16) = 0.65, eff(32) = 0.5. Efficiency from 2 to 4 ranks on this small cell was already 68%.
-- One Modal "physical core" (2 vCPU, [docs](https://modal.com/docs/guide/resources)) runs one MPI rank at the speed of one core here.
-- **Treat every 3D figure below as uncertain by a factor of 2 either way.**
+- 1-4 ranks are taken equal to the 8-rank value.
+- 32 ranks (tiers `3d_xl`, `ring`) are taken as 57 core-ns, i.e. 70% of the 16-rank efficiency.
+- Treat 32-rank figures as uncertain by about 2x.
 
 **Pricing** ([modal.com/pricing](https://modal.com/pricing), 2026-11-05):
 - CPU: $0.0000131 per physical core per second.
@@ -381,31 +343,31 @@ Memory is sized from the pilot full-ring run: 1.7 GB / 9.6e6 reduced voxels, abo
 
 ### Estimates
 
-These are computed by `tpc_plan.cost()` from the manifests. For E3 to E5 they use a representative fabricable Si cell (a = 0.200, b = 0.160, r = 0.035 um, w = 0.5 um, air top). The real E2 pick is a = 0.2225, b = 0.1335, r = 0.0356 um; the E3/E4 rows use it, or a hypothetical r = 50 nm cell, and the stage-1/2 resolution rule.
+These are computed by `tpc_plan.cost()` from the manifests, except the row marked measured. The E3/E4 rows use the actual E2 pick (a = 0.2225, b = 0.1335, r = 0.0356 um) or a hypothetical r = 50 nm cell, with the stage-1/2 resolution rule. The r = 50 nm figures are costs for that geometry only; whether such a cell has a usable gap is what E2b tests.
 
 | Exp | Jobs | Container-hours | Cost (USD) | Longest job | Wall clock |
 |---|---|---|---|---|---|
 | E0 | 2 | 0.03 | < 0.01 + image build | 2 min | ~10 min incl. first build |
 | E1 | 44 | 1.7 | 0.11 | 10 min (res-60 convergence rows) | minutes |
 | E2 | 160 | 4.0 | 0.25 | 2 min (flat MPB guess) | minutes |
-| E3 (old plan, res 20/30) | 8 | 2.3 | 1.8 | 0.44 h | superseded: unconverged on Si holes |
-| E3 stage 1 + 2, r = 35.6 nm | 29 | 128 | 211 | 20 h (3 jobs over the limit) | see "Cost problem" under E3 |
-| E3 stage 1 + 2, r = 50 nm | 29 | 43 | 49 | 5 h | |
-| E4, N = 48, r = 35.6 / 50 nm | 1156 | 2900 / 1035 | 4940 / 1100 | 5.7 / 1.4 h | use perturbation theory + FDTD spot checks |
+| E3 (first run, res 20/30, done) | 18 | 1.04 (measured job wall time) | 0.83 (from measured wall time × list price) | 0.17 h | superseded: unconverged on Si holes |
+| E3 stage 1 + 2, r = 35.6 nm | 29 | 39 | 65 | 6.3 h | see "Cost problem" under E3 |
+| E3 stage 1 + 2, r = 50 nm | 29 | 12 | 15 | 1.5 h | |
+| E4, N = 48, r = 35.6 / 50 nm | 1156 | 895 / 301 | 1535 / 328 | 1.8 / 0.4 h | perturbation theory + FDTD spot checks is far cheaper |
 
 **What the cost scales with.**
 
 Harminv window:
-- T_harm = 400 resolves Q up to roughly 10 pi f T ≈ 8e3 without heavy extrapolation.
-- Designs with Q of 1e5 need T of about 5000, which costs about 10x more per job. Check `Q_over_pi_f_T` in E3 before scaling E4.
+- T_harm = 400 resolves Q up to roughly 10 pi f T ≈ 8e3 without heavy extrapolation; T_harm = 1000 reaches about 2e4.
+- Q_rad of 1e5 or more needs a longer T or reliance on Harminv extrapolation. Check `Q_over_pi_f_T` and `dQ_rel_half_vs_full` before scaling E4.
 
 Resolution:
-- Cost goes as res^4.
-- Moving E4 to res 30 multiplies it by about 5.
+- Cost goes as res^4, and resolution is now set by the smallest hole (`px_on_r`).
+- Holes of 50 nm instead of 36 nm cut every 3D job by about 3-4x.
 
 Free credit:
-- Starter's $30 covers everything except paper-scale E4.
-- E4 at N = 48 needs about $90 of credit or an academic grant.
+- Starter's $30 covers E0-E2, E3 stage 1 on either cell, and stage 2 on a large-hole cell.
+- E4 at N = 48 by FDTD needs $330-1,500 of credit or an academic grant. Perturbation theory with FDTD spot checks would need a small fraction of that.
 
 ---
 
