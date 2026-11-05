@@ -13,8 +13,8 @@
 experiment: E3
 kind: nanobeam
 select: {from: E2, platform: si220, clad: sub, top_k: 1, rank_by: gap_mid_ratio,
+         min_r_nm: 50, min_margin_nm: 10,      # the E2b big-hole cell, as in research/results/manifests/e3_bighole.yaml
          require: [fab_ok, gap_contains_target, below_lightline]}
-         # add  min_r_nm: 45  to trade gap for larger holes (cost ~ r^-4)
 df_gap_multiple: 3.0
 df_min_rel: 0.03
 px_on_r: [1.5]           # res = ceil(1.5 / r_min): 43 for r = 35.6 nm

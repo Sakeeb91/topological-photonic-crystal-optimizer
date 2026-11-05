@@ -122,7 +122,8 @@ def _fake_e2_bighole():
 
 
 def test_selection_manifests_expand_from_e2():
-    e3 = P.expand(P.load_manifest("E3"), lambda e: _fake_e2())
+    assert P.expand(P.load_manifest("E3"), lambda e: _fake_e2()) == []  # r = 35 nm fails min_r_nm 50
+    e3 = P.expand(P.load_manifest("E3"), lambda e: _fake_e2_bighole())
     # 3 SSH walls x 3 Nside + graded x 2 Nside at one resolution + parity check + mirror_cell_check
     # + one ql_tune MPB job (QL nanobeams wait for it)
     assert len(e3) == 14 and {j["tier"] for j in e3} <= {"light", "3d", "3d_big", "3d_xl"}
@@ -131,7 +132,7 @@ def test_selection_manifests_expand_from_e2():
     assert len(tune) == 1 and tune[0]["params"]["mode_type"] == "auto"
     hit = dict(kernel="ql_period", converged=True, fab_ok=True, period=0.46, r_center=0.097, r_end=0.139,
                job=dict(key=tune[0]["key"]))
-    e3b = P.expand(P.load_manifest("E3"), lambda e: _fake_e2() if e == "E2" else [hit])
+    e3b = P.expand(P.load_manifest("E3"), lambda e: _fake_e2_bighole() if e == "E2" else [hit])
     ql = [j for j in e3b if j["kernel"] == "nanobeam3d" and j["tag"].startswith("quan_loncar")]
     assert len(ql) == 2 and all(j["params"]["design"]["period"] == 0.46 for j in ql)  # n_mirror 15 / 25
     nb = [j for j in e3 if j["kernel"] == "nanobeam3d"]
@@ -336,3 +337,4 @@ def test_e3_bighole_snapshot_not_plateaued():
     if not big:
         pytest.skip("snapshot predates E3-bighole")
     assert all(not v["plateaued"] for v in big.values())  # Nside 30 -> 40 still moves Q_rad by > 20%
+
