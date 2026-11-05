@@ -272,3 +272,18 @@ def test_budget_guard():
     assert P.budget_check(spent, 3.0)["ok"]                     # 3.92 + 1.6 x 3.0 = 8.72
     assert not P.budget_check(spent, 4.0)["ok"]                 # 3.92 + 1.6 x 4.0 = 10.32
     assert P.budget_check(spent, 4.0, cap_usd=12.0)["ok"]
+
+
+def test_e4_reuses_e3_mode_for_sens3d():
+    cell = _fake_e2_bighole()
+    m = P.load_manifest("E4")
+    e4 = P.expand(m, lambda e: cell)
+    s = [j for j in e4 if j["kernel"] == "sens3d"][0]
+    assert "f_mode" not in s["params"]  # no E3 results yet: two-pass sens3d
+    e3row = dict(kernel="nanobeam3d", status="ok", platform=s["params"]["platform"], w=s["params"]["w"],
+                 clad=s["params"]["clad"], res=s["params"]["res"], design=s["params"]["design"],
+                 convergence=dict(primary=dict(f=0.6461, Q=4321.0)), job=dict(key="abc"))
+    e4b = P.expand(m, lambda e: cell if e == "E2" else [e3row])
+    s2 = [j for j in e4b if j["kernel"] == "sens3d"][0]
+    assert s2["params"]["f_mode"] == 0.6461 and s2["params"]["f_mode_from"] == "abc"
+    assert P.cost(s2)["hours"] < P.cost(s)["hours"]  # one pass instead of two

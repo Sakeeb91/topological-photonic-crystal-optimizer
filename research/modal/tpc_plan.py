@@ -187,6 +187,19 @@ def _designs_for_cell(cell: dict, man: dict) -> list[tuple[str, dict]]:
     return out
 
 
+def find_mode(rows: list[dict], p: dict) -> dict | None:
+    """Mode (f, Q) of a nominal nanobeam3d result with the same stack, design and resolution."""
+    keys = ("platform", "w", "clad", "res")
+    for r in rows:
+        if r.get("kernel") != "nanobeam3d" or r.get("status") != "ok" or r.get("disorder"):
+            continue
+        if all(r.get(k) == p.get(k) for k in keys) and r.get("design") == p["design"]:
+            pm = (r.get("convergence") or {}).get("primary")
+            if pm:
+                return dict(f=pm["f"], Q=pm["Q"], key=r.get("job", {}).get("key"))
+    return None
+
+
 def resolutions(man: dict, design: dict) -> list[int]:
     """Resolution list for one design. `px_on_r: [1.5, 2, 2.5]` sets res = ceil(px / r_min) so the
     smallest hole radius gets that many pixels (the criterion that matters for small Si holes);
@@ -232,6 +245,10 @@ def expand(man: dict, load_results: Callable[[str], list[dict]] | None = None) -
                     jobs.append(make_job(exp, "nanobeam3d", p, tag=f"{name}|res{res}|nominal"))
                     if man.get("pt"):
                         sp = dict(p, **{k: v for k, v in man["pt"].items() if k in ("n_theta", "n_z", "T_harm_pass1")})
+                        if man["pt"].get("mode_from") and load_results is not None:
+                            fm = find_mode(load_results(man["pt"]["mode_from"]), sp)
+                            if fm:
+                                sp.update(f_mode=fm["f"], Q_mode=fm["Q"], f_mode_from=fm["key"])
                         jobs.append(make_job(exp, "sens3d", sp, tag=f"{name}|res{res}|sens"))
                     for cls in ens["classes"]:
                         for sig in ens["sigmas_nm"]:
@@ -323,8 +340,8 @@ def estimate(job: dict) -> dict:
     vred = vox / 2 ** nsym
     steps = (10.0 / p["df"] + p["T_harm"]) * 2 * res
     mem = BYTES_PER_REDUCED_VOXEL * vred / 1e9
-    if k == "sens3d":  # two passes; DFT of 6 complex components over the slab box, gathered in full
-        steps *= 2
+    if k == "sens3d":  # two passes unless f_mode is given; DFT of 6 complex components over the slab box
+        steps *= 1 if p.get("f_mode") else 2
         dft_pts = (sx - 2 * dpml) * (w + 1.2) * (t + 1.0) * res ** 3
         # get_dft_array returns the full array on every MPI rank: 6 complex components x (array +
         # interpolator copy), times 16 ranks (the 3d_big tier) as a conservative bound

@@ -493,18 +493,25 @@ def sens3d(p):
     if not fab["ok"] and not p.get("allow_fab_violation", False):
         out.update(status="refused_fab", reason="; ".join(fab["violations"]))
         return out
-    # pass 1: mode frequency
-    sim, g = _nanobeam_sim(mp, p, holes, plat)
-    pts = [mp.Vector3(g["xs_src"], 0, 0), mp.Vector3(-0.21, 0, 0)]
-    h_res, _ = _two_stage_harminv(sim, mp, mp.Ey, pts, g["fcen"], g["df"], float(p.get("T_harm_pass1", p["T_harm"])))
-    pm = _convergence(h_res)["primary"]
-    out.update(pass1=dict(modes=h_res["modes"][:5], t_source_end=h_res["t_source_end"], T_harm=h_res["T_harm"], wall_s=h_res["wall_s"]))
-    if not pm:
-        out.update(status="no_mode")
-        return out
-    f0 = pm["f"]
+    if p.get("f_mode"):
+        # mode frequency already measured (E3 nanobeam3d on the same design, resolution and stack):
+        # skip pass 1, which halves the cost
+        f0 = float(p["f_mode"])
+        pm = dict(f=f0, Q=p.get("Q_mode"))
+        out.update(pass1=dict(skipped=True, f_mode_from=p.get("f_mode_from")))
+    else:
+        # pass 1: mode frequency
+        sim, g = _nanobeam_sim(mp, p, holes, plat)
+        pts = [mp.Vector3(g["xs_src"], 0, 0), mp.Vector3(-0.21, 0, 0)]
+        h_res, _ = _two_stage_harminv(sim, mp, mp.Ey, pts, g["fcen"], g["df"], float(p.get("T_harm_pass1", p["T_harm"])))
+        pm = _convergence(h_res)["primary"]
+        out.update(pass1=dict(modes=h_res["modes"][:5], t_source_end=h_res["t_source_end"], T_harm=h_res["T_harm"], wall_s=h_res["wall_s"]))
+        if not pm:
+            out.update(status="no_mode")
+            return out
+        f0 = pm["f"]
+        sim.reset_meep()
     # pass 2: DFT of E and D at f0 during the ringdown
-    sim.reset_meep()
     sim, g = _nanobeam_sim(mp, p, holes, plat)
     sim.init_sim()
     t_src = float(sim.fields.last_source_time())
