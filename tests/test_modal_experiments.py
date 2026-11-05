@@ -123,8 +123,9 @@ def _fake_e2_bighole():
 
 def test_selection_manifests_expand_from_e2():
     e3 = P.expand(P.load_manifest("E3"), lambda e: _fake_e2())
-    # 3 SSH walls x 3 Nside at one resolution + parity check + one ql_tune MPB job (QL nanobeams wait for it)
-    assert len(e3) == 11 and {j["tier"] for j in e3} <= {"light", "3d", "3d_big", "3d_xl"}
+    # 3 SSH walls x 3 Nside + graded x 2 Nside at one resolution + parity check + mirror_cell_check
+    # + one ql_tune MPB job (QL nanobeams wait for it)
+    assert len(e3) == 14 and {j["tier"] for j in e3} <= {"light", "3d", "3d_big", "3d_xl"}
     assert sum(j["params"].get("check_other_parity", False) for j in e3) == 1
     tune = [j for j in e3 if j["kernel"] == "ql_period"]
     assert len(tune) == 1 and tune[0]["params"]["mode_type"] == "auto"
@@ -294,3 +295,22 @@ def test_e4_reuses_e3_mode_for_sens3d():
     s2 = [j for j in e4b if j["kernel"] == "sens3d"][0]
     assert s2["params"]["f_mode"] == 0.6461 and s2["params"]["f_mode_from"] == "abc"
     assert P.cost(s2)["hours"] < P.cost(s)["hours"]  # one pass instead of two
+
+
+def test_graded_mirror_design():
+    plat = G.platform("si220")
+    L, r = 0.3821, 0.0535
+    dm = G.max_delta(L, r, plat, margin_nm=5)
+    assert 0.09 < dm < 0.11
+    h = G.graded_nanobeam(L, r, Nside=30, delta_wall=0.0, delta_mirror=dm, M=4)
+    fab = G.fab_check(h, 0.5, plat)
+    assert fab["ok"] and fab["min_web_nm"] == pytest.approx(65.0, abs=0.5)  # 60 nm rule + 5 nm margin
+    x = sorted(q["x"] for q in h)
+    gaps = np.diff(x)
+    centre = len(gaps) // 2
+    assert abs(gaps[centre] - gaps[centre + 1]) < 0.02 * L          # weak dimerization at the wall
+    assert abs(abs(gaps[-1] - gaps[-2]) - dm * L) < 1e-3 * L          # full mirror dimerization far out
+    e3 = P.expand(P.load_manifest("E3"), lambda e: _fake_e2_bighole() if e == "E2" else [])
+    gr = [j for j in e3 if j["tag"].startswith("ssh_graded")]
+    assert len(gr) == 2 and all(j["params"]["design"]["delta_mirror"] > 0.06 for j in gr)
+    assert sum(j["tag"] == "mirror_cell_check" for j in e3) == 1

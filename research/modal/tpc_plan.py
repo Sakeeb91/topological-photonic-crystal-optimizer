@@ -193,6 +193,21 @@ def _designs_for_cell(cell: dict, man: dict, tuned: list[dict] | None = None) ->
                 if d["wall"] == "tanh":
                     dd["M"] = float(d.get("M", 6))
                 out.append((d.get("name", f"ssh_{d['wall']}") + sfx, dd))
+            elif d["kind"] == "ssh_graded":
+                L, r = cell["a"] + cell["b"], cell["r"]
+                d_cell = (cell["a"] - cell["b"]) / L
+                dm = d.get("delta_mirror", "max")
+                if dm == "max":  # largest fab-allowed mirror dimerization, with its own margin
+                    dm = max(G.max_delta(L, r, plat, float(d.get("mirror_margin_nm", 5.0))), d_cell)
+                dd = dict(kind="ssh_graded", L=L, r=r, Nside=int(d.get("Nside", 20)), M=float(d.get("M", 4)),
+                          delta_wall=float(d.get("delta_wall", 0.0)), delta_mirror=round(float(dm), 6))
+                out.append((d.get("name", "ssh_graded") + sfx, dd))
+                # MPB check that the strong-mirror cell's gap still contains the target (cents)
+                a_m, b_m = L * (1 + dd["delta_mirror"]) / 2, L * (1 - dd["delta_mirror"]) / 2
+                out.append(("__mirror_cell__", dict(platform=cell["platform"], clad=cell["clad"], w=cell["w"],
+                                                    a=a_m, b=b_m, r=r, res=int(cell.get("res", 32)),
+                                                    Ly=cell.get("Ly", 2.0), Lz=cell.get("Lz", 2.0),
+                                                    target_lambda_um=1.547)))
             elif d["kind"] == "quan_loncar":
                 if d.get("tune"):
                     # target-driven period from a ql_period MPB job in the same experiment (run 1 creates
@@ -271,6 +286,9 @@ def _expand(man: dict, load_results: Callable[[str], list[dict]] | None = None) 
             for name, design in _designs_for_cell(cell, man, tuned):
                 if name == "__ql_tune__":
                     jobs.append(make_job(exp, "ql_period", design, tag="ql_tune"))
+                    continue
+                if name == "__mirror_cell__":
+                    jobs.append(make_job(exp, "mpb_cell", design, tag="mirror_cell_check"))
                     continue
                 for res in resolutions(man, design):
                     p = dict(base, res=int(res), design=design)
@@ -630,7 +648,7 @@ def _gonogo_e3(rows, ok, ref, target_um: float = 1.547, mirror_ratio: float = 10
     for r in [x for x in ok if x.get("kernel") == "nanobeam3d"]:
         d = r["design"]
         name = r.get("job", {}).get("tag", "").split("|")[0]
-        var = {k: v for k, v in d.items() if k not in ("a", "b", "r", "period", "r_center", "r_end")}
+        var = {k: v for k, v in d.items() if k not in ("a", "b", "r", "L", "period", "r_center", "r_end")}
         key = f"{_cell_key(d)}|{name}|" + ",".join(f"{k}={v}" for k, v in sorted(var.items()) if k != "kind")
         pm = (r.get("convergence") or {}).get("primary") or {}
         g = groups.setdefault(key, dict(cell=_cell_key(d), design=name.split("[")[0], variant=name, by_res={}))

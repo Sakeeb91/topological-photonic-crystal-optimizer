@@ -101,9 +101,33 @@ def ssh_nanobeam(a: float, b: float, r: float, Nside: int, wall: str = "A", M: f
             D = D0 * math.tanh((i + 0.5) / M)
             for gap in (L / 2 - D, L / 2 + D):
                 x += gap; xs += [x, -x]
+    elif wall == "graded":
+        raise ValueError("use graded_nanobeam() for wall='graded'")
     else:
         raise ValueError(f"unknown wall {wall!r}")
     return _holes(xs, [r] * len(xs))
+
+
+def graded_nanobeam(L: float, r: float, Nside: int, delta_wall: float, delta_mirror: float, M: float) -> list[dict]:
+    """Type-B SSH wall whose dimerization ramps from delta_wall at the wall to delta_mirror in the
+    mirrors: Delta_i = (L/2) [delta_wall + (delta_mirror - delta_wall) tanh((i + 0.5)/M)], gaps
+    (L/2 - Delta_i, L/2 + Delta_i) outward on both sides. delta = (a - b)/(a + b). A stronger mirror
+    dimerization widens the mirror gap and shortens the localization length xi."""
+    if M <= 0:
+        raise ValueError("graded wall needs M > 0")
+    xs = [0.0]; x = 0.0
+    for i in range(Nside):
+        D = 0.5 * L * (delta_wall + (delta_mirror - delta_wall) * math.tanh((i + 0.5) / M))
+        for gap in (L / 2 - D, L / 2 + D):
+            x += gap; xs += [x, -x]
+    return _holes(xs, [r] * len(xs))
+
+
+def max_delta(L: float, r: float, plat: dict, margin_nm: float = 0.0) -> float:
+    """Largest dimerization delta = (a-b)/(a+b) whose short gap still leaves a web of
+    min_web + margin: b - 2r >= min_web + margin, with b = L (1 - delta) / 2."""
+    b_min = 2 * r + plat["min_web"] + 1e-3 * margin_nm
+    return max(0.0, 1.0 - 2.0 * b_min / L)
 
 
 def quan_loncar_nanobeam(period: float, r_center: float, r_end: float, n_taper: int, n_mirror: int) -> list[dict]:
@@ -233,6 +257,8 @@ def build_design(d: dict) -> list[dict]:
     kind = d.get("kind", "ssh")
     if kind == "ssh":
         return ssh_nanobeam(d["a"], d["b"], d["r"], int(d["Nside"]), d.get("wall", "A"), float(d.get("M", 0.0)))
+    if kind == "ssh_graded":
+        return graded_nanobeam(d["L"], d["r"], int(d["Nside"]), float(d["delta_wall"]), float(d["delta_mirror"]), float(d["M"]))
     if kind == "quan_loncar":
         return quan_loncar_nanobeam(d["period"], d["r_center"], d["r_end"], int(d["n_taper"]), int(d["n_mirror"]))
     raise ValueError(f"unknown design kind {kind!r}")

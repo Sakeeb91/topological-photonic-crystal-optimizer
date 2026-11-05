@@ -22,6 +22,11 @@ designs:
   - {kind: ssh, wall: A, Nside: [20, 30, 40]}
   - {kind: ssh, wall: B, Nside: [20, 30, 40]}
   - {kind: ssh, wall: tanh, M: 6, Nside: [20, 30, 40]}
+  # Graded mirror: weak dimerization at the wall (delta_wall), ramping (tanh, M cells) to the largest
+  # fab-allowed delta in the mirrors (web >= 60 nm + mirror_margin_nm) to shorten xi (5.9 um at the
+  # cell's own delta in E3-bighole). A mirror_cell_check MPB job verifies the strong-mirror gap.
+  - {kind: ssh_graded, name: ssh_graded, delta_wall: 0.0, delta_mirror: max, mirror_margin_nm: 5, M: 4,
+     Nside: [20, 30]}
   # Quan-Loncar control with a TARGET-DRIVEN period (ql_period, MPB, cents): run E3 once to create the
   # ql_tune job, then again to build the nanobeam at the tuned period. With r_center < r_end the
   # cavity is an AIR-mode cavity at the centre segment's upper band edge (mode_type auto -> air).
