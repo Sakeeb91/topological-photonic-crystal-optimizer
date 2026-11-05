@@ -142,7 +142,7 @@ def test_e1_gonogo_saturates_at_q_cap():
     rows = [_bq("sin400", 1.0, 10.0, 30, 2022), _bq("sin400", 1.0, 10.0, 45, 1743),
             _bq("sin400", 1.0, 20.0, 30, 6.48e5), _bq("sin400", 1.0, 20.0, 45, 4.72e5),
             _bq("si220", 0.5, 3.0, 40, 1.22e9), _bq("si220", 0.5, 3.0, 60, 7.99e8),
-            _bq("si220", 0.5, 5.0, 40, 4.4e10, dq=1e42), _bq("si220", 0.5, 5.0, 60, 1.9e8)]
+            _bq("si220", 0.5, 5.0, 40, 4.4e10, dq=45), _bq("si220", 0.5, 5.0, 60, 1.9e8, dq=7.3e3)]
     g = P.gonogo("E1", rows)
     v = {k: e["verdict"] for k, e in g["resolution_convergence"].items()}
     assert v["sin400|oxide|w1.0|R10.0"] == "agree"
@@ -152,3 +152,12 @@ def test_e1_gonogo_saturates_at_q_cap():
     # a negative-Q row with no above-cap partner is flagged
     bad = P.gonogo("E1", [_bq("sin400", 0.8, 10.0, 30, -5.0), _bq("sin400", 0.8, 10.0, 45, 900)])
     assert not bad["go"] and bad["flagged_pairs"]
+    # negative Q paired with a positive above-cap value: agree as > cap
+    neg = P.gonogo("E1", [_bq("si220", 0.45, 2.0, 40, -3.0), _bq("si220", 0.45, 2.0, 60, 5e7, dq=2.0)])
+    assert neg["resolution_convergence"]["si220|oxide|w0.45|R2.0"]["verdict"] == "agree"
+
+
+def test_select_cells_margin():
+    rows = _fake_e2()  # min web 90 nm vs the 60 nm Si rule -> margin 30 nm (diameter 70 vs 60 -> 10 nm)
+    assert len(P.select_cells({"platform": "si220", "min_margin_nm": 10}, rows)) == 1
+    assert len(P.select_cells({"platform": "si220", "min_margin_nm": 11}, rows)) == 0

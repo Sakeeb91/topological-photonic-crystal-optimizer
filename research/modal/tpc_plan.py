@@ -118,6 +118,12 @@ def select_cells(sel: dict, results: list[dict]) -> list[dict]:
     req = sel.get("require", ["fab_ok", "gap_contains_target", "below_lightline"])
     if "fab_ok" in req:
         rows = [r for r in rows if r.get("fab", {}).get("ok")]
+    margin = float(sel.get("min_margin_nm", 0.0))
+    if margin > 0:  # extra web/feature margin above the platform rule, against CD bias (tapeout safety)
+        def _m(r):
+            pl = G.platform(r["platform"])
+            return min(r["fab"]["min_web_nm"] - 1e3 * pl["min_web"], r["fab"]["min_hole_diameter_nm"] - 1e3 * pl["min_feature"])
+        rows = [r for r in rows if _m(r) >= margin - 1e-9]
     if "gap_contains_target" in req:
         rows = [r for r in rows if r.get("gap_contains_target")]
     if "below_lightline" in req:
@@ -377,7 +383,8 @@ def _gonogo_e1(rows: list[dict], cap: float = Q_CAP, thr: float = Q_DECISION) ->
         lo, hi = g[0], g[-1]  # lowest and highest resolution
         st = {lo["q_status"], hi["q_status"]}
         e = dict(res=[lo["res"], hi["res"]], T=[lo["T_after"], hi["T_after"]], Q=[lo["Q_bend"], hi["Q_bend"]])
-        if st <= {"above_cap", "unresolved"} and "above_cap" in st:
+        any_high = any((d["Q_bend"] or 0) > cap for d in (lo, hi))  # positive and above the cap, resolved or not
+        if st <= {"above_cap", "unresolved"} and any_high and "ok" not in st:
             e.update(verdict="agree", Q_display=f">{cap:.0e}",
                      note="both at or beyond the resolvable limit: bend loss negligible" if "unresolved" not in st
                      else f"one member unresolved, the other > {cap:.0e}: treated as > cap")
@@ -400,17 +407,18 @@ def _gonogo_e1(rows: list[dict], cap: float = Q_CAP, thr: float = Q_DECISION) ->
     best = {}
     for k, g in groups.items():
         d = g[-1]
-        if d["q_status"] == "unresolved" and not any(x["q_status"] == "above_cap" for x in g):
+        if d["q_status"] == "unresolved" and not any((x["Q_bend"] or 0) > cap for x in g):
             continue
-        qok = d["q_status"] == "above_cap" or any(x["q_status"] == "above_cap" for x in g) or (d["Q_bend"] or 0) >= thr
+        qok = any((x["Q_bend"] or 0) > cap for x in g) or (d["q_status"] == "ok" and (d["Q_bend"] or 0) >= thr)
         if qok and (d["platform"] not in best or (d["R"], d["w"]) < (best[d["platform"]]["R"], best[d["platform"]]["w"])):
             best[d["platform"]] = dict(clad=d["clad"], w=d["w"], R=d["R"], res=d["res"],
-                                       Q_bend=(f">{cap:.0e}" if d["q_status"] != "ok" else d["Q_bend"]))
+                                       Q_bend=(f">{cap:.0e}" if (d["Q_bend"] or 0) > cap or d["q_status"] != "ok" else d["Q_bend"]))
     return dict(exp="E1", go=bool(best) and bool(conv) and not flagged, smallest_R_with_Qbend_ge_1e5=best,
                 resolution_convergence=conv, flagged_pairs=flagged, Q_cap=cap, table=tab,
                 criterion=f"some (platform, w, clad) reaches Q_bend >= {thr:.0e}; every convergence pair agrees "
                           f"(|dQ|/Q < 0.2 below Q_cap = {cap:.0e}, or both >= cap) or stays on the same side of {thr:.0e}; "
-                          "rows with Q <= 0 or T/2-vs-T change > 10% count only when the other member is > cap")
+                          "unresolved rows (Q <= 0 or T/2-vs-T change > 10%) agree as '>cap' when no member is a resolved below-cap "
+                          "value and at least one member is positive and > cap")
 
 
 def gonogo(exp: str, rows: list[dict]) -> dict:
@@ -438,6 +446,9 @@ def gonogo(exp: str, rows: list[dict]) -> dict:
                 if not b["best"] or r["gap_mid_ratio"] > b["best"]["gap_mid_ratio"]:
                     b["best"] = {k2: r[k2] for k2 in ("a", "b", "r", "L", "dlambda_nm", "gap_mid_ratio", "lambda_mid_um")}
                     b["best"]["min_web_nm"] = r["fab"]["min_web_nm"]
+                    pl = G.platform(r["platform"])
+                    b["best"]["fab_margin_nm"] = min(r["fab"]["min_web_nm"] - 1e3 * pl["min_web"],
+                                                     r["fab"]["min_hole_diameter_nm"] - 1e3 * pl["min_feature"])
         refused = {}
         for r in cells:
             for v in r.get("fab", {}).get("violations", []):

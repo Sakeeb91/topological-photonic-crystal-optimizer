@@ -141,7 +141,9 @@ How a pair is judged (`tpc_plan._gonogo_e1`). E1 reruns 4 rows at higher resolut
 - **Q_cap = 1e6.** Harminv/FDTD cannot resolve bend Q above about 1e6-1e7 at these run lengths and PML settings. A pair where both members are above the cap agrees, and is reported as `>1e+06`.
 - **Below the cap,** members agree if |dQ|/Q < 0.2.
 - **`same_side_of_threshold`:** both members fall on the same side of 1e5, which is the only decision E1 makes.
-- **Unresolved rows** (Q <= 0, or a change of more than 10% between Harminv at T/2 and at T) count as "> cap" when the other member is above the cap. Otherwise the pair is flagged.
+- **Unresolved rows** (Q <= 0, or a change of more than 10% between Harminv at T/2 and at T) are handled as follows:
+  - The pair agrees as "> cap" when neither member is a resolved below-cap value and at least one member is positive and above the cap. Example: Si R = 5 gave 4.4e10 (dQ_half 45) and 1.9e8 (dQ_half 7.3e3).
+  - The pair is flagged when a resolved below-cap value meets an unresolved one, or when both members are unresolved and below the cap.
 
 **First E1 run on Modal** (2026-11-05, 44 jobs, about 8 min, run by the parent session):
 
@@ -150,7 +152,7 @@ How a pair is judged (`tpc_plan._gonogo_e1`). E1 reruns 4 rows at higher resolut
 | SiN 400, w = 1.0, R = 10 | 2022 (res 30) | 1743 (res 45) | agree, 16% |
 | SiN 400, w = 1.0, R = 20 | 6.48e5 | 4.72e5 | 37%, same side of 1e5 |
 | Si 220, w = 0.5, R = 3 | 1.22e9 | 7.99e8 | > cap |
-| Si 220, w = 0.5, R = 5 | 4.4e10 (dQ_half 1e42) | 1.9e8 | > cap |
+| Si 220, w = 0.5, R = 5 | 4.4e10 (dQ_half 45) | 1.9e8 (dQ_half 7.3e3) | > cap |
 
 What this means:
 - E0's Q_bend = 2543 (res 20, T = 300) overestimated. The pilot's 1.6e3 was close to the converged value.
@@ -186,6 +188,25 @@ What the output shows:
 No-go:
 - If nothing is feasible on SiN, that confirms the review's prediction that the 120 nm rule removes almost all dimerization. Proceed on Si only.
 - If nothing is feasible on Si, stop. Widen the E2 grid (lower `delta`, larger `r_over_L`, other `w`) before spending on 3D.
+
+**First E2 run on Modal** (2026-11-05, 160 jobs, run by the parent session; go = true):
+
+SiN 400 (oxide-filled, w = 1.0 and 1.2): **0 of 40 cells pass the ANT 120 nm rules.** An SSH hole lattice at 1547 nm is not realizable on the ANT SiN MPW. This is a clean negative result in its own right.
+
+Si 220: **36 feasible cells.** Best by gap-to-midgap ratio:
+
+| Stack | Best cell (um) | Gap | Mid-gap | Min web |
+|---|---|---|---|---|
+| air top, w = 0.5 | a = 0.2225, b = 0.1335, r = 0.0356, L = 0.3561 | 59.2 nm (3.8%) | 1555 nm | 62.3 nm |
+| air top, w = 0.6 | | 47.7 nm (3.1%) | | |
+| oxide-filled, w = 0.5 | | 42.0 nm (2.7%) | | |
+| oxide-filled, w = 0.6 | | 34.0 nm (2.2%) | | |
+
+**Fabrication margin is the open risk.** Every feasible Si cell has a minimum web of 60-64 nm, right at the 60 nm rule. A few nm of global CD bias would break the rule.
+- E2 now reports `fab_margin_nm` for each stack's best cell.
+- Selections accept `select.min_margin_nm`, which requires that much margin above the rule on both web and feature.
+- No current E2 cell has 10 nm of margin. A tapeout design (Paper B / C0) needs an extended E2 grid first: lower `delta` or smaller `r_over_L` near the gap/margin trade-off.
+- E3 runs on the zero-margin pick; that is fine for physics, but not for a mask.
 
 **E3: 3D wall Q.** Runs walls A, B and tanh (M = 6), plus the Quan-Loncar trivial control. Each runs at res 20 and res 30, with a flux-box split into Q_rad and Q_axial (mirror and guided leakage).
 
