@@ -651,7 +651,8 @@ def _gonogo_e3(rows, ok, ref, target_um: float = 1.547, mirror_ratio: float = 10
         var = {k: v for k, v in d.items() if k not in ("a", "b", "r", "L", "period", "r_center", "r_end")}
         key = f"{_cell_key(d)}|{name}|" + ",".join(f"{k}={v}" for k, v in sorted(var.items()) if k != "kind")
         pm = (r.get("convergence") or {}).get("primary") or {}
-        g = groups.setdefault(key, dict(cell=_cell_key(d), design=name.split("[")[0], variant=name, by_res={}))
+        g = groups.setdefault(key, dict(cell=_cell_key(d), design=name.split("[")[0], variant=name, by_res={},
+                                        nside=d.get("Nside", d.get("n_mirror"))))
         rmin = min(h["r"] for h in G.build_design(d))
         g["by_res"][r["res"]] = dict(Q_total=r.get("Q_total"), Q_rad=r.get("Q_rad"), Q_axial=r.get("Q_axial"),
                                      lam_um=pm.get("lam_um"), px_on_rmin=rmin * r["res"], T_harm=r.get("T_harm"),
@@ -673,17 +674,42 @@ def _gonogo_e3(rows, ok, ref, target_um: float = 1.547, mirror_ratio: float = 10
         g["converged"] = bool(g["n_res"] >= 3 and g.get("dQrad_rel", 9) < 0.2 and g.get("dlam_nm", 99) < 2.0
                               and top["px_on_rmin"] >= 2.0)
         g["usable"] = g["converged"] and not g["mirror_limited"] and g["in_window"]
+    # Q_rad plateau across mirror length: compare the two longest Nside (n_mirror for QL) at the highest
+    # resolution they share; a > 20% change means the flux split still feels the mirrors.
+    plateau = {}
+    fam: dict[tuple, list] = {}
+    for g in groups.values():
+        fam.setdefault((g["cell"], g["design"]), []).append(g)
+    for (c, dname), gs in fam.items():
+        gs = [g for g in gs if g["nside"] is not None]
+        if len(gs) < 2:
+            continue
+        gs.sort(key=lambda g: g["nside"])
+        g1, g2 = gs[-2], gs[-1]
+        common = sorted(set(g1["by_res"]) & set(g2["by_res"]))
+        if not common:
+            continue
+        q1, q2 = g1["by_res"][common[-1]]["Q_rad"], g2["by_res"][common[-1]]["Q_rad"]
+        if q1 and q2:
+            ch = abs(q2 - q1) / q2
+            plateau[f"{c}|{dname}"] = dict(nside=[g1["nside"], g2["nside"]], res=common[-1], Q_rad=[q1, q2],
+                                           dQrad_rel=ch, plateaued=ch <= 0.2)
+            for g in gs:
+                g["q_rad_plateaued"] = ch <= 0.2
+                if ch > 0.2:
+                    g["usable"] = False
     designs = sorted({(g["cell"], g["design"]) for g in groups.values()})
     status = {f"{c}|{d}": any(g["usable"] for g in groups.values() if g["cell"] == c and g["design"] == d) for c, d in designs}
     par = [dict(a=r["a"], b=r["b"], r=r["r"], w=r["w"], clear=r.get("other_parity_clear"),
                 in_gap=r.get("other_parity_in_gap")) for r in rows if r.get("kernel") == "mpb_cell"]
     has_ql = any(d == "quan_loncar" for _, d in designs)
     return dict(exp="E3", go=bool(status) and all(status.values()) and has_ql, design_usable=status, variants=groups,
+                q_rad_plateau=plateau,
                 refused=ref, other_parity=par,
                 criterion=f"for every (cell, design) incl. the Quan-Loncar control, some variant is: converged over >= 3 "
                           f"resolutions (top two: |dQ_rad|/Q_rad < 0.2, |dlambda| < 2 nm, >= 2 px on the smallest hole radius), "
-                          f"not mirror-limited (Q_axial >= {mirror_ratio:.0f} x Q_rad), and resonant inside the source window. "
-                          "Compare designs on Q_rad, not Q_total.")
+                          f"not mirror-limited (Q_axial >= {mirror_ratio:.0f} x Q_rad), and resonant inside the source window, and "
+                          "Q_rad plateaued across mirror length (two longest Nside within 20%). Compare designs on Q_rad, not Q_total.")
 
 
 def gonogo(exp: str, rows: list[dict]) -> dict:

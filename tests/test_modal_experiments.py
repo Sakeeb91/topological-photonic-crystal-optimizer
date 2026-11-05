@@ -314,3 +314,25 @@ def test_graded_mirror_design():
     gr = [j for j in e3 if j["tag"].startswith("ssh_graded")]
     assert len(gr) == 2 and all(j["params"]["design"]["delta_mirror"] > 0.06 for j in gr)
     assert sum(j["tag"] == "mirror_cell_check" for j in e3) == 1
+
+
+def test_e3_q_rad_plateau_flag():
+    d = dict(kind="ssh", a=0.2022, b=0.1793, r=0.0534, wall="A")
+    rows = [_nb(dict(d, Nside=n), 29, q, 1e6, 1.547, name=f"ssh_A[Nside={n}]") for n, q in ((30, 1.24e5), (40, 2.81e5))]
+    g = P.gonogo("E3", rows)
+    p = g["q_rad_plateau"]["L381.5nm|ssh_A"]
+    assert p["nside"] == [30, 40] and not p["plateaued"] and p["dQrad_rel"] > 0.5
+    rows2 = [_nb(dict(d, Nside=n), 29, q, 1e7, 1.547, name=f"ssh_A[Nside={n}]") for n, q in ((40, 2.6e5), (60, 2.8e5))]
+    assert P.gonogo("E3", rows2)["q_rad_plateau"]["L381.5nm|ssh_A"]["plateaued"]
+
+
+@pytest.mark.skipif(not os.path.isdir(SNAPSHOT_E3), reason="Modal results snapshot not present")
+def test_e3_bighole_snapshot_not_plateaued():
+    import glob
+    import json
+    rows = [json.load(open(f)) for f in glob.glob(os.path.join(SNAPSHOT_E3, "**", "*.json"), recursive=True)]
+    pl = P.gonogo("E3", rows)["q_rad_plateau"]
+    big = {k: v for k, v in pl.items() if k.startswith("L381.5nm|ssh_")}
+    if not big:
+        pytest.skip("snapshot predates E3-bighole")
+    assert all(not v["plateaued"] for v in big.values())  # Nside 30 -> 40 still moves Q_rad by > 20%
