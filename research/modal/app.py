@@ -79,6 +79,13 @@ def _run(job: dict, nproc: int) -> dict:
         proc = subprocess.run(cmd, capture_output=True, text=True)
         wall = time.time() - t0
         if proc.returncode != 0 or not os.path.exists(pout):
+            uns = P.unstable_result(job, proc.stdout, proc.stderr, wall)
+            if uns:  # deterministic blow-up: store under the normal key so gonogo reports it
+                os.makedirs(os.path.dirname(out_path), exist_ok=True)
+                with open(out_path, "w") as f:
+                    json.dump(uns, f, indent=1)
+                vol.commit()
+                return dict(key=job["key"], tag=job["tag"], cached=False, status="unstable", res=job["params"].get("res"))
             fail = dict(job=job, returncode=proc.returncode, stderr_tail=proc.stderr[-4000:],
                         stdout_tail=proc.stdout[-2000:], wall_s=wall)
             fpath = os.path.join(VOL_MOUNT, job["exp"], "_failed", f"{job['key']}.json")

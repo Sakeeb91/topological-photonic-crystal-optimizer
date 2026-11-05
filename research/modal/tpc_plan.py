@@ -58,6 +58,23 @@ def job_path(job: dict) -> str:
     return f"{job['exp']}/{job['kernel']}/{job['key']}.json"
 
 
+UNSTABLE_MARKERS = ("fields are NaN or Inf", "NaN or Inf")
+
+
+def unstable_result(job: dict, stdout: str, stderr: str, wall_s: float) -> dict | None:
+    """If a failed run aborted because MEEP's fields blew up (a deterministic numerical instability,
+    typically too coarse a grid), return a result record with status 'unstable' to store under the
+    job's normal key (so it is reported, and not paid for again). Other failures return None."""
+    text = (stderr or "") + (stdout or "")
+    if not any(m in text for m in UNSTABLE_MARKERS):
+        return None
+    p = job["params"]
+    return dict(kernel=job["kernel"], status="unstable", res=p.get("res"), platform=p.get("platform"),
+                w=p.get("w"), clad=p.get("clad"), design=p.get("design"), disorder=p.get("disorder"),
+                reason="MEEP fields became NaN/Inf (numerical instability; raise the resolution)",
+                stderr_tail=text[-1500:], wall_s=wall_s, job=job)
+
+
 def make_job(exp: str, kernel: str, params: dict, tag: str = "") -> dict:
     params = copy.deepcopy(params)
     j = dict(exp=exp, kernel=kernel, params=params, tag=tag, key=job_key(kernel, params))
@@ -797,7 +814,9 @@ def gonogo(exp: str, rows: list[dict]) -> dict:
         ok = _ok(rows)
         ref = [dict(tag=r.get("job", {}).get("tag"), reason=r.get("reason")) for r in rows if r.get("status") == "refused_fab"]
         if exp == "E3":
-            return _gonogo_e3(rows, ok, ref)
+            g = _gonogo_e3(rows, ok, ref)
+            g["unstable"] = [dict(tag=r.get("job", {}).get("tag"), res=r.get("res")) for r in rows if r.get("status") == "unstable"]
+            return g
         return dict(exp=exp, go=bool(ok), refused=ref,
                     results=[dict(tag=r.get("job", {}).get("tag"), primary_A=r.get("primary_A"), primary_B=r.get("primary_B"),
                                   primary=(r.get("convergence") or {}).get("primary")) for r in ok],

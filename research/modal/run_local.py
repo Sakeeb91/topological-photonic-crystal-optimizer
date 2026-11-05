@@ -93,6 +93,11 @@ def run_job(job: dict, out: str, env: str, nproc: int) -> dict:
     wall = time.time() - t0
     os.remove(pin)
     if pr.returncode != 0 or not os.path.exists(path + ".tmp"):
+        uns = P.unstable_result(job, pr.stdout, pr.stderr, wall)
+        if uns:
+            with open(path, "w") as f:
+                json.dump(uns, f, indent=1)
+            return dict(status="unstable", key=job["key"], tag=job["tag"], wall_s=wall)
         fpath = os.path.join(out, job["exp"], "_failed", f"{job['key']}.json")
         os.makedirs(os.path.dirname(fpath), exist_ok=True)
         with open(fpath, "w") as f:

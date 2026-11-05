@@ -403,3 +403,16 @@ def test_common_resolution_and_floor():
     alone = dict(P.load_manifest("E3"), designs=[d for d in P.load_manifest("E3")["designs"] if d["kind"] == "quan_loncar"])
     ql_only = [j for j in P.expand(alone, lambda e: _fake_e2_bighole() if e == "E2" else [hit]) if j["kernel"] == "nanobeam3d"]
     assert {j["params"]["res"] for j in ql_only} == {23}  # floor, not 16
+
+
+def test_unstable_runs_are_recorded_and_reported():
+    job = P.make_job("E3", "nanobeam3d", dict(platform="si220", w=0.5, clad="sub", res=16, fcen=0.646, df=0.04,
+                                              T_harm=1000, design=dict(kind="quan_loncar", period=0.4616, r_center=0.0969,
+                                                                       r_end=0.1385, n_taper=10, n_mirror=15)),
+                     tag="quan_loncar[n_mirror=15]|res16|nominal")
+    err = "meep: simulation fields are NaN or Inf\nMPI_ABORT was invoked"
+    u = P.unstable_result(job, "", err, 104.0)
+    assert u["status"] == "unstable" and u["res"] == 16
+    assert P.unstable_result(job, "", "Killed (OOM)", 5.0) is None  # other failures stay in _failed
+    g = P.gonogo("E3", [u])
+    assert g["unstable"] == [dict(tag="quan_loncar[n_mirror=15]|res16|nominal", res=16)] and g["go"] is False
