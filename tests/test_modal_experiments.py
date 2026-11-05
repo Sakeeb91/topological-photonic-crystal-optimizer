@@ -112,6 +112,15 @@ def _fake_e2():
                  gap_contains_target=True, below_lightline=True, fab=G.ssh_cell_fab_check(a, b, r, 0.5, plat))]
 
 
+def _fake_e2_bighole():
+    # an e2b-like cell: r = 53.5 nm, webs 95 / 73 nm (>= 10 nm margin on the 60 nm rule)
+    plat = G.platform("si220")
+    a, b, r = 0.2025, 0.1796, 0.0535
+    return [dict(kernel="mpb_cell", platform="si220", clad="sub", w=0.5, a=a, b=b, r=r, L=a + b,
+                 edge_f1=0.640, edge_f2=0.652, gap_abs=0.012, gap_mid_ratio=0.0186,
+                 gap_contains_target=True, below_lightline=True, fab=G.ssh_cell_fab_check(a, b, r, 0.5, plat))]
+
+
 def test_selection_manifests_expand_from_e2():
     e3 = P.expand(P.load_manifest("E3"), lambda e: _fake_e2())
     # 3 SSH walls x 3 Nside + Quan-Loncar 2 n_mirror x 3 period_scale, one resolution, + parity check
@@ -121,8 +130,11 @@ def test_selection_manifests_expand_from_e2():
     assert all(j["params"]["res"] * min(h["r"] for h in G.build_design(j["params"]["design"])) >= 1.5 for j in nb)
     e3c = P.expand(P.load_manifest(os.path.join(os.path.dirname(P.__file__), "manifests", "e3c.yaml")), lambda e: _fake_e2())
     assert len({j["params"]["res"] for j in e3c if j["tag"].startswith("ssh_A")}) == 3
-    e4 = P.expand(P.load_manifest("E4"), lambda e: _fake_e2())
-    assert len(e4) == 1 + 3 * (1 + 4 * 2 * 4)  # + 1 parity check  # 3 designs x (nominal + 4 classes x 2 sigmas x N=4)
+    assert P.expand(P.load_manifest("E4"), lambda e: _fake_e2()) == []  # r = 35 nm fails min_r_nm 50
+    e4 = P.expand(P.load_manifest("E4"), lambda e: _fake_e2_bighole())
+    # parity check + 3 designs x (nominal + sens3d + 4 classes x 2 sigmas x N=4)
+    assert len(e4) == 1 + 3 * (2 + 4 * 2 * 4)
+    assert sum(j["kernel"] == "sens3d" for j in e4) == 3  # 3 designs x (nominal + 4 classes x 2 sigmas x N=4)
     e5 = P.expand(P.load_manifest("E5"), lambda e: _fake_e2())
     assert [j["kernel"] for j in e5] == ["mpb_cell", "supercell3d", "supercell3d", "ring3d"]
     ring = e5[-1]
@@ -207,3 +219,46 @@ def test_e3_report_on_modal_snapshot_keeps_both_cells():
     assert sum(1 for k in first if set(first[k]["by_res"]) >= {20, 30}) == 8
     assert g["go"] is False  # not converged over 3 resolutions; mirror-limited
     assert all(first[k]["mirror_limited"] for k in first)
+
+
+FIX_PT = os.path.join(os.path.dirname(__file__), "fixtures", "pt_validation_res20.json")
+
+
+def test_pt_shift_and_stats_on_validation_runs():
+    """sens3d gradients vs FDTD on the same CRN realizations (validation scale, res 20)."""
+    import json
+    fx = json.load(open(FIX_PT))
+    sens, nom = fx["sens"], fx["nominal"]
+    f_nom = nom["convergence"]["primary"]["f"]
+    pairs = []
+    for k, r in fx["spots"].items():
+        fd = min([r["convergence"]["primary"]], key=lambda m: abs(m["f"] - sens["f0"]))["f"] - f_nom
+        pairs.append((fd, P.pt_shift(sens, sens["design"], r["disorder"])))
+    a = np.array(pairs)
+    assert np.all(np.sign(a[:, 0]) == np.sign(a[:, 1]))  # same sign in every realization
+    slope = (a[:, 0] @ a[:, 1]) / (a[:, 1] @ a[:, 1])
+    assert 0.5 < slope < 2.0
+    st = P.pt_stats(sens, sens["design"], ["radius", "position_x", "cd_bias"], [5], n_draws=400)
+    for v in st["by_class"].values():  # linear model: Monte Carlo matches the analytic value
+        assert v["sigma_lambda_nm_mc"] == pytest.approx(v["sigma_lambda_nm_analytic"], rel=0.15)
+
+
+def test_group_ensemble_reports_pt_and_minkov_c():
+    import json
+    fx = json.load(open(FIX_PT))
+    d = fx["sens"]["design"]
+    base = dict(platform="sin400", w=0.6, clad="susp", res=20, fcen=0.8, df=0.2, T_harm=150, design=d)
+    jobs, rows = {}, []
+    def add(tag, kernel, r, dis=None):
+        if kernel == "nanobeam3d":  # these validation runs had flux off; use the Harminv Q as Q_total
+            r = dict(r, Q_total=r["convergence"]["primary"]["Q"])
+        j = P.make_job("E4", kernel, dict(base, **({"disorder": dis} if dis else {})), tag)
+        jobs[j["key"]] = j; rows.append((j["key"], r))
+    add("ssh_A|res20|nominal", "nanobeam3d", fx["nominal"])
+    add("ssh_A|res20|sens", "sens3d", fx["sens"])
+    for i, k in enumerate(["x10a", "x10b"]):
+        add(f"ssh_A|res20|position_x|s10|k{i}", "nanobeam3d", fx["spots"][k], fx["spots"][k]["disorder"])
+    out = P.group_ensemble(rows, jobs, pt=dict(classes=["radius", "position_x"], sigmas_nm=[1, 3], n_draws=200))
+    cell = out["ssh_A|res20|position_x|s10"]
+    assert cell["pt_check"]["n"] == 2 and "C_minkov_per_nm2" in cell
+    assert set(out["ssh_A|res20|pt"]["by_class"]) == {"radius|s1", "radius|s3", "position_x|s1", "position_x|s3"}

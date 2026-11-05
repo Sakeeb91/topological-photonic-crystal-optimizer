@@ -230,6 +230,9 @@ def expand(man: dict, load_results: Callable[[str], list[dict]] | None = None) -
                         continue
                     ens = man["ensemble"]
                     jobs.append(make_job(exp, "nanobeam3d", p, tag=f"{name}|res{res}|nominal"))
+                    if man.get("pt"):
+                        sp = dict(p, **{k: v for k, v in man["pt"].items() if k in ("n_theta", "n_z", "T_harm_pass1")})
+                        jobs.append(make_job(exp, "sens3d", sp, tag=f"{name}|res{res}|sens"))
                     for cls in ens["classes"]:
                         for sig in ens["sigmas_nm"]:
                             for k in range(int(ens["N"])):
@@ -270,7 +273,7 @@ def estimate(job: dict) -> dict:
         R = p["R"]; sr = R + w / 2 + 2.5 + dpml; sz = t + 3 + 2 * dpml
         steps = (10 / (0.25 / 1.547) + p["T_after"]) * 2 * res
         return dict(kind="cyl", vox_reduced=sr * sz * res ** 2, steps=steps)
-    if k == "nanobeam3d":
+    if k in ("nanobeam3d", "sens3d"):
         holes = G.build_design(p["design"])
         xmax = max(abs(h["x"]) for h in holes)
         sx = 2 * (xmax + 1.0) + 2 * dpml
@@ -292,7 +295,14 @@ def estimate(job: dict) -> dict:
     vox = sx * sy * sz * res ** 3
     vred = vox / 2 ** nsym
     steps = (10.0 / p["df"] + p["T_harm"]) * 2 * res
-    return dict(kind="3d", vox_full=vox, vox_reduced=vred, steps=steps, mem_GB=BYTES_PER_REDUCED_VOXEL * vred / 1e9)
+    mem = BYTES_PER_REDUCED_VOXEL * vred / 1e9
+    if k == "sens3d":  # two passes; DFT of 6 complex components over the slab box, gathered in full
+        steps *= 2
+        dft_pts = (sx - 2 * dpml) * (w + 1.2) * (t + 1.0) * res ** 3
+        # get_dft_array returns the full array on every MPI rank: 6 complex components x (array +
+        # interpolator copy), times 16 ranks (the 3d_big tier) as a conservative bound
+        mem += 6 * 16 * dft_pts * 2 * 16 / 1e9
+    return dict(kind="3d", vox_full=vox, vox_reduced=vred, steps=steps, mem_GB=mem)
 
 
 def route(job: dict) -> str:
@@ -302,7 +312,7 @@ def route(job: dict) -> str:
     if k == "ring3d":
         return "ring"
     e = estimate(job)
-    if e["vox_reduced"] > 1.5e7:
+    if e["vox_reduced"] > 1.5e7 or e.get("mem_GB", 0) > 0.8 * TIERS["3d_big"]["memory"] / 1024:
         return "3d_xl"
     if k == "supercell3d" or e["vox_reduced"] > 4e6:
         return "3d_big"
@@ -361,21 +371,95 @@ def ensemble_stats(rows: list[dict]) -> dict:
                 sigma_lambda_ci95_nm=[1e3 * v for v in _boot(lam, lambda x: x.std(ddof=1))] if len(lam) > 2 else None)
 
 
-def group_ensemble(results: list[tuple[str, dict]], jobs_by_key: dict[str, dict]) -> dict:
-    """Group (key, result) pairs into ensemble cells by tag, dropping the realization index."""
-    cells: dict[str, list[dict]] = {}
-    for key, r in results:
-        parts = [t for t in jobs_by_key[key]["tag"].split("|") if t != "validation"]
-        parts = [t for t in parts if not (t.startswith("k") and t[1:].isdigit())]
-        cells.setdefault("|".join(parts), []).append(r)
+_CLASS_KEY = {"radius": "sigma_r_nm", "position_x": "sigma_x_nm", "offset_y": "sigma_y_nm", "cd_bias": "sigma_bias_nm"}
+
+
+def pt_shift(sens: dict, design: dict, dis: dict) -> float:
+    """First-order frequency shift (1/um) for one CRN disorder realization, from sens3d gradients."""
+    g = {h["ord"]: h for h in sens["holes"]}
+    nom = G.build_design(design)
+    per = G.apply_disorder(nom, dis)
+    return float(sum(g[a["ord"]]["df_dr"] * (b["r"] - a["r"]) + g[a["ord"]]["df_dx"] * (b["x"] - a["x"])
+                     + g[a["ord"]]["df_dy"] * (b["y"] - a["y"]) for a, b in zip(nom, per)))
+
+
+def pt_stats(sens: dict, design: dict, classes, sigmas_nm, n_draws: int = 2000, seed: int = 2026) -> dict:
+    """sigma_lambda per (class, sigma) from first-order PT. Linear in the displacements, so the
+    analytic value is exact for the linear model; the CRN Monte Carlo is reported alongside.
+    Draws use realization indices 100000+ so they never coincide with FDTD spot checks."""
+    lam0 = sens["lam0_um"]
+    gr = np.array([h["df_dr"] for h in sens["holes"]]); gx = np.array([h["df_dx"] for h in sens["holes"]])
+    gy = np.array([h["df_dy"] for h in sens["holes"]])
+    analytic_coef = {"radius": float(np.sqrt((gr ** 2).sum())), "position_x": float(np.sqrt((gx ** 2).sum())),
+                     "offset_y": float(np.sqrt((gy ** 2).sum())), "cd_bias": float(abs(gr.sum()))}
     out = {}
-    for cell, rows in sorted(cells.items()):
-        if cell.endswith("|nominal"):
-            r = rows[0]
-            out[cell] = dict(status=r.get("status"), Q_total=r.get("Q_total"), Q_rad=r.get("Q_rad"),
-                             lam_um=((r.get("convergence") or {}).get("primary") or {}).get("lam_um"))
+    for cls in classes:
+        cl = cls if isinstance(cls, list) else [cls]
+        for sig in sigmas_nm:
+            an = 1e-3 * float(sig) * float(np.sqrt(sum(analytic_coef[c] ** 2 for c in cl)))
+            dis = {v: 0.0 for v in _CLASS_KEY.values()}
+            for c in cl:
+                dis[_CLASS_KEY[c]] = float(sig)
+            df = np.array([pt_shift(sens, design, dict(dis, seed=seed, realization=100000 + k)) for k in range(n_draws)])
+            out[f"{'+'.join(cl)}|s{sig}"] = dict(sigma_lambda_nm_analytic=1e3 * lam0 ** 2 * an,
+                                                sigma_lambda_nm_mc=float(1e3 * lam0 ** 2 * df.std(ddof=1)), n_draws=n_draws)
+    return dict(lam0_um=lam0, dlam_dbias_nm_per_nm=sens.get("dlam_dbias_nm_per_nm"), by_class=out,
+                note="first-order frequency statistics; Q under disorder needs FDTD (loss is second order)")
+
+
+def group_ensemble(results: list[tuple[str, dict]], jobs_by_key: dict[str, dict], pt: dict | None = None) -> dict:
+    """Per (design, res) ensemble cell: FDTD statistics; with sens3d results, PT sigma_lambda for all
+    classes/sigmas, PT-vs-FDTD spot-check agreement, and the Minkov coefficient C in
+    <1/Q - 1/Q_nominal> = C sigma^2 (fit per class from the FDTD spot set)."""
+    cells: dict[str, list] = {}
+    sens: dict[str, dict] = {}
+    nominal: dict[str, dict] = {}
+    for key, r in results:
+        job = jobs_by_key[key]
+        parts = [t for t in job["tag"].split("|") if t != "validation"]
+        if job["kernel"] not in ("nanobeam3d", "sens3d") or len(parts) < 3:
+            continue  # e.g. the parity_check MPB job
+        base = "|".join(parts[:2])
+        if parts[2] == "sens":
+            sens[base] = r; continue
+        if parts[2] == "nominal":
+            nominal[base] = r; continue
+        cell = "|".join(t for t in parts if not (t.startswith("k") and t[1:].isdigit()))
+        cells.setdefault(cell, []).append((job, r))
+    out = {}
+    for base, r in sorted(nominal.items()):
+        out[f"{base}|nominal"] = dict(status=r.get("status"), Q_total=r.get("Q_total"), Q_rad=r.get("Q_rad"),
+                                      lam_um=((r.get("convergence") or {}).get("primary") or {}).get("lam_um"))
+    for cell, pairs in sorted(cells.items()):
+        base = "|".join(cell.split("|")[:2])
+        rows = [r for _, r in pairs]
+        st = ensemble_stats(rows)
+        nr = nominal.get(base)
+        sig = float(cell.split("|")[-1][1:])
+        if nr and nr.get("Q_total"):
+            inv = [1 / r["Q_total"] - 1 / nr["Q_total"] for r in rows if r.get("Q_total")]
+            if inv:
+                st["C_minkov_per_nm2"] = float(np.mean(inv) / sig ** 2)
+                st["C_note"] = "<1/Q - 1/Q_nom> / sigma^2 (Minkov et al., Opt. Express 21, 28233, 2013); extrapolates loss to 1-3 nm"
+        if base in sens and sens[base].get("status") == "ok" and nr:
+            f_nom = ((nr.get("convergence") or {}).get("primary") or {}).get("f")
+            cmp = []
+            for job, r in pairs:
+                pm = (r.get("convergence") or {}).get("primary") or {}
+                if f_nom and pm.get("f"):
+                    cmp.append((pm["f"] - f_nom, pt_shift(sens[base], job["params"]["design"], job["params"]["disorder"])))
+            if cmp:
+                a = np.array(cmp)
+                st["pt_check"] = dict(n=len(a), fdtd_df=a[:, 0].tolist(), pt_df=a[:, 1].tolist(),
+                                      slope_fdtd_vs_pt=float((a[:, 0] @ a[:, 1]) / max(a[:, 1] @ a[:, 1], 1e-30)),
+                                      corr=float(np.corrcoef(a[:, 0], a[:, 1])[0, 1]) if len(a) > 2 else None)
+        out[cell] = st
+    for base, sr in sorted(sens.items()):
+        if sr.get("status") == "ok" and pt:
+            out[f"{base}|pt"] = pt_stats(sr, sr["design"], pt.get("classes", ["radius", "position_x", "offset_y", "cd_bias"]),
+                                         pt.get("sigmas_nm", [1, 2, 3, 5, 10]), int(pt.get("n_draws", 2000)), int(pt.get("seed", 2026)))
         else:
-            out[cell] = ensemble_stats(rows)
+            out[f"{base}|pt"] = dict(status=sr.get("status"), reason=sr.get("reason"))
     return out
 
 

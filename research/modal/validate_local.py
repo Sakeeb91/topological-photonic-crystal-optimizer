@@ -27,21 +27,24 @@ SMALL = {
     "mpb_cell": dict(res=10, Ly=2.0, Lz=2.0, rescale_iters=2),
     "bend_q": dict(res=12, T_after=60, neff_res=16),
     "nanobeam3d": dict(T_harm=60, nfreq=41),   # res comes from shrink_manifest
+    "sens3d": dict(T_harm=60, n_theta=16, n_z=4),
     "supercell3d": dict(T_harm=40),
     "ring3d": dict(T_harm=20),
 }
-LIMIT = {"E0": 99, "E1": 2, "E2": 6, "E3": 8, "E4": 8, "E5": 2}
+LIMIT = {"E0": 99, "E1": 2, "E2": 6, "E3": 8, "E4": 9, "E5": 2}
 
 
 def shrink_manifest(man: dict) -> dict:
     m = copy.deepcopy(man)
-    if "res" in m:
+    if "res" in m or "px_on_r" in m:
+        m.pop("px_on_r", None)
         m["res"] = [10, 12]
     for d in m.get("designs", []):
         if "Nside" in d:
             d["Nside"] = 4
         if d["kind"] == "quan_loncar":
             d["n_taper"], d["n_mirror"] = 3, 3
+            d.pop("period_scale", None)
     if "ensemble" in m:
         m["ensemble"]["N"] = 1
         m["ensemble"]["sigmas_nm"] = m["ensemble"]["sigmas_nm"][:1]
@@ -53,6 +56,7 @@ def shrink_manifest(man: dict) -> dict:
         rg["R_um"], rg["res"] = 1.2, 8
     if m.get("select"):
         m["select"]["top_k"] = 1
+        m["select"].pop("min_r_nm", None); m["select"].pop("min_margin_nm", None)  # local E2 is tiny
     return m
 
 
@@ -130,7 +134,8 @@ def main():
                            statuses=sorted({r.get("status", "ok") for r in rows}), gonogo_go=g.get("go"))
         if exp == "E4":
             jobs_by_key = {j["key"]: j for j in jobs}
-            summ = P.group_ensemble([(r["job"]["key"], r) for r in rows], jobs_by_key)
+            summ = P.group_ensemble([(r["job"]["key"], r) for r in rows], jobs_by_key,
+                                    pt=dict(man.get("pt") or {}, classes=man["ensemble"]["classes"], n_draws=200) if man.get("pt") else None)
             json.dump(summ, open(os.path.join(a.out, "E4", "summary.json"), "w"), indent=1)
     print(json.dumps(report, indent=1))
 

@@ -263,7 +263,7 @@ def _summarize_e4(manifest: str, n: int) -> None:
         man["ensemble"]["N"] = int(n)
     jobs = {j["key"]: j for j in P.expand(man, load_results)}
     rows = [(r["job"]["key"], r) for r in load_results("E4") if r.get("job", {}).get("key") in jobs]
-    summ = P.group_ensemble(rows, jobs)
+    summ = P.group_ensemble(rows, jobs, pt=dict(man.get("pt") or {}, classes=man["ensemble"]["classes"]) if man.get("pt") else None)
     with vol.batch_upload(force=True) as b:
         tmp = os.path.join(tempfile.mkdtemp(), "summary.json")
         with open(tmp, "w") as f:
