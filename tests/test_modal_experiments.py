@@ -114,11 +114,12 @@ def _fake_e2():
 
 def test_selection_manifests_expand_from_e2():
     e3 = P.expand(P.load_manifest("E3"), lambda e: _fake_e2())
-    assert len(e3) == 8 and {j["tier"] for j in e3} <= {"3d", "3d_big"}
+    assert len(e3) == 9 and {j["tier"] for j in e3} <= {"light", "3d", "3d_big"}
+    assert sum(j["params"].get("check_other_parity", False) for j in e3) == 1
     e4 = P.expand(P.load_manifest("E4"), lambda e: _fake_e2())
-    assert len(e4) == 3 * (1 + 4 * 2 * 4)  # 3 designs x (nominal + 4 classes x 2 sigmas x N=4)
+    assert len(e4) == 1 + 3 * (1 + 4 * 2 * 4)  # + 1 parity check  # 3 designs x (nominal + 4 classes x 2 sigmas x N=4)
     e5 = P.expand(P.load_manifest("E5"), lambda e: _fake_e2())
-    assert [j["kernel"] for j in e5] == ["supercell3d", "supercell3d", "ring3d"]
+    assert [j["kernel"] for j in e5] == ["mpb_cell", "supercell3d", "supercell3d", "ring3d"]
     ring = e5[-1]
     assert ring["tier"] == "ring" and P.cost(ring)["hours"] < 24
 
@@ -129,3 +130,25 @@ def test_ensemble_stats():
     s = P.ensemble_stats(rows)
     assert s["n"] == 4 and s["Q_harmonic"] == pytest.approx(4 / (1 / 1000 + 1 / 2000 + 1 / 4000 + 1 / 500))
     assert s["Q10"] <= s["Q_median"]
+
+
+def _bq(platform, w, R, res, Q, dq=0.01, lam=1.55):
+    return dict(kernel="bend_q", platform=platform, clad="oxide", w=w, R=R, res=res, T_harm=2000, Q_bend=Q,
+                lam_bend_um=lam, convergence=dict(dQ_rel_half_vs_full=dq))
+
+
+def test_e1_gonogo_saturates_at_q_cap():
+    # the four convergence pairs reported from the first E1 run on Modal (2026-11-05)
+    rows = [_bq("sin400", 1.0, 10.0, 30, 2022), _bq("sin400", 1.0, 10.0, 45, 1743),
+            _bq("sin400", 1.0, 20.0, 30, 6.48e5), _bq("sin400", 1.0, 20.0, 45, 4.72e5),
+            _bq("si220", 0.5, 3.0, 40, 1.22e9), _bq("si220", 0.5, 3.0, 60, 7.99e8),
+            _bq("si220", 0.5, 5.0, 40, 4.4e10, dq=1e42), _bq("si220", 0.5, 5.0, 60, 1.9e8)]
+    g = P.gonogo("E1", rows)
+    v = {k: e["verdict"] for k, e in g["resolution_convergence"].items()}
+    assert v["sin400|oxide|w1.0|R10.0"] == "agree"
+    assert v["sin400|oxide|w1.0|R20.0"] == "same_side_of_threshold"
+    assert v["si220|oxide|w0.5|R3.0"] == "agree" and v["si220|oxide|w0.5|R5.0"] == "agree"
+    assert g["go"] and g["smallest_R_with_Qbend_ge_1e5"]["si220"]["R"] == 3.0
+    # a negative-Q row with no above-cap partner is flagged
+    bad = P.gonogo("E1", [_bq("sin400", 0.8, 10.0, 30, -5.0), _bq("sin400", 0.8, 10.0, 45, 900)])
+    assert not bad["go"] and bad["flagged_pairs"]

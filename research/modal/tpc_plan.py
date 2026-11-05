@@ -176,6 +176,13 @@ def expand(man: dict, load_results: Callable[[str], list[dict]] | None = None) -
     for cell in cells:
         geo = _cell_geometry(cell)
         fcen, df = _window(cell, man)
+        if man.get("check_other_parity", True):
+            # TE1/TM-like bands inside the TE0 SSH gap would couple under transverse disorder
+            # (likely for multimode cross-sections such as SiN w >= 1.0 um at 400 nm).
+            jobs.append(make_job(exp, "mpb_cell", dict(platform=geo["platform"], clad=geo["clad"], w=geo["w"],
+                                                       a=geo["a"], b=geo["b"], r=geo["r"], res=int(cell.get("res", 32)),
+                                                       Ly=cell.get("Ly", 3.0), Lz=cell.get("Lz", 3.0),
+                                                       check_other_parity=True), tag="parity_check"))
         base = dict(platform=geo["platform"], w=geo["w"], clad=geo["clad"], fcen=fcen, df=df, **sim)
         kind = man.get("kind", "nanobeam")
         if kind == "nanobeam":
@@ -340,6 +347,72 @@ def _ok(rows):
     return [r for r in rows if r.get("status", "ok") == "ok"]
 
 
+Q_CAP = 1e6          # Harminv/FDTD cannot resolve bend Q above ~1e6-1e7 at the E1 run lengths and PML
+Q_DECISION = 1e5     # E1 decides which (platform, w, R) reach Q_bend >= 1e5
+
+
+def _q_status(q, dq_half, cap=Q_CAP):
+    """'ok' (resolved), 'above_cap' (resolved and > cap), 'unresolved' (Q <= 0 or T/2-vs-T change > 10%)."""
+    if q is None or q <= 0 or (dq_half is not None and dq_half > 0.1):
+        return "unresolved"
+    return "above_cap" if q > cap else "ok"
+
+
+def _gonogo_e1(rows: list[dict], cap: float = Q_CAP, thr: float = Q_DECISION) -> dict:
+    bq = [r for r in rows if r.get("kernel") == "bend_q"]
+    tab = []
+    for r in bq:
+        dq = (r.get("convergence") or {}).get("dQ_rel_half_vs_full")
+        tab.append(dict(platform=r["platform"], clad=r["clad"], w=r["w"], R=r["R"], res=r["res"],
+                        T_after=r.get("T_harm", r.get("T_after")), Q_bend=r.get("Q_bend"), lam_um=r.get("lam_bend_um"),
+                        dQ_half=dq, q_status=_q_status(r.get("Q_bend"), dq, cap)))
+    tab.sort(key=lambda d: (d["platform"], d["clad"], d["w"], d["R"], d["res"]))
+    groups: dict[tuple, list[dict]] = {}
+    for d in tab:
+        groups.setdefault((d["platform"], d["clad"], d["w"], d["R"]), []).append(d)
+    conv = {}
+    for k, g in groups.items():
+        if len(g) < 2:
+            continue
+        lo, hi = g[0], g[-1]  # lowest and highest resolution
+        st = {lo["q_status"], hi["q_status"]}
+        e = dict(res=[lo["res"], hi["res"]], T=[lo["T_after"], hi["T_after"]], Q=[lo["Q_bend"], hi["Q_bend"]])
+        if st <= {"above_cap", "unresolved"} and "above_cap" in st:
+            e.update(verdict="agree", Q_display=f">{cap:.0e}",
+                     note="both at or beyond the resolvable limit: bend loss negligible" if "unresolved" not in st
+                     else f"one member unresolved, the other > {cap:.0e}: treated as > cap")
+        elif "unresolved" in st:
+            e.update(verdict="flag", note="unresolved member without an above-cap partner: rerun with longer T_after")
+        else:
+            q0, q1 = min(lo["Q_bend"], cap), min(hi["Q_bend"], cap)
+            e["dQ_rel"] = abs(q1 - q0) / q1
+            e["dlam_nm"] = 1e3 * abs(hi["lam_um"] - lo["lam_um"])
+            if e["dQ_rel"] < 0.2:
+                e["verdict"] = "agree"
+            elif (lo["Q_bend"] >= thr) == (hi["Q_bend"] >= thr):
+                e.update(verdict="same_side_of_threshold",
+                         note=f"|dQ|/Q = {e['dQ_rel']:.0%} but both on the same side of {thr:.0e}: the E1 decision is unchanged")
+            else:
+                e.update(verdict="flag", note=f"members straddle the {thr:.0e} decision threshold")
+        conv[f"{k[0]}|{k[1]}|w{k[2]}|R{k[3]}"] = e
+    flagged = [k for k, e in conv.items() if e["verdict"] == "flag"]
+    # smallest R per platform whose (highest-res) row is resolved and >= thr, or above cap
+    best = {}
+    for k, g in groups.items():
+        d = g[-1]
+        if d["q_status"] == "unresolved" and not any(x["q_status"] == "above_cap" for x in g):
+            continue
+        qok = d["q_status"] == "above_cap" or any(x["q_status"] == "above_cap" for x in g) or (d["Q_bend"] or 0) >= thr
+        if qok and (d["platform"] not in best or (d["R"], d["w"]) < (best[d["platform"]]["R"], best[d["platform"]]["w"])):
+            best[d["platform"]] = dict(clad=d["clad"], w=d["w"], R=d["R"], res=d["res"],
+                                       Q_bend=(f">{cap:.0e}" if d["q_status"] != "ok" else d["Q_bend"]))
+    return dict(exp="E1", go=bool(best) and bool(conv) and not flagged, smallest_R_with_Qbend_ge_1e5=best,
+                resolution_convergence=conv, flagged_pairs=flagged, Q_cap=cap, table=tab,
+                criterion=f"some (platform, w, clad) reaches Q_bend >= {thr:.0e}; every convergence pair agrees "
+                          f"(|dQ|/Q < 0.2 below Q_cap = {cap:.0e}, or both >= cap) or stays on the same side of {thr:.0e}; "
+                          "rows with Q <= 0 or T/2-vs-T change > 10% count only when the other member is > cap")
+
+
 def gonogo(exp: str, rows: list[dict]) -> dict:
     rows = [r for r in rows if isinstance(r, dict)]
     if exp == "E0":
@@ -350,29 +423,7 @@ def gonogo(exp: str, rows: list[dict]) -> dict:
                     bend=[{k: r.get(k) for k in ("R", "w", "m", "Q_bend", "lam_bend_um", "kernel_wall_s")} for r in cyl],
                     criterion="both kernels ran on Modal, MPB gap > 0, Harminv found a bend mode")
     if exp == "E1":
-        bq = [r for r in rows if r.get("kernel") == "bend_q"]
-        tab = sorted([(r["platform"], r["clad"], r["w"], r["R"], r["res"], r.get("T_harm", r.get("T_after")), r.get("Q_bend"), r.get("lam_bend_um"),
-                       (r.get("convergence") or {}).get("dQ_rel_half_vs_full")) for r in bq],
-                     key=lambda x: (x[0], x[1], x[2], x[3], x[4]))
-        groups = {}
-        for t in tab:
-            groups.setdefault(t[:4], []).append(t)
-        conv = {}
-        for k, g in groups.items():
-            g = [t for t in g if t[6]]
-            if len(g) >= 2:
-                lo, hi = g[0], g[-1]  # lowest and highest resolution
-                conv[f"{k[0]}|{k[1]}|w{k[2]}|R{k[3]}"] = dict(res=[lo[4], hi[4]], T=[lo[5], hi[5]], Q=[lo[6], hi[6]],
-                                                             dQ_rel=abs(hi[6] - lo[6]) / hi[6], dlam_nm=1e3 * abs(hi[7] - lo[7]))
-        converged = all(c["dQ_rel"] < 0.2 for c in conv.values()) if conv else False
-        best = {}
-        for p_, c, w, R, res, T, q, lam, dq in tab:
-            if q and q >= 1e5 and (p_ not in best or R < best[p_]["R"]):
-                best[p_] = dict(clad=c, w=w, R=R, res=res, Q_bend=q, dQ_half=dq)
-        return dict(exp=exp, go=bool(best) and converged, smallest_R_with_Qbend_ge_1e5=best, resolution_convergence=conv,
-                    table=[dict(platform=a, clad=b, w=c, R=d, res=e, T_after=f, Q_bend=g, lam_um=h, dQ_half=i) for a, b, c, d, e, f, g, h, i in tab],
-                    criterion="some (platform, w, clad) reaches Q_bend >= 1e5 at a usable R, AND every high-res/long-T "
-                              "convergence pair agrees within |dQ|/Q < 0.2 (Harminv T/2 vs T within 10%)")
+        return _gonogo_e1(rows)
     if exp == "E2":
         cells = [r for r in rows if r.get("kernel") == "mpb_cell"]
         by = {}
@@ -398,7 +449,7 @@ def gonogo(exp: str, rows: list[dict]) -> dict:
         ref = [dict(tag=r.get("job", {}).get("tag"), reason=r.get("reason")) for r in rows if r.get("status") == "refused_fab"]
         if exp == "E3":
             pairs = {}
-            for r in ok:
+            for r in [x for x in ok if x.get("kernel") == "nanobeam3d"]:
                 tag = r.get("job", {}).get("tag", "")
                 name = tag.split("|")[0]
                 pm = (r.get("convergence") or {}).get("primary")
@@ -411,8 +462,10 @@ def gonogo(exp: str, rows: list[dict]) -> dict:
                 if len(rs) >= 2 and d[rs[0]]["Q"] and d[rs[-1]]["Q"]:
                     q0, q1 = d[rs[0]]["Q"], d[rs[-1]]["Q"]
                     conv[name] = dict(dQ_rel=abs(q1 - q0) / q1, dlam_nm=1e3 * abs(d[rs[-1]]["lam_um"] - d[rs[0]]["lam_um"]))
+            par = [dict(a=r["a"], b=r["b"], r=r["r"], w=r["w"], clear=r.get("other_parity_clear"),
+                        in_gap=r.get("other_parity_in_gap")) for r in rows if r.get("kernel") == "mpb_cell"]
             go = bool(conv) and all(c["dQ_rel"] < 0.2 and c["dlam_nm"] < 2.0 for c in conv.values())
-            return dict(exp=exp, go=go, results=pairs, convergence=conv, refused=ref,
+            return dict(exp=exp, go=go, results=pairs, convergence=conv, refused=ref, other_parity=par,
                         criterion="every design has a mode in the window; res 20 vs 30: |dQ|/Q < 20% and |dlambda| < 2 nm; "
                                   "Quan-Loncar control has a mode in the window")
         return dict(exp=exp, go=bool(ok), refused=ref,

@@ -57,7 +57,7 @@ def _z_symmetric(clad):
 # ==========================================================================
 # MPB unit cell
 # ==========================================================================
-def _mpb_cell_once(a, b, r, w, t, plat, clad, res, Ly, Lz, num_bands=4):
+def _mpb_cell_once(a, b, r, w, t, plat, clad, res, Ly, Lz, num_bands=4, other_parity=False):
     mp = _meep()
     from meep import mpb
     core, ox, bg, hole = _materials(mp, plat, clad)
@@ -80,7 +80,15 @@ def _mpb_cell_once(a, b, r, w, t, plat, clad, res, Ly, Lz, num_bands=4):
     f_ll = 0.5 / L / n_lc
     f1, f2 = f[0], f[1]
     mid = 0.5 * (f1 + f2)
-    return dict(a=a, b=b, r=r, L=L, freqs_edge=f, edge_f1=f1, edge_f2=f2, gap_abs=f2 - f1,
+    extra = {}
+    if other_parity:
+        # Opposite y-parity bands (TE1-like and TM-like) at the zone edge. They do not couple to
+        # the TE0 SSH bands in a y-symmetric beam, but transverse disorder (offset_y) mixes them.
+        ms.run_yeven()
+        fo = [float(v) for v in ms.all_freqs[-1]]
+        inside = [v for v in fo if f1 < v < f2]
+        extra = dict(freqs_edge_other_parity=fo, other_parity_in_gap=inside, other_parity_clear=not inside)
+    return dict(a=a, b=b, r=r, L=L, freqs_edge=f, **extra, edge_f1=f1, edge_f2=f2, gap_abs=f2 - f1,
                 gap_mid_ratio=(f2 - f1) / mid, lambda1_um=1 / f1, lambda2_um=1 / f2, lambda_mid_um=1 / mid,
                 dlambda_nm=1e3 * (1 / f1 - 1 / f2), f_lightline=f_ll, below_lightline=bool(f2 < f_ll),
                 wall_s=wall_s)
@@ -113,6 +121,9 @@ def mpb_cell(p):
     if target:
         out["gap_contains_target"] = bool(res_d["lambda2_um"] <= target <= res_d["lambda1_um"])
     out["fab"] = G.ssh_cell_fab_check(a, b, r, w, plat)
+    if p.get("check_other_parity"):
+        op = _mpb_cell_once(a, b, r, w, t, plat, clad, res, Ly, Lz, other_parity=True)
+        out.update({k: op[k] for k in ("freqs_edge_other_parity", "other_parity_in_gap", "other_parity_clear")})
     return out
 
 

@@ -135,10 +135,31 @@ modal run research/modal/app.py::e1
 
 Go if:
 - some (platform, w, cladding) reaches **Q_bend >= 1e5** at a usable R;
-- for that row, `dQ_half` (the relative change between Harminv at T/2 and at T) is below 0.1;
-- every pair in `resolution_convergence` agrees within |dQ|/Q < 0.2. E1 reruns 4 rows at higher resolution (Si res 60, SiN res 45) with a 2x longer ringdown for this.
+- every pair in `resolution_convergence` has verdict `agree` or `same_side_of_threshold`, and `flagged_pairs` is empty.
 
-Why the convergence check: on Modal, E0's res-20, T = 300 bend run (SiN, R = 10, w = 1.0) gave Q_bend = 2543. The pilot got 1.6e3 for the same cross-section at res 30 with T = 600-800. Low-resolution bend Q is not converged.
+How a pair is judged (`tpc_plan._gonogo_e1`). E1 reruns 4 rows at higher resolution (Si res 60, SiN res 45) with a 2x longer ringdown:
+- **Q_cap = 1e6.** Harminv/FDTD cannot resolve bend Q above about 1e6-1e7 at these run lengths and PML settings. A pair where both members are above the cap agrees, and is reported as `>1e+06`.
+- **Below the cap,** members agree if |dQ|/Q < 0.2.
+- **`same_side_of_threshold`:** both members fall on the same side of 1e5, which is the only decision E1 makes.
+- **Unresolved rows** (Q <= 0, or a change of more than 10% between Harminv at T/2 and at T) count as "> cap" when the other member is above the cap. Otherwise the pair is flagged.
+
+**First E1 run on Modal** (2026-11-05, 44 jobs, about 8 min, run by the parent session):
+
+| Pair | Q (base res) | Q (high res) | Verdict |
+|---|---|---|---|
+| SiN 400, w = 1.0, R = 10 | 2022 (res 30) | 1743 (res 45) | agree, 16% |
+| SiN 400, w = 1.0, R = 20 | 6.48e5 | 4.72e5 | 37%, same side of 1e5 |
+| Si 220, w = 0.5, R = 3 | 1.22e9 | 7.99e8 | > cap |
+| Si 220, w = 0.5, R = 5 | 4.4e10 (dQ_half 1e42) | 1.9e8 | > cap |
+
+What this means:
+- E0's Q_bend = 2543 (res 20, T = 300) overestimated. The pilot's 1.6e3 was close to the converged value.
+- **Si 220, oxide-clad:** Q_bend >= 2.9e5 already at R = 2 um (w = 0.45), and > 1e6 for R >= 3. **Bend loss is irrelevant on Si.**
+- **SiN 400, oxide-clad:** Q_bend >= 1e5 needs w >= 1.2 at R = 15 (1.4e5), or w >= 1.0 at R = 20 (4.7e5 to 6.5e5). w = 0.8 needs R = 30.
+- **Multimode warning:** SiN at w >= 1.0 um and 400 nm thickness is likely multimode.
+  - Every E3/E4/E5 run now adds a `parity_check` MPB job per selected cell (`check_other_parity`). It reports opposite-parity (TE1/TM-like) zone-edge bands that fall inside the TE0 SSH gap.
+  - Those bands do not couple in a y-symmetric beam, but transverse disorder (`offset_y`) mixes them.
+  - Treat `other_parity_clear: false` as a no-go for that cell's offset_y ensemble.
 
 What to record:
 - The output names the smallest such R per platform. Use it as R in `manifests/e5.yaml`.
