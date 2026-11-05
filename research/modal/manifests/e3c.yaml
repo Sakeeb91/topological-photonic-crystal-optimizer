@@ -1,0 +1,21 @@
+# E3 stage 2 (convergence): run with
+#   modal run research/modal/app.py::e3 --manifest research/modal/manifests/e3c.yaml
+# Results share the E3 folder, so `report --exp E3` judges scan + convergence together.
+# EDIT the Nside / period_scale / n_mirror values below to the variants stage 1 picked
+# (shortest Nside with Q_axial >= 10 Q_rad; QL variant resonant nearest 1547 nm).
+# Three resolutions at 1.5 / 2 / 2.5 px on the smallest hole radius (43 / 57 / 71 for r = 35.6 nm).
+# res >= ~60 routes to the 32-core 3d_xl tier.
+experiment: E3
+kind: nanobeam
+select: {from: E2, platform: si220, clad: sub, top_k: 1, rank_by: gap_mid_ratio,
+         require: [fab_ok, gap_contains_target, below_lightline]}
+df_gap_multiple: 3.0
+df_min_rel: 0.03
+px_on_r: [1.5, 2.0, 2.5]
+designs:
+  - {kind: ssh, wall: A, Nside: 30}
+  - {kind: ssh, wall: B, Nside: 30}
+  - {kind: ssh, wall: tanh, M: 6, Nside: 30}
+  - {kind: quan_loncar, name: quan_loncar, n_taper: 10, n_mirror: 25, r_end_over_L: 0.30,
+     r_center_ratio: 0.70, margin_nm: 5, period_scale: 0.955}
+sim: {T_harm: 1000, nfreq: 101, flux: true}   # check convergence.Q_over_pi_f_T and dQ_half

@@ -9,7 +9,7 @@ select: {from: E2, platform: si220, clad: sub, top_k: 1, rank_by: gap_mid_ratio,
          require: [fab_ok, gap_contains_target, below_lightline]}
 df_gap_multiple: 3.0
 df_min_rel: 0.03
-res: [20]
+px_on_r: [2.0]        # use the resolution E3 stage 2 showed converged; update Nside to the E3 pick
 designs:
   - {kind: ssh, wall: A, Nside: 20, name: ssh_abrupt}
   - {kind: ssh, wall: tanh, M: 6, Nside: 20, name: ssh_tanh}

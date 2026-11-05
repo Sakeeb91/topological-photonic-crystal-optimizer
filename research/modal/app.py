@@ -125,13 +125,19 @@ def run_3d_big(job: dict) -> dict:
     return _run(job, P.TIERS["3d_big"]["np"])
 
 
+@app.function(**_kw("3d_xl"))
+def run_3d_xl(job: dict) -> dict:
+    """Nanobeams above 1.5e7 reduced voxels (res >= 60 on small Si holes): 32 cores, 32 GiB, 24 h."""
+    return _run(job, P.TIERS["3d_xl"]["np"])
+
+
 @app.function(**_kw("ring"))
 def run_ring(job: dict) -> dict:
     """Full 3D ring: 32 cores, 32 GiB, 24 h (Modal's maximum timeout), mpirun -np 32."""
     return _run(job, P.TIERS["ring"]["np"])
 
 
-FN = {"light": run_light, "3d": run_3d, "3d_big": run_3d_big, "ring": run_ring}
+FN = {"light": run_light, "3d": run_3d, "3d_big": run_3d_big, "3d_xl": run_3d_xl, "ring": run_ring}
 
 
 # ----------------------------------------------------------------------------
@@ -173,7 +179,7 @@ def _print_plan(jobs: list[dict]) -> None:
         print(f"   ... {len(jobs) - 12} more")
 
 
-def _dispatch(exp_name: str, manifest: str, dry_run: bool, n: int = 0) -> list[dict]:
+def _dispatch(exp_name: str, manifest: str, dry_run: bool, n: int = 0, force: bool = False) -> list[dict]:
     man = P.load_manifest(manifest or exp_name)
     if n and man.get("ensemble"):
         man["ensemble"]["N"] = int(n)
@@ -181,11 +187,19 @@ def _dispatch(exp_name: str, manifest: str, dry_run: bool, n: int = 0) -> list[d
     _print_plan(jobs)
     done = _existing(man["experiment"])
     todo = [j for j in jobs if j["key"] not in done]
+    too_long = [j for j in todo if P.cost(j)["hours"] > 0.8 * P.TIERS[j["tier"]]["timeout"] / 3600]
+    if too_long and not force:
+        print(f"[refuse] {len(too_long)} job(s) are estimated above 80% of their tier timeout (Modal max 24 h); "
+              "they would likely be killed. Lower px_on_r / T_harm / Nside, select larger holes (select.min_r_nm), "
+              "or pass --force. Running the rest.")
+        for j in too_long[:6]:
+            print(f"   {j['tag']}: est. {P.cost(j)['hours']:.1f} h on {j['tier']}")
+        todo = [j for j in todo if j not in too_long]
     print(f"[skip] {len(jobs) - len(todo)} already on the Volume; {len(todo)} to run")
     if dry_run or not todo:
         return []
     out = []
-    for tier in ("light", "3d", "3d_big", "ring"):
+    for tier in ("light", "3d", "3d_big", "3d_xl", "ring"):
         group = [j for j in todo if j["tier"] == tier]
         if not group:
             continue
@@ -222,16 +236,16 @@ def e2(dry_run: bool = False, manifest: str = ""):
 
 
 @app.local_entrypoint()
-def e3(dry_run: bool = False, manifest: str = ""):
-    _dispatch("E3", manifest, dry_run)
+def e3(dry_run: bool = False, manifest: str = "", force: bool = False):
+    _dispatch("E3", manifest, dry_run, force=force)
     if not dry_run:
         print(json.dumps(P.gonogo("E3", load_results("E3")), indent=1))
 
 
 @app.local_entrypoint()
-def e4(dry_run: bool = False, manifest: str = "", n: int = 0):
+def e4(dry_run: bool = False, manifest: str = "", n: int = 0, force: bool = False):
     """Disorder ensembles; --n overrides the manifest's realizations per cell (48 for the paper)."""
-    _dispatch("E4", manifest, dry_run, n=n)
+    _dispatch("E4", manifest, dry_run, n=n, force=force)
     if not dry_run:
         _summarize_e4(manifest, n)
 

@@ -208,29 +208,71 @@ Si 220: **36 feasible cells.** Best by gap-to-midgap ratio:
 - No current E2 cell has 10 nm of margin. A tapeout design (Paper B / C0) needs an extended E2 grid first: lower `delta` or smaller `r_over_L` near the gap/margin trade-off.
 - E3 runs on the zero-margin pick; that is fine for physics, but not for a mask.
 
-**E3: 3D wall Q.** Runs walls A, B and tanh (M = 6), plus the Quan-Loncar trivial control. Each runs at res 20 and res 30, with a flux-box split into Q_rad and Q_axial (mirror and guided leakage).
+**E3: 3D wall Q.** E3 now runs in two stages. Both share the `/E3` folder, and `report --exp E3` judges them together.
+
+```bash
+modal run research/modal/app.py::e2 --manifest research/modal/manifests/e2b.yaml
+```
 
 ```bash
 modal run research/modal/app.py::e3 --dry-run
 modal run research/modal/app.py::e3
 ```
 
-Geometry is taken automatically from the best fabricable E2 cells: Si, `sub` cladding, top 2. Edit `select:` in `manifests/e3.yaml` to change it.
+```bash
+modal run research/modal/app.py::e3 --manifest research/modal/manifests/e3c.yaml
+```
 
-Go if:
-- every design has a mode in the Harminv window;
-- res 20 and res 30 agree: |dQ|/Q < 20% and |d lambda| < 2 nm;
-- the Quan-Loncar control has a mode in the window.
+The three runs are, in order:
+1. **(Optional, recommended) E2b:** Si cells with larger holes and a fabrication margin. Cheap, and it cuts every 3D job below by about 4x (see "Cost problem").
+2. **Stage 1, scan (`e3.yaml`):**
+   - one resolution (1.5 px on the smallest hole radius);
+   - Nside 20 / 30 / 40 for walls A, B and tanh;
+   - a Quan-Loncar retune: `period_scale` 0.94 / 0.955 / 0.97, with `n_mirror` 15 / 25.
+3. **Stage 2, convergence (`e3c.yaml`):**
+   - first edit Nside / `period_scale` / `n_mirror` to the stage-1 picks;
+   - three resolutions at 1.5 / 2 / 2.5 px on the smallest hole radius.
 
-If res 20 and 30 disagree, add `40` to `res:` and re-run; finished jobs are skipped. Si at res 20 is about 9 pixels per wavelength in Si, so this is likely.
+Go if every (cell, design) pair, including the Quan-Loncar control, has a variant that is:
+- **converged** over at least 3 resolutions: at the top two, |dQ_rad|/Q_rad < 0.2 and |d lambda| < 2 nm, with at least 2 px on the smallest hole radius;
+- **not mirror-limited:** Q_axial >= 10 x Q_rad;
+- **resonant inside the source window.**
 
-If the control has no mode, tune `r_center_ratio` / `r_end_over_L` for `quan_loncar` until it does. E4 needs a working control.
+Compare designs on **Q_rad**, not Q_total. Results are keyed by (cell, design variant), so two selected cells no longer overwrite each other.
 
-Report for each design:
-- `Q_total`, `Q_rad`, `Q_axial`, `frac_rad`;
-- `T_harm`;
-- `convergence.Q_over_pi_f_T`;
-- `convergence.dQ_rel_half_vs_full`.
+**First E3 run on Modal** (2026-11-05, 18 jobs from 9f828c4, run by the parent session; go = false):
+- **Multi-rank `mpirun` works on Modal.**
+- **Not converged.** Going from res 20 to res 30 moved lambda by 9.6 / 14.7 / 24.1 / 8.9 nm (A / B / tanh / Quan-Loncar), and Q by 140% (A) and 76% (B).
+  - The cause: the selected Si holes (r = 36-43 nm) were only 0.7-1.1 px wide.
+  - The old "px per wavelength" comment was the wrong criterion. **Resolution is now set from the smallest hole radius (`px_on_r`).**
+- **Mirror-limited.** Every design had Q_total of about 1e3, with Q_axial of about 1e3, far below Q_rad (1e4 to 2e5).
+  - At Nside = 20 the Q_total comparison measured mirror strength, not cavity quality.
+  - Q_rad at res 30 (not converged): tanh 2.05e5, A 1.18e5, B 2.83e4, Quan-Loncar 1.29e4.
+- **The Quan-Loncar control was not tuned.** It resonated at 1.615-1.624 um, outside the window, with Q_rad of 1.3e4.
+  - Stage 1 retunes it with `period_scale`. The resonance needs to move about 4.5% to the blue, hence 0.955.
+  - A topological-vs-trivial comparison is not fair until the control is tuned.
+
+**Cost problem.** Resolving 36 nm holes at 2-2.5 px needs res 57-71, and cost scales as res^4.
+
+Estimates (`tpc_plan.cost`, T_harm 1000 for E3 and 400 for E4):
+
+| Run | E2 pick, r = 35.6 nm | Hypothetical cell, r = 50 nm |
+|---|---|---|
+| E3 stage 1 (16 jobs) | $42, 30 container-h | $9, 12 container-h |
+| E3 stage 2 (13 jobs) | $169, 98 container-h, **3 jobs > 24 h** | $40, 31 container-h |
+| E4, N = 4 | $421 | $94 |
+| E4, N = 48 | **$4,940** | $1,100 |
+
+The r = 50 nm column is a cost figure for that geometry only, not a claim that such a cell has a usable gap. E2b finds out.
+
+What is now in place:
+- Res >= ~60 routes to a new 32-core `3d_xl` tier, with a 24 h timeout.
+- The dispatcher **refuses jobs estimated above 80% of their tier timeout** unless `--force` is passed. It prints what to change.
+
+Cheaper routes, in order of value:
+1. **Larger holes** (E2b, then `select.min_r_nm: 45` in e3/e4/e5.yaml). About 4x cheaper, and the same change gives the web margin a mask needs.
+2. **E4 by perturbation theory, with FDTD only as validation.** Use first-order sensitivities d omega/d r_i and d omega/d x_i from one converged field (Johnson et al., PRE 65, 066611, 2002; review section 7). That gives frequency statistics for all four classes in seconds, with 5-10 FDTD runs per cell to check them. Not implemented yet; it is the next code step if E4 at N = 48 is wanted.
+3. **GPU FDTD** (e.g. Tidy3D) for the ensemble, as the review suggested.
 
 **E4: matched disorder ensembles.** Designs: abrupt SSH wall, tanh SSH wall and Quan-Loncar. Disorder classes, each in absolute nm with common random numbers: radius, longitudinal position, transverse offset, global CD bias. Sigma = 5 and 10 nm.
 
@@ -331,25 +373,25 @@ The parent review quotes about 10 ns at 4 ranks. That figure was not reproduced:
 |---|---|---|---|---|---|
 | light | `mpb_cell`, `bend_q` | 1 | 2 GiB | 1 h | 1 |
 | 3d | nanobeams <= 4e6 reduced voxels | 8 | 8 GiB | 6 h | 8 |
-| 3d_big | res-30 nanobeams, supercells | 16 | 16 GiB | 12 h | 16 |
+| 3d_big | 4e6-1.5e7 reduced voxels, supercells | 16 | 16 GiB | 12 h | 16 |
+| 3d_xl | > 1.5e7 reduced voxels (res >= ~60 on Si holes) | 32 | 32 GiB | 24 h | 32 |
 | ring | full 3D ring | 32 | 32 GiB | 24 h | 32 |
 
 Memory is sized from the pilot full-ring run: 1.7 GB / 9.6e6 reduced voxels, about 200 B per voxel. That leaves about 5x headroom.
 
 ### Estimates
 
-These are computed by `tpc_plan.cost()` from the manifests. For E3 to E5 they use a representative fabricable Si cell (a = 0.200, b = 0.160, r = 0.035 um, w = 0.5 um, air top). The real E2 pick will differ.
+These are computed by `tpc_plan.cost()` from the manifests. For E3 to E5 they use a representative fabricable Si cell (a = 0.200, b = 0.160, r = 0.035 um, w = 0.5 um, air top). The real E2 pick is a = 0.2225, b = 0.1335, r = 0.0356 um; the E3/E4 rows use it, or a hypothetical r = 50 nm cell, and the stage-1/2 resolution rule.
 
 | Exp | Jobs | Container-hours | Cost (USD) | Longest job | Wall clock |
 |---|---|---|---|---|---|
 | E0 | 2 | 0.03 | < 0.01 + image build | 2 min | ~10 min incl. first build |
 | E1 | 44 | 1.7 | 0.11 | 10 min (res-60 convergence rows) | minutes |
 | E2 | 160 | 4.0 | 0.25 | 2 min (flat MPB guess) | minutes |
-| E3 | 8 | 2.3 | 1.8 | 0.44 h (res 30) | ~0.5 h |
-| E4, N = 4 | 99 | 18 | 7.8 | 0.28 h | ~0.5 h |
-| E4, N = 48 | 1155 | 206 | 91 | 0.28 h | ~3-4 h at 100 containers |
-| E5 | 3 | 2.4 | 3.0 | 1.0 h (full ring) | ~1 h |
-| **Total (E4 at N = 48)** | | **~216** | **~$100** | | |
+| E3 (old plan, res 20/30) | 8 | 2.3 | 1.8 | 0.44 h | superseded: unconverged on Si holes |
+| E3 stage 1 + 2, r = 35.6 nm | 29 | 128 | 211 | 20 h (3 jobs over the limit) | see "Cost problem" under E3 |
+| E3 stage 1 + 2, r = 50 nm | 29 | 43 | 49 | 5 h | |
+| E4, N = 48, r = 35.6 / 50 nm | 1156 | 2900 / 1035 | 4940 / 1100 | 5.7 / 1.4 h | use perturbation theory + FDTD spot checks |
 
 **What the cost scales with.**
 

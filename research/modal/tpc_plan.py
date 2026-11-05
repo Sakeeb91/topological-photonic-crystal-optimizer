@@ -30,6 +30,7 @@ TIERS: dict[str, dict[str, Any]] = {
     "light":  dict(cpu=1.0,  memory=2048,  timeout=3600,      np=1),
     "3d":     dict(cpu=8.0,  memory=8192,  timeout=6 * 3600,  np=8),
     "3d_big": dict(cpu=16.0, memory=16384, timeout=12 * 3600, np=16),
+    "3d_xl":  dict(cpu=32.0, memory=32768, timeout=24 * 3600, np=32),  # res >= 60 nanobeams
     "ring":   dict(cpu=32.0, memory=32768, timeout=24 * 3600, np=32),  # 24 h is Modal's maximum
 }
 
@@ -118,6 +119,8 @@ def select_cells(sel: dict, results: list[dict]) -> list[dict]:
     req = sel.get("require", ["fab_ok", "gap_contains_target", "below_lightline"])
     if "fab_ok" in req:
         rows = [r for r in rows if r.get("fab", {}).get("ok")]
+    if sel.get("min_r_nm"):  # larger holes need lower resolution: cost scales as res^4 ~ r^-4
+        rows = [r for r in rows if 1e3 * r["r"] >= float(sel["min_r_nm"]) - 1e-9]
     margin = float(sel.get("min_margin_nm", 0.0))
     if margin > 0:  # extra web/feature margin above the platform rule, against CD bias (tapeout safety)
         def _m(r):
@@ -149,22 +152,49 @@ def _ql_design(cell: dict, ql: dict, plat: dict) -> dict:
     r_max = 0.5 * (L - plat["min_web"]) - 1e-3 * float(ql.get("margin_nm", 5))
     r_end = min(r_max, float(ql.get("r_end_over_L", 0.3)) * L)
     r_c = max(float(ql.get("r_center_ratio", 0.7)) * r_end, 0.5 * plat["min_feature"] + 1e-3 * float(ql.get("margin_nm", 5)))
+    sc = float(ql.get("period_scale", 1.0))
+    if sc != 1.0:  # retune the control's resonance onto the target; radii scale with the period
+        L, r_c, r_end = L * sc, r_c * sc, r_end * sc
     return dict(kind="quan_loncar", period=L, r_center=r_c, r_end=r_end,
                 n_taper=int(ql.get("n_taper", 10)), n_mirror=int(ql.get("n_mirror", 10)))
 
 
-def _designs_for_cell(cell: dict, man: dict) -> list[dict]:
+def _variants(d: dict) -> list[tuple[dict, str]]:
+    """Expand list-valued fields of a manifest design entry (e.g. Nside: [20, 30, 40]) into variants.
+    Returns (entry, suffix); the suffix names the swept values so variants stay distinguishable."""
+    keys = [k for k, v in d.items() if isinstance(v, list)]
+    if not keys:
+        return [(d, "")]
+    out = []
+    for combo in itertools.product(*[d[k] for k in keys]):
+        dd = dict(d); dd.update(zip(keys, combo))
+        out.append((dd, "[" + ",".join(f"{k}={v}" for k, v in zip(keys, combo)) + "]"))
+    return out
+
+
+def _designs_for_cell(cell: dict, man: dict) -> list[tuple[str, dict]]:
     plat = G.platform(cell["platform"])
     out = []
-    for d in man.get("designs", []):
-        if d["kind"] == "ssh":
-            dd = dict(kind="ssh", a=cell["a"], b=cell["b"], r=cell["r"], Nside=int(d.get("Nside", 20)), wall=d["wall"])
-            if d["wall"] == "tanh":
-                dd["M"] = float(d.get("M", 6))
-            out.append((d.get("name", f"ssh_{d['wall']}"), dd))
-        elif d["kind"] == "quan_loncar":
-            out.append((d.get("name", "quan_loncar"), _ql_design(cell, d, plat)))
+    for d0 in man.get("designs", []):
+        for d, sfx in _variants(d0):
+            if d["kind"] == "ssh":
+                dd = dict(kind="ssh", a=cell["a"], b=cell["b"], r=cell["r"], Nside=int(d.get("Nside", 20)), wall=d["wall"])
+                if d["wall"] == "tanh":
+                    dd["M"] = float(d.get("M", 6))
+                out.append((d.get("name", f"ssh_{d['wall']}") + sfx, dd))
+            elif d["kind"] == "quan_loncar":
+                out.append((d.get("name", "quan_loncar") + sfx, _ql_design(cell, d, plat)))
     return out
+
+
+def resolutions(man: dict, design: dict) -> list[int]:
+    """Resolution list for one design. `px_on_r: [1.5, 2, 2.5]` sets res = ceil(px / r_min) so the
+    smallest hole radius gets that many pixels (the criterion that matters for small Si holes);
+    otherwise the manifest's fixed `res` list."""
+    if man.get("px_on_r"):
+        rmin = min(h["r"] for h in G.build_design(design))
+        return sorted({int(math.ceil(float(px) / rmin)) for px in man["px_on_r"]})
+    return [int(x) for x in man.get("res", [20])]
 
 
 def expand(man: dict, load_results: Callable[[str], list[dict]] | None = None) -> list[dict]:
@@ -193,7 +223,7 @@ def expand(man: dict, load_results: Callable[[str], list[dict]] | None = None) -
         kind = man.get("kind", "nanobeam")
         if kind == "nanobeam":
             for name, design in _designs_for_cell(cell, man):
-                for res in man.get("res", [20]):
+                for res in resolutions(man, design):
                     p = dict(base, res=int(res), design=design)
                     if not man.get("ensemble"):
                         jobs.append(make_job(exp, "nanobeam3d", p, tag=f"{name}|res{res}|nominal"))
@@ -272,6 +302,8 @@ def route(job: dict) -> str:
     if k == "ring3d":
         return "ring"
     e = estimate(job)
+    if e["vox_reduced"] > 1.5e7:
+        return "3d_xl"
     if k == "supercell3d" or e["vox_reduced"] > 4e6:
         return "3d_big"
     return "3d"
@@ -421,6 +453,56 @@ def _gonogo_e1(rows: list[dict], cap: float = Q_CAP, thr: float = Q_DECISION) ->
                           "value and at least one member is positive and > cap")
 
 
+def _cell_key(design: dict) -> str:
+    L = design["a"] + design["b"] if design["kind"] == "ssh" else design.get("L", design.get("period"))
+    return f"L{1e3 * L:.1f}nm"
+
+
+def _gonogo_e3(rows, ok, ref, target_um: float = 1.547, mirror_ratio: float = 10.0) -> dict:
+    """Group by (cell, design variant incl. Nside), compare Q_rad (not Q_total) and lambda across the
+    two highest resolutions, and flag mirror-limited variants (Q_axial < mirror_ratio * Q_rad)."""
+    groups: dict[str, dict] = {}
+    for r in [x for x in ok if x.get("kernel") == "nanobeam3d"]:
+        d = r["design"]
+        name = r.get("job", {}).get("tag", "").split("|")[0]
+        var = {k: v for k, v in d.items() if k not in ("a", "b", "r", "period", "r_center", "r_end")}
+        key = f"{_cell_key(d)}|{name}|" + ",".join(f"{k}={v}" for k, v in sorted(var.items()) if k != "kind")
+        pm = (r.get("convergence") or {}).get("primary") or {}
+        g = groups.setdefault(key, dict(cell=_cell_key(d), design=name.split("[")[0], variant=name, by_res={}))
+        rmin = min(h["r"] for h in G.build_design(d))
+        g["by_res"][r["res"]] = dict(Q_total=r.get("Q_total"), Q_rad=r.get("Q_rad"), Q_axial=r.get("Q_axial"),
+                                     lam_um=pm.get("lam_um"), px_on_rmin=rmin * r["res"], T_harm=r.get("T_harm"),
+                                     window_um=[1 / (r["fcen"] + r["df"] / 2), 1 / (r["fcen"] - r["df"] / 2)])
+    for key, g in groups.items():
+        rs = sorted(g["by_res"])
+        top = g["by_res"][rs[-1]]
+        g["max_res"] = rs[-1]
+        g["n_res"] = len(rs)
+        g["mirror_limited"] = bool(top["Q_axial"] and top["Q_rad"] and top["Q_axial"] < mirror_ratio * top["Q_rad"])
+        lam = top["lam_um"]
+        g["in_window"] = bool(lam and top["window_um"][0] <= lam <= top["window_um"][1])
+        g["detuning_nm"] = 1e3 * (lam - target_um) if lam else None
+        if len(rs) >= 2:
+            p, q = g["by_res"][rs[-2]], top
+            if p["Q_rad"] and q["Q_rad"] and p["lam_um"] and q["lam_um"]:
+                g["dQrad_rel"] = abs(q["Q_rad"] - p["Q_rad"]) / q["Q_rad"]
+                g["dlam_nm"] = 1e3 * abs(q["lam_um"] - p["lam_um"])
+        g["converged"] = bool(g["n_res"] >= 3 and g.get("dQrad_rel", 9) < 0.2 and g.get("dlam_nm", 99) < 2.0
+                              and top["px_on_rmin"] >= 2.0)
+        g["usable"] = g["converged"] and not g["mirror_limited"] and g["in_window"]
+    designs = sorted({(g["cell"], g["design"]) for g in groups.values()})
+    status = {f"{c}|{d}": any(g["usable"] for g in groups.values() if g["cell"] == c and g["design"] == d) for c, d in designs}
+    par = [dict(a=r["a"], b=r["b"], r=r["r"], w=r["w"], clear=r.get("other_parity_clear"),
+                in_gap=r.get("other_parity_in_gap")) for r in rows if r.get("kernel") == "mpb_cell"]
+    has_ql = any(d == "quan_loncar" for _, d in designs)
+    return dict(exp="E3", go=bool(status) and all(status.values()) and has_ql, design_usable=status, variants=groups,
+                refused=ref, other_parity=par,
+                criterion=f"for every (cell, design) incl. the Quan-Loncar control, some variant is: converged over >= 3 "
+                          f"resolutions (top two: |dQ_rad|/Q_rad < 0.2, |dlambda| < 2 nm, >= 2 px on the smallest hole radius), "
+                          f"not mirror-limited (Q_axial >= {mirror_ratio:.0f} x Q_rad), and resonant inside the source window. "
+                          "Compare designs on Q_rad, not Q_total.")
+
+
 def gonogo(exp: str, rows: list[dict]) -> dict:
     rows = [r for r in rows if isinstance(r, dict)]
     if exp == "E0":
@@ -459,26 +541,7 @@ def gonogo(exp: str, rows: list[dict]) -> dict:
         ok = _ok(rows)
         ref = [dict(tag=r.get("job", {}).get("tag"), reason=r.get("reason")) for r in rows if r.get("status") == "refused_fab"]
         if exp == "E3":
-            pairs = {}
-            for r in [x for x in ok if x.get("kernel") == "nanobeam3d"]:
-                tag = r.get("job", {}).get("tag", "")
-                name = tag.split("|")[0]
-                pm = (r.get("convergence") or {}).get("primary")
-                pairs.setdefault(name, {})[r["res"]] = dict(Q=r.get("Q_total"), Q_rad=r.get("Q_rad"), Q_axial=r.get("Q_axial"),
-                                                            lam_um=pm["lam_um"] if pm else None, T_harm=r.get("T_harm"),
-                                                            dQ_half=(r.get("convergence") or {}).get("dQ_rel_half_vs_full"))
-            conv = {}
-            for name, d in pairs.items():
-                rs = sorted(d)
-                if len(rs) >= 2 and d[rs[0]]["Q"] and d[rs[-1]]["Q"]:
-                    q0, q1 = d[rs[0]]["Q"], d[rs[-1]]["Q"]
-                    conv[name] = dict(dQ_rel=abs(q1 - q0) / q1, dlam_nm=1e3 * abs(d[rs[-1]]["lam_um"] - d[rs[0]]["lam_um"]))
-            par = [dict(a=r["a"], b=r["b"], r=r["r"], w=r["w"], clear=r.get("other_parity_clear"),
-                        in_gap=r.get("other_parity_in_gap")) for r in rows if r.get("kernel") == "mpb_cell"]
-            go = bool(conv) and all(c["dQ_rel"] < 0.2 and c["dlam_nm"] < 2.0 for c in conv.values())
-            return dict(exp=exp, go=go, results=pairs, convergence=conv, refused=ref, other_parity=par,
-                        criterion="every design has a mode in the window; res 20 vs 30: |dQ|/Q < 20% and |dlambda| < 2 nm; "
-                                  "Quan-Loncar control has a mode in the window")
+            return _gonogo_e3(rows, ok, ref)
         return dict(exp=exp, go=bool(ok), refused=ref,
                     results=[dict(tag=r.get("job", {}).get("tag"), primary_A=r.get("primary_A"), primary_B=r.get("primary_B"),
                                   primary=(r.get("convergence") or {}).get("primary")) for r in ok],

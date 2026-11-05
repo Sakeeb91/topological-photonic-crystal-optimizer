@@ -114,8 +114,13 @@ def _fake_e2():
 
 def test_selection_manifests_expand_from_e2():
     e3 = P.expand(P.load_manifest("E3"), lambda e: _fake_e2())
-    assert len(e3) == 9 and {j["tier"] for j in e3} <= {"light", "3d", "3d_big"}
+    # 3 SSH walls x 3 Nside + Quan-Loncar 2 n_mirror x 3 period_scale, one resolution, + parity check
+    assert len(e3) == 16 and {j["tier"] for j in e3} <= {"light", "3d", "3d_big", "3d_xl"}
     assert sum(j["params"].get("check_other_parity", False) for j in e3) == 1
+    nb = [j for j in e3 if j["kernel"] == "nanobeam3d"]
+    assert all(j["params"]["res"] * min(h["r"] for h in G.build_design(j["params"]["design"])) >= 1.5 for j in nb)
+    e3c = P.expand(P.load_manifest(os.path.join(os.path.dirname(P.__file__), "manifests", "e3c.yaml")), lambda e: _fake_e2())
+    assert len({j["params"]["res"] for j in e3c if j["tag"].startswith("ssh_A")}) == 3
     e4 = P.expand(P.load_manifest("E4"), lambda e: _fake_e2())
     assert len(e4) == 1 + 3 * (1 + 4 * 2 * 4)  # + 1 parity check  # 3 designs x (nominal + 4 classes x 2 sigmas x N=4)
     e5 = P.expand(P.load_manifest("E5"), lambda e: _fake_e2())
@@ -161,3 +166,21 @@ def test_select_cells_margin():
     rows = _fake_e2()  # min web 90 nm vs the 60 nm Si rule -> margin 30 nm (diameter 70 vs 60 -> 10 nm)
     assert len(P.select_cells({"platform": "si220", "min_margin_nm": 10}, rows)) == 1
     assert len(P.select_cells({"platform": "si220", "min_margin_nm": 11}, rows)) == 0
+
+
+def _nb(design, res, Q_rad, Q_axial, lam, fcen=0.646, df=0.04, name="ssh_A"):
+    return dict(kernel="nanobeam3d", status="ok", design=design, res=res, Q_rad=Q_rad, Q_axial=Q_axial,
+                Q_total=1 / (1 / Q_rad + 1 / Q_axial), fcen=fcen, df=df, T_harm=1000,
+                convergence=dict(primary=dict(lam_um=lam)), job=dict(tag=f"{name}|res{res}|nominal"))
+
+
+def test_e3_gonogo_groups_by_cell_and_flags_mirror_limit():
+    d1 = dict(kind="ssh", a=0.2225, b=0.1335, r=0.0356, Nside=30, wall="A")
+    d2 = dict(d1, a=0.21, b=0.15)  # second cell: must not overwrite the first
+    rows = [_nb(d1, r, 1e5 * (1 + 0.01 * i), 2e6, 1.547 + 1e-4 * i) for i, r in enumerate((43, 57, 71))]
+    rows += [_nb(d2, r, 1e5, 5e4, 1.55) for r in (43, 57, 71)]  # mirror-limited
+    g = P.gonogo("E3", rows)
+    assert len(g["variants"]) == 2
+    u = g["design_usable"]
+    assert u["L356.0nm|ssh_A"] is True and u["L360.0nm|ssh_A"] is False
+    assert not g["go"]  # no Quan-Loncar control yet
