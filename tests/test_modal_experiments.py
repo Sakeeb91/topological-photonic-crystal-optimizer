@@ -96,7 +96,7 @@ def test_job_keys_are_stable_and_param_sensitive():
     assert P.job_path(j1) == f"E1/bend_q/{j1['key']}.json"
 
 
-@pytest.mark.parametrize("exp,n", [("E0", 2), ("E1", 40), ("E2", 160)])
+@pytest.mark.parametrize("exp,n", [("E0", 2), ("E1", 44), ("E2", 160)])
 def test_manifests_expand(exp, n):
     jobs = P.expand(P.load_manifest(exp))
     assert len(jobs) == n and len({j["key"] for j in jobs}) == n

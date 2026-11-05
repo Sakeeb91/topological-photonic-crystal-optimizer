@@ -16,9 +16,13 @@ Verified in this container:
   - Fab refusal works: the pilot geometry (a/b/r = 0.35/0.15/0.10) is refused with `web -50.0 nm < min web 60 nm (8 of 16 webs)`.
 - `pytest`: 108 passed, 13 of them new (`tests/test_modal_experiments.py`).
 
+Verified on Modal (run by the parent session from the `topological-photonic-crystal-optimizer` environment, branch commit 0bb888f):
+- E0 passed its go criterion with this app's MPICH image. That covers the image build, Volume writes, `.map()` and local Volume reads.
+- E0 results: MPB cell (SiN 400, oxide-filled, w = 1.0) gap 1540.6-1557.0 nm (16.4 nm). Bend Q (R = 10, w = 1.0, oxide-clad) Q_bend = 2543 at 1571.8 nm, m = 67, 18.8 s. The bend value is not converged; see E1.
+
 Not verified:
-- **Nothing in `research/modal/` has run on Modal yet.** This session runs in an environment whose proxy refuses `api.modal.com:443` and `api.modal2.com:443` (policy 403). It also has no Modal credentials.
-- The image build, Volume I/O, `.map()` fan-out and `mpirun` inside a Modal container are therefore untested. E0 exists to test them for a few cents.
+- **E1 to E5 have not run on Modal yet.** This session itself runs in an environment that blocks Modal. This session runs in an environment whose proxy refuses `api.modal.com:443` and `api.modal2.com:443` (policy 403). It also has no Modal credentials.
+- `mpirun` with more than 1 rank inside a Modal container is untested: E0 jobs are single-rank. E3 is its first test.
 - `CLAUDE.md` records a separate, verified Modal path from an earlier session: environment `topological-photonic-crystal-optimizer`, a `nompi` pymeep image, an E0 MPB cell that matched the local result. Section 3 follows that path. This app's image uses the **MPICH** build instead, which E0 will be the first to exercise on Modal.
 
 No physics numbers are reported here. The validation runs used res 8-12, where Si holes are 1-2 pixels wide, and they say nothing about real Q.
@@ -58,7 +62,7 @@ Suggested settings:
 The recipe is from `CLAUDE.md`, commit 2a0edf4, verified on Modal on 2026-11-05.
 
 **1. Environment.** The session must run in the cloud environment **`topological-photonic-crystal-optimizer`**:
-- That environment allows `api.modal.com` and `input-plane.us-east.modal.com`.
+- That environment allows `api.modal.com`, `input-plane.us-east.modal.com` (function calls) and `clobber.modal-storage.com` (Volume reads by the local entrypoint; needed by `_existing`, `load_results` and `report`).
 - The Default environment blocks Modal.
 - If the proxy refuses another Modal host, the refused host appears in `recentRelayFailures`; add that exact host to the environment. The likely candidate is `api.modal2.com`, the client's fail-over server.
 
@@ -131,7 +135,10 @@ modal run research/modal/app.py::e1
 
 Go if:
 - some (platform, w, cladding) reaches **Q_bend >= 1e5** at a usable R;
-- for that row, `dQ_half` (the relative change between Harminv at T/2 and at T) is below 0.1.
+- for that row, `dQ_half` (the relative change between Harminv at T/2 and at T) is below 0.1;
+- every pair in `resolution_convergence` agrees within |dQ|/Q < 0.2. E1 reruns 4 rows at higher resolution (Si res 60, SiN res 45) with a 2x longer ringdown for this.
+
+Why the convergence check: on Modal, E0's res-20, T = 300 bend run (SiN, R = 10, w = 1.0) gave Q_bend = 2543. The pilot got 1.6e3 for the same cross-section at res 30 with T = 600-800. Low-resolution bend Q is not converged.
 
 What to record:
 - The output names the smallest such R per platform. Use it as R in `manifests/e5.yaml`.
@@ -294,7 +301,7 @@ These are computed by `tpc_plan.cost()` from the manifests. For E3 to E5 they us
 | Exp | Jobs | Container-hours | Cost (USD) | Longest job | Wall clock |
 |---|---|---|---|---|---|
 | E0 | 2 | 0.03 | < 0.01 + image build | 2 min | ~10 min incl. first build |
-| E1 | 40 | 1.2 | 0.07 | 3 min | minutes |
+| E1 | 44 | 1.7 | 0.11 | 10 min (res-60 convergence rows) | minutes |
 | E2 | 160 | 4.0 | 0.25 | 2 min (flat MPB guess) | minutes |
 | E3 | 8 | 2.3 | 1.8 | 0.44 h (res 30) | ~0.5 h |
 | E4, N = 4 | 99 | 18 | 7.8 | 0.28 h | ~0.5 h |

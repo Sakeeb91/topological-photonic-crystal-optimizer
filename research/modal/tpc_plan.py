@@ -350,16 +350,29 @@ def gonogo(exp: str, rows: list[dict]) -> dict:
                     bend=[{k: r.get(k) for k in ("R", "w", "m", "Q_bend", "lam_bend_um", "kernel_wall_s")} for r in cyl],
                     criterion="both kernels ran on Modal, MPB gap > 0, Harminv found a bend mode")
     if exp == "E1":
-        tab = sorted([(r["platform"], r["clad"], r["w"], r["R"], r.get("Q_bend"), r.get("lam_bend_um"),
-                       (r.get("convergence") or {}).get("dQ_rel_half_vs_full")) for r in rows if r.get("kernel") == "bend_q"],
-                     key=lambda x: (x[0], x[1], x[2], x[3]))
+        bq = [r for r in rows if r.get("kernel") == "bend_q"]
+        tab = sorted([(r["platform"], r["clad"], r["w"], r["R"], r["res"], r.get("T_harm", r.get("T_after")), r.get("Q_bend"), r.get("lam_bend_um"),
+                       (r.get("convergence") or {}).get("dQ_rel_half_vs_full")) for r in bq],
+                     key=lambda x: (x[0], x[1], x[2], x[3], x[4]))
+        groups = {}
+        for t in tab:
+            groups.setdefault(t[:4], []).append(t)
+        conv = {}
+        for k, g in groups.items():
+            g = [t for t in g if t[6]]
+            if len(g) >= 2:
+                lo, hi = g[0], g[-1]  # lowest and highest resolution
+                conv[f"{k[0]}|{k[1]}|w{k[2]}|R{k[3]}"] = dict(res=[lo[4], hi[4]], T=[lo[5], hi[5]], Q=[lo[6], hi[6]],
+                                                             dQ_rel=abs(hi[6] - lo[6]) / hi[6], dlam_nm=1e3 * abs(hi[7] - lo[7]))
+        converged = all(c["dQ_rel"] < 0.2 for c in conv.values()) if conv else False
         best = {}
-        for p_, c, w, R, q, lam, dq in tab:
+        for p_, c, w, R, res, T, q, lam, dq in tab:
             if q and q >= 1e5 and (p_ not in best or R < best[p_]["R"]):
-                best[p_] = dict(clad=c, w=w, R=R, Q_bend=q, dQ_half=dq)
-        return dict(exp=exp, go=bool(best), smallest_R_with_Qbend_ge_1e5=best,
-                    table=[dict(platform=a, clad=b, w=c, R=d, Q_bend=e, lam_um=f, dQ_half=g) for a, b, c, d, e, f, g in tab],
-                    criterion="some (platform, w, clad) reaches Q_bend >= 1e5 at a usable R; Q at T/2 and T agree within 10%")
+                best[p_] = dict(clad=c, w=w, R=R, res=res, Q_bend=q, dQ_half=dq)
+        return dict(exp=exp, go=bool(best) and converged, smallest_R_with_Qbend_ge_1e5=best, resolution_convergence=conv,
+                    table=[dict(platform=a, clad=b, w=c, R=d, res=e, T_after=f, Q_bend=g, lam_um=h, dQ_half=i) for a, b, c, d, e, f, g, h, i in tab],
+                    criterion="some (platform, w, clad) reaches Q_bend >= 1e5 at a usable R, AND every high-res/long-T "
+                              "convergence pair agrees within |dQ|/Q < 0.2 (Harminv T/2 vs T within 10%)")
     if exp == "E2":
         cells = [r for r in rows if r.get("kernel") == "mpb_cell"]
         by = {}
