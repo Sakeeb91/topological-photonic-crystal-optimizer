@@ -71,11 +71,13 @@ Run order: E0, E1, E2, E3, then E4 and E5. Each entry point accepts `--dry-run` 
 | E2 | Fabrication-constrained SSH gap maps | `7a60192` | 160 | ~$0.25 | **go** for Si 220; **no** for SiN 400 |
 | E3 | 3D domain-wall Q, flux split, convergence | `9f828c4` | 18 | ~$2.86 | **no-go**: unconverged, mirror-limited, control untuned |
 | E3-probe-40 | Same as E3 at res 40, Nside 30, T 600 (A and tanh walls, best cell) | `d3966b7` | 3 | ~$3.6 | done: lambda converged (<2 nm), Q_rad not converged |
-| E3-probe-60 | Same at res 60 | `d3966b7` | 2 | ~$18 | running (detached) |
+| E3-probe-60 | Same at res 60 | `d3966b7` | 2 | ~$18 (old model) | **stopped** at about 40 min to respect the budget; no results |
 | E2b | Si 220 cells with larger holes (r/L 0.12-0.15, delta 0.02-0.10) | `175db31` | 40 | ~$0.06 | **go**: 37 fab-ok cells, several with r >= 50 nm and margin >= 10 nm |
 | E3-bighole | E3 stage-1 scan on the best cell with r >= 50 nm and margin >= 10 nm (A/B/tanh at Nside 20/30/40; QL period_scale scan) | `175db31` | 16 | ~$8.9 | running (detached) |
 
-Costs are the app's pre-run estimates. E3's actual wall times came in 2-4x shorter than estimated. Actual spend is shown on the Modal dashboard (workspace `sakeeb91`, app `tpc-experiments`).
+**Budget:** at most $10 of Modal spend for the whole program (user, 2026-11-05). Measured spend at 21:47 UTC was $3.92 (`modal billing report`, apps `tpc-experiments` and `ssh-ring-smoke`).
+
+The costs in this table are the app's pre-run estimates. E3's actual wall times came in 2-4x shorter than estimated. Actual spend is shown on the Modal dashboard (workspace `sakeeb91`, app `tpc-experiments`).
 
 ---
 
@@ -190,7 +192,7 @@ Res-40 probe result for the best old cell (a = 0.2225, r = 35.6 nm). Q_rad depen
 - Probe settings: only the best cell (`top_k: 1`), only the A and tanh walls, Nside 30, T_harm 600. Everything else follows `e3.yaml` at `d3966b7`.
 - Purpose: a three-point resolution trend (res 20/30, then 40, then 60) to decide whether res >= 60 is needed for the 36 nm holes, or whether selection should move to larger-hole cells.
 - Res 60 was launched with `--detach`, so it finishes even if the launching client disconnects. Its results land on the Volume and appear with `modal run research/modal/app.py::report --exp E3`.
-- **Update this section and the snapshot when res 60 finishes.**
+- Res 60 was **stopped** after about 40 min to keep the program under the $10 budget. It ran on the superseded r = 35.6 nm cell, and the larger-hole cells (E2b) are the better use of the remaining budget.
 
 ## E2b: larger-hole Si cells (go)
 
