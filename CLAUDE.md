@@ -125,3 +125,12 @@ python visualize_best_design.py results/run_TIMESTAMP
 - All runs logged with parameters and results
 - Random seeds controlled for deterministic optimization
 - Configuration files stored with results for exact reproduction
+## Running on Modal from Claude Code cloud sessions (solved; do not ask the user)
+
+Experiments run on Modal (workspace `sakeeb91`). Modal is already set up on the user's side, so apply the steps below directly without asking the user to configure anything.
+
+- **Environment:** use the cloud environment `topological-photonic-crystal-optimizer`. It allows `api.modal.com` and `input-plane.us-east.modal.com`; the Default environment blocks Modal. If the proxy refuses another Modal host, read `curl -sS "$HTTPS_PROXY/__agentproxy/status"` (`recentRelayFailures`) and add that exact host to the environment.
+- **Client:** install with `pip install 'modal[api-proxy-support]'`. Plain `modal` cannot use the HTTPS proxy and hangs.
+- **TLS:** run every Modal command with `SSL_CERT_FILE=/root/.ccr/ca-bundle.crt` so the client trusts the proxy's certificate.
+- **Token:** if `~/.modal.toml` is missing (it does not persist across containers), run `modal token new --source claude-code` in the background, extract the `https://modal.com/token-flow/...` URL from its output, and give it to the user to click. Never ask for the token itself.
+- **Image:** `modal.Image.micromamba(python_version="3.11").micromamba_install("pymeep=1.35.0=nompi*", "mpb=1.12", ..., channels=["conda-forge"])` builds and runs `research/pilot_sims` scripts. Verified 2026-11-05: the E0 MPB unit-cell run on Modal matched the local result (25.49 nm gap at 1491.9-1517.4 nm).
