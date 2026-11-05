@@ -17,8 +17,9 @@ Verified in this container:
 - `pytest`: 108 passed, 13 of them new (`tests/test_modal_experiments.py`).
 
 Not verified:
-- **Nothing has run on Modal.** The container's proxy refuses `api.modal.com:443` and `api.modal2.com:443` (policy 403), and there are no Modal credentials.
+- **Nothing in `research/modal/` has run on Modal yet.** This session runs in an environment whose proxy refuses `api.modal.com:443` and `api.modal2.com:443` (policy 403). It also has no Modal credentials.
 - The image build, Volume I/O, `.map()` fan-out and `mpirun` inside a Modal container are therefore untested. E0 exists to test them for a few cents.
+- `CLAUDE.md` records a separate, verified Modal path from an earlier session: environment `topological-photonic-crystal-optimizer`, a `nompi` pymeep image, an E0 MPB cell that matched the local result. Section 3 follows that path. This app's image uses the **MPICH** build instead, which E0 will be the first to exercise on Modal.
 
 No physics numbers are reported here. The validation runs used res 8-12, where Si holes are 1-2 pixels wide, and they say nothing about real Q.
 
@@ -57,63 +58,46 @@ Suggested settings:
 - Set a **$10 spend limit**.
 - Raise both only when you get to E4 at N = 48.
 
-### 3. Create a token
+### 3. Run from a Claude Code cloud session (verified path, from `CLAUDE.md`)
 
-The dashboard route works from anywhere:
-- Open **Settings → API Tokens → New Token**.
-- Copy the `token-id` (`ak-...`) and the `token-secret` (`as-...`).
-- The secret is shown once.
-
-On a machine with a browser, the CLI route does the same and writes `~/.modal.toml`:
+**Environment.** Start the session in the cloud environment **`topological-photonic-crystal-optimizer`**:
+- It already allows `api.modal.com` and `input-plane.us-east.modal.com`. The Default environment blocks Modal.
+- If the proxy refuses another Modal host, the denied host appears in `recentRelayFailures`:
 
 ```bash
-pip install modal
-modal token new
+curl -sS "$HTTPS_PROXY/__agentproxy/status"
 ```
 
-**Never paste the token into a chat with Claude.**
+- Add that exact host under the environment's **Edit → Network access → Allowed domains**, with **Also include default list of common package managers** ticked ([docs](https://code.claude.com/docs/en/cloud-environments#network-access)).
+- Candidates from the client source: `api.modal2.com` is the client's fail-over server (`DEFAULT_SERVER_URL` in `modal/config.py`, client 1.6.3). Uploads go to `*.amazonaws.com` / `*.r2.cloudflarestorage.com`, which are already on the default list.
+- A **new session** picks up environment changes.
 
-### 4a. Run from this Claude Code cloud environment
-
-Allow Modal's hosts:
-1. Open the cloud environment menu in the session title bar, then **Edit → Network access**.
-2. Select **Custom**.
-3. Tick **Also include default list of common package managers**. This keeps PyPI, conda-forge, GitHub, `*.amazonaws.com` and `*.r2.cloudflarestorage.com` reachable.
-4. Under **Allowed domains**, add:
-
-```text
-api.modal.com
-api.modal2.com
-modal.com
-*.modal.com
-```
-
-Why these hosts:
-- `api.modal.com` is the client's server URL. `api.modal2.com` is its fail-over (`DEFAULT_SERVER_URL = "https://api.modal.com,https://api.modal2.com"` in `modal/config.py`, client 1.6.3). This container's proxy logged CONNECT attempts to both.
-- File and blob uploads go to pre-signed URLs on `*.amazonaws.com` or `*.r2.cloudflarestorage.com` (see `modal/_utils/blob_utils.py`). Both are already in the default list.
-- `modal.com` and `*.modal.com` cover the dashboard links the CLI prints.
-- Docs: [code.claude.com/docs/en/cloud-environments#network-access](https://code.claude.com/docs/en/cloud-environments#network-access).
-
-Store the token:
-1. In the same **Edit** dialog, open **Environment variables**.
-2. Add the two lines below, with your values:
-
-```text
-MODAL_TOKEN_ID=ak-...
-MODAL_TOKEN_SECRET=as-...
-```
-
-Anyone who uses that environment can read these values ([docs](https://code.claude.com/docs/en/cloud-environments)). Use a dedicated token and revoke it when you are done.
-
-Then:
-1. **Start a new session.** A running session only picks up environment changes when its VM is restored.
-2. In the new session, run the client setup. It installs `modal[api-proxy-support]`, which the client needs to tunnel through `HTTPS_PROXY`. It also appends the agent proxy CA to the venv's certifi bundle, because grpclib trusts only certifi. This path is **untested**, since Modal was blocked when it was written. If it fails, use 4b.
+**Client.** Plain `modal` cannot use the HTTPS proxy and hangs. Install the proxy extra, and point TLS at the agent proxy CA:
 
 ```bash
 bash research/modal/ccr_client_setup.sh
 ```
 
-### 4b. Alternative: run from your own laptop
+```bash
+export SSL_CERT_FILE=/root/.ccr/ca-bundle.crt
+```
+
+**Token.** `~/.modal.toml` does not persist across containers.
+- Claude runs the command below in the background and gives you the `https://modal.com/token-flow/...` URL it prints.
+- You click the URL and approve the token in the browser.
+
+```bash
+~/.venv-modal/bin/modal token new --source claude-code
+```
+
+**Never paste a token into the chat.**
+
+If you prefer a long-lived token over the click flow:
+1. Create it on the Modal dashboard under **Settings → API Tokens**.
+2. Store it as `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` in the environment's **Edit → Environment variables**.
+3. Note that anyone who uses that environment can read those values ([docs](https://code.claude.com/docs/en/cloud-environments)).
+
+### 4. Alternative: run from your own laptop
 
 This path needs no change to the Claude Code environment. Python 3.10+ is enough locally; MEEP runs only in the Modal container.
 
@@ -354,7 +338,7 @@ Free credit:
 | `research/modal/tpc_plan.py` | Manifest expansion, E2 → E3/E4/E5 selection, hash keys, tier routing, cost model, ensemble statistics, go/no-go checks |
 | `research/modal/manifests/e0.yaml` … `e5.yaml` | Experiment definitions |
 | `research/modal/validate_local.py` | Runs every experiment at validation scale with a local MEEP env, with no Modal |
-| `research/modal/ccr_client_setup.sh` | Modal client setup inside a Claude Code cloud session |
+| `research/modal/ccr_client_setup.sh` | Modal client setup inside a Claude Code cloud session (proxy extra, SSL_CERT_FILE, token flow) |
 | `tests/test_modal_experiments.py` | Geometry, fab rules, CRN, keys, manifest expansion, statistics |
 
 ### Physics rules the code enforces
@@ -399,4 +383,5 @@ Free credit:
 - 64-core per-function CPU ceiling (third-party report of Modal's error text): https://github.com/Open-Athena/MarinMat/blob/main/specs/31-cache-build-modal-cpu.md
 - Modal client 1.6.3 source (`modal/config.py`, `modal/_utils/proxy_support.py`, `modal/_utils/blob_utils.py`, `grpclib/client.py`), read from the installed package
 - Claude Code cloud environments, network access and environment variables: https://code.claude.com/docs/en/cloud-environments#network-access
+- Verified cloud-session Modal recipe (environment, proxy extra, SSL_CERT_FILE, token flow): `CLAUDE.md`, commit 2a0edf4
 - Quan and Loncar, "Deterministic design of wavelength scale, ultra-high Q photonic crystal nanobeam cavities", *Opt. Express* 19, 18529 (2011)
