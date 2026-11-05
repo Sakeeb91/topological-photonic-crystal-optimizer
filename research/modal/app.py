@@ -179,7 +179,16 @@ def _print_plan(jobs: list[dict]) -> None:
         print(f"   ... {len(jobs) - 12} more")
 
 
-def _dispatch(exp_name: str, manifest: str, dry_run: bool, n: int = 0, force: bool = False) -> list[dict]:
+def _spent_usd() -> float:
+    """Program spend so far, from the workspace billing report (apps in P.PROGRAM_APPS)."""
+    from datetime import datetime, timezone
+    start = datetime.fromisoformat(P.PROGRAM_START).replace(tzinfo=timezone.utc)
+    items = modal.Workspace.from_context().billing.report(start=start, resolution="d")
+    return P.program_spend(items)
+
+
+def _dispatch(exp_name: str, manifest: str, dry_run: bool, n: int = 0, force: bool = False,
+              budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0) -> list[dict]:
     man = P.load_manifest(manifest or exp_name)
     if n and man.get("ensemble"):
         man["ensemble"]["N"] = int(n)
@@ -196,7 +205,28 @@ def _dispatch(exp_name: str, manifest: str, dry_run: bool, n: int = 0, force: bo
             print(f"   {j['tag']}: est. {P.cost(j)['hours']:.1f} h on {j['tier']}")
         todo = [j for j in todo if j not in too_long]
     print(f"[skip] {len(jobs) - len(todo)} already on the Volume; {len(todo)} to run")
-    if dry_run or not todo:
+    if not todo:
+        return []
+    est = sum(P.cost(j)["usd"] for j in todo)
+    if spent_usd < 0:
+        try:
+            spent_usd = _spent_usd()
+            src = "workspace billing report"
+        except Exception as e:  # noqa: BLE001
+            print(f"[budget] could not read billing ({type(e).__name__}: {e}); pass --spent-usd")
+            if not dry_run:
+                return []
+            spent_usd, src = 0.0, "unknown"
+    else:
+        src = "--spent-usd"
+    b = P.budget_check(spent_usd, est, budget_usd)
+    print(f"[budget] spent ${b['spent_usd']:.2f} ({src}) + {P.BUDGET_SAFETY} x est ${est:.2f} = ${b['worst_case_usd']:.2f} "
+          f"vs cap ${budget_usd:.2f}: {'OK' if b['ok'] else 'REFUSED'}")
+    if dry_run:
+        return []
+    if not b["ok"]:
+        print("[budget] refusing to launch. Reduce the manifest (fewer designs, ensemble.N: 0, lower px_on_r) or have "
+              "the user raise the cap (--budget-usd).")
         return []
     out = []
     for tier in ("light", "3d", "3d_big", "3d_xl", "ring"):
@@ -215,44 +245,44 @@ def _dispatch(exp_name: str, manifest: str, dry_run: bool, n: int = 0, force: bo
 
 
 @app.local_entrypoint()
-def e0(dry_run: bool = False, manifest: str = ""):
-    _dispatch("E0", manifest, dry_run)
+def e0(dry_run: bool = False, manifest: str = "", budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0):
+    _dispatch("E0", manifest, dry_run, budget_usd=budget_usd, spent_usd=spent_usd)
     if not dry_run:
         print(json.dumps(P.gonogo("E0", load_results("E0")), indent=1))
 
 
 @app.local_entrypoint()
-def e1(dry_run: bool = False, manifest: str = ""):
-    _dispatch("E1", manifest, dry_run)
+def e1(dry_run: bool = False, manifest: str = "", budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0):
+    _dispatch("E1", manifest, dry_run, budget_usd=budget_usd, spent_usd=spent_usd)
     if not dry_run:
         print(json.dumps(P.gonogo("E1", load_results("E1")), indent=1))
 
 
 @app.local_entrypoint()
-def e2(dry_run: bool = False, manifest: str = ""):
-    _dispatch("E2", manifest, dry_run)
+def e2(dry_run: bool = False, manifest: str = "", budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0):
+    _dispatch("E2", manifest, dry_run, budget_usd=budget_usd, spent_usd=spent_usd)
     if not dry_run:
         print(json.dumps(P.gonogo("E2", load_results("E2")), indent=1))
 
 
 @app.local_entrypoint()
-def e3(dry_run: bool = False, manifest: str = "", force: bool = False):
-    _dispatch("E3", manifest, dry_run, force=force)
+def e3(dry_run: bool = False, manifest: str = "", force: bool = False, budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0):
+    _dispatch("E3", manifest, dry_run, force=force, budget_usd=budget_usd, spent_usd=spent_usd)
     if not dry_run:
         print(json.dumps(P.gonogo("E3", load_results("E3")), indent=1))
 
 
 @app.local_entrypoint()
-def e4(dry_run: bool = False, manifest: str = "", n: int = 0, force: bool = False):
+def e4(dry_run: bool = False, manifest: str = "", n: int = 0, force: bool = False, budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0):
     """Disorder ensembles; --n overrides the manifest's realizations per cell (48 for the paper)."""
-    _dispatch("E4", manifest, dry_run, n=n, force=force)
+    _dispatch("E4", manifest, dry_run, n=n, force=force, budget_usd=budget_usd, spent_usd=spent_usd)
     if not dry_run:
         _summarize_e4(manifest, n)
 
 
 @app.local_entrypoint()
-def e5(dry_run: bool = False, manifest: str = ""):
-    _dispatch("E5", manifest, dry_run)
+def e5(dry_run: bool = False, manifest: str = "", budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0):
+    _dispatch("E5", manifest, dry_run, budget_usd=budget_usd, spent_usd=spent_usd)
     if not dry_run:
         print(json.dumps(P.gonogo("E5", load_results("E5")), indent=1))
 
@@ -270,6 +300,13 @@ def _summarize_e4(manifest: str, n: int) -> None:
             json.dump(summ, f, indent=1)
         b.put_file(tmp, "/E4/summary.json")
     print(json.dumps(summ, indent=1))
+
+
+@app.local_entrypoint()
+def spend():
+    """Print program spend against the cap (apps in tpc_plan.PROGRAM_APPS since PROGRAM_START)."""
+    s = _spent_usd()
+    print(f"program spend ${s:.2f} of ${P.BUDGET_USD:.2f} cap ({', '.join(P.PROGRAM_APPS)} since {P.PROGRAM_START})")
 
 
 @app.local_entrypoint()

@@ -262,3 +262,13 @@ def test_group_ensemble_reports_pt_and_minkov_c():
     cell = out["ssh_A|res20|position_x|s10"]
     assert cell["pt_check"]["n"] == 2 and "C_minkov_per_nm2" in cell
     assert set(out["ssh_A|res20|pt"]["by_class"]) == {"radius|s1", "radius|s3", "position_x|s1", "position_x|s3"}
+
+
+def test_budget_guard():
+    items = [dict(description="tpc-experiments", cost="3.10"), dict(description="ssh-ring-smoke", cost="0.82"),
+             dict(description="hf-physics-x", cost="40.0")]  # the user's other apps do not count
+    spent = P.program_spend(items)
+    assert spent == pytest.approx(3.92)
+    assert P.budget_check(spent, 3.0)["ok"]                     # 3.92 + 1.6 x 3.0 = 8.72
+    assert not P.budget_check(spent, 4.0)["ok"]                 # 3.92 + 1.6 x 4.0 = 10.32
+    assert P.budget_check(spent, 4.0, cap_usd=12.0)["ok"]

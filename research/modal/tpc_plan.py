@@ -257,6 +257,33 @@ def expand(man: dict, load_results: Callable[[str], list[dict]] | None = None) -
 
 
 # --------------------------------------------------------------------------
+# Budget (program cap set by the user: $10 of Modal spend in total, docs/EXPERIMENT_LOG.md)
+# --------------------------------------------------------------------------
+BUDGET_USD = 10.0
+PROGRAM_APPS = ("tpc-experiments", "ssh-ring-smoke")  # apps whose spend counts against the cap
+PROGRAM_START = "2026-11-05"
+BUDGET_SAFETY = 1.6  # measured/model wall time reached 1.59 on the first E3 run (median 0.82)
+
+
+def program_spend(items, apps=PROGRAM_APPS) -> float:
+    """Sum billing-report rows (dicts or objects with description/cost) for the program's apps."""
+    tot = 0.0
+    for it in items:
+        desc = it["description"] if isinstance(it, dict) else getattr(it, "description", "")
+        cost = it["cost"] if isinstance(it, dict) else getattr(it, "cost", 0)
+        if desc in apps:
+            tot += float(cost)
+    return tot
+
+
+def budget_check(spent_usd: float, est_usd: float, cap_usd: float = BUDGET_USD, safety: float = BUDGET_SAFETY) -> dict:
+    """Refuse when already-spent + safety x estimate would exceed the cap."""
+    worst = spent_usd + safety * est_usd
+    return dict(ok=worst <= cap_usd, spent_usd=spent_usd, est_usd=est_usd, worst_case_usd=worst,
+                cap_usd=cap_usd, headroom_usd=cap_usd - spent_usd)
+
+
+# --------------------------------------------------------------------------
 # Size, routing and cost
 # --------------------------------------------------------------------------
 def estimate(job: dict) -> dict:
