@@ -34,13 +34,13 @@ TIERS: dict[str, dict[str, Any]] = {
     "ring":   dict(cpu=32.0, memory=32768, timeout=24 * 3600, np=32),  # 24 h is Modal's maximum
 }
 
-# MEEP 1.35 MPICH cost, measured 2026-11-05 on the 4-core cloud container (Xeon 2.8 GHz) with
-# tpc_physics.nanobeam3d (flux monitors + 2 Harminv points on), 6.84e5 reduced voxels:
-#   np=2: 31.3 ns per reduced voxel-step (63 core-ns);  np=4: 23.1 ns (92 core-ns).
-# Cost per job = V_red * steps * CORE_NS / (np * PAR_EFF[np]), relative to np=4.
-# PAR_EFF beyond 4 ranks is ASSUMED (unmeasured); see docs/MODAL_RUNBOOK.md.
-CORE_NS_PER_VOXEL_STEP = 92.0
-PAR_EFF = {1: 1.45, 2: 1.45, 4: 1.0, 8: 0.8, 16: 0.65, 32: 0.5}
+# MEEP 1.35 MPICH cost in core-ns per symmetry-reduced voxel-step, MEASURED ON MODAL (first E3 run,
+# 2026-11-05, 16 nanobeam3d jobs, field ns_core_per_reduced_voxel_step; research/results/):
+#   np=8: median 26 (range 19-28);  np=16: median 40 (range 24-69).
+# np=1-4 and np=32 are ASSUMED (unmeasured on Modal): the 8-rank value below 8, and 40/0.7 for 32.
+# (The 4-core cloud container measured 63 core-ns at np=2 and 92 at np=4: Modal cores are ~3x faster.)
+CORE_NS_BY_NP = {1: 26.0, 2: 26.0, 4: 26.0, 8: 26.0, 16: 40.0, 32: 57.0}
+CORE_NS_PER_VOXEL_STEP = CORE_NS_BY_NP[8]  # scale factor for callers that pass core_ns explicitly
 BYTES_PER_REDUCED_VOXEL = 200.0  # from the pilot full-ring run: 1.7 GB / 9.6e6 voxels
 CPU_USD_PER_CORE_S = 0.0000131   # modal.com/pricing, 2026-11-05
 MEM_USD_PER_GIB_S = 0.00000222
@@ -318,7 +318,8 @@ def cost(job: dict, core_ns: float = CORE_NS_PER_VOXEL_STEP) -> dict:
         hours = e["vox_reduced"] * e["steps"] * 6e-9 / 3600  # 2D: about 6 ns per pixel-step (pilot BENCH2D)
     else:
         npr = tier["np"]
-        hours = e["vox_reduced"] * e["steps"] * core_ns * 1e-9 / (npr * PAR_EFF.get(npr, 0.4)) / 3600
+        cns = CORE_NS_BY_NP.get(npr, 60.0) * core_ns / CORE_NS_PER_VOXEL_STEP
+        hours = e["vox_reduced"] * e["steps"] * cns * 1e-9 / npr / 3600
     hours += 0.5 / 60  # amortised container start (map reuses warm containers), rough
     usd = hours * 3600 * (tier["cpu"] * CPU_USD_PER_CORE_S + tier["memory"] / 1024 * MEM_USD_PER_GIB_S)
     return dict(hours=hours, usd=usd, **e)
