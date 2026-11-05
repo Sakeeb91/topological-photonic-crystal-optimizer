@@ -52,7 +52,7 @@ There are two caps:
 Suggested settings:
 - Start with a **$40 workspace budget**.
 - Set a **$10 spend limit**.
-- Raise both only when you get to E4 at N = 48.
+- The program cap is $10 in total (`EXPERIMENT_LOG.md`). Check spend with `modal billing report` before each experiment.
 
 ### 3. Cloud-session setup (Claude does this; nothing for you to configure)
 
@@ -221,8 +221,8 @@ Estimates (`tpc_plan.cost`, calibrated on the Modal E3 timings; T_harm 1000 for 
 |---|---|---|
 | E3 stage 1 (16 jobs) | $13, 9 container-h | $3, 3 container-h |
 | E3 stage 2 (13 jobs) | $52, 30 container-h, longest 6.3 h | $12, 9 container-h |
-| E4, N = 4 | $131 | $28 |
-| E4, N = 48 | **$1,535** | $328 |
+| E4, FDTD-only N = 4 | $131 | $28 |
+| E4, FDTD-only N = 48 | **$1,535** | $328 |
 
 The r = 50 nm column is a cost figure for that geometry only, not a claim that such a cell has a usable gap. E2b finds out.
 
@@ -232,32 +232,55 @@ What is now in place:
 
 Cheaper routes, in order of value:
 1. **Larger holes** (E2b, then `select.min_r_nm: 45` in e3/e4/e5.yaml). About 4x cheaper, and the same change gives the web margin a mask needs.
-2. **E4 by perturbation theory, with FDTD only as validation.** Use first-order sensitivities d omega/d r_i and d omega/d x_i from one converged field (Johnson et al., PRE 65, 066611, 2002; review section 7). That gives frequency statistics for all four classes in seconds, with 5-10 FDTD runs per cell to check them. Not implemented yet; it is the next code step if E4 at N = 48 is wanted.
+2. **E4 by perturbation theory, with FDTD for spot checks and loss** (implemented: `sens3d`; see E4).
 3. **GPU FDTD** (e.g. Tidy3D) for the ensemble, as the review suggested.
 
-**E4: matched disorder ensembles.** Designs: abrupt SSH wall, tanh SSH wall and Quan-Loncar. Disorder classes, each in absolute nm with common random numbers: radius, longitudinal position, transverse offset, global CD bias. Sigma = 5 and 10 nm.
+**E4: matched disorder.** Designs: abrupt SSH wall, tanh SSH wall and Quan-Loncar, on the big-hole cell (`select.min_r_nm: 50`, `min_margin_nm: 10`). Disorder classes, each in absolute nm with common random numbers: radius, longitudinal position, transverse offset, global CD bias.
 
-Start with the default N = 4, then go to N = 48:
+Two methods, each for what it can do:
+- **Frequencies: first-order perturbation theory (`sens3d`).** Shifting-boundary formula of Johnson et al., PRE 65, 066611 (2002):
+  - One extra 3D job per design (two passes) gives d omega/d r_i, d x_i and d y_i for every hole.
+  - The summary then computes sigma_lambda for every class at sigma = 1, 2, 3, 5, 10 nm (`pt.sigmas_nm`), analytically and by CRN Monte Carlo, in seconds.
+  - This covers the realistic 1-3 nm regime, which FDTD cannot resolve on the grid.
+- **Q under disorder: FDTD.** Disorder loss is second order in the displacement, so first-order perturbation theory gives no loss estimate.
+  - The FDTD realizations at sigma 5 and 10 nm fit C in <1/Q - 1/Q_nom> = C sigma^2 (Minkov et al., Opt. Express 21, 28233, 2013) per class, which extrapolates the loss to 1-3 nm.
+  - The same realizations check the perturbation-theory shifts (`pt_check`: slope and correlation).
+
+**Budget.** The program is capped at $10 of Modal spend (`EXPERIMENT_LOG.md`), so the E4 defaults are sized to it: N = 1 FDTD realization at sigma = 10 nm per class, which is 19 jobs and about $5.5 on a big-hole cell. Options from `e4.yaml`:
+
+| Setting | Jobs | Estimated cost |
+|---|---|---|
+| perturbation theory only (`ensemble.N: 0`) | 7 | ~$1.9 |
+| default: N = 1, sigma 10 nm, 4 classes | 19 | ~$5.5 |
+| N = 2, sigma 10 nm, 4 classes | 31 | ~$9.2 |
+| N = 8, sigma 5 and 10 nm (beyond the budget) | 199 | ~$60 |
+
+Check the remaining budget, then preview and run:
+
+```bash
+modal run research/modal/app.py::e4 --dry-run
+```
 
 ```bash
 modal run research/modal/app.py::e4
 ```
 
-```bash
-modal run research/modal/app.py::e4 --n 48
-```
+Go if:
+- every design has a `sens3d` result with status `ok`;
+- `pt_check.slope_fdtd_vs_pt` is within 0.7-1.3 (with N = 1, that is one realization per class: a spot check, not a statistic);
+- `C_minkov_per_nm2` is positive. With one sigma, C is a single-point estimate; its sigma^2 scaling is assumed from Minkov 2013, not tested.
 
-Go to N = 48 if:
-- N = 4 finishes with fewer than 5% failed or empty-mode jobs;
-- the per-cell spread looks sane.
+If the PT slope is off, check FDTD resolution first: 10 nm is about 0.4 px at res 38. A second sigma (5 nm) costs about as much again and tests the sigma^2 scaling of C.
 
-The summary is written to `/E4/summary.json`. It holds, per (design, class, sigma) cell:
-- harmonic-mean Q, Q10 and median Q;
-- harmonic-mean Q_rad;
-- sigma_lambda;
-- 95% bootstrap intervals.
+The summary is written to `/E4/summary.json`. It holds:
+- per (design, class, sigma) FDTD cell: harmonic-mean Q, Q10, median Q, harmonic-mean Q_rad, sigma_lambda, 95% bootstrap intervals, `C_minkov_per_nm2` and `pt_check`;
+- per design (`|pt`): sigma_lambda for all classes and sigmas from perturbation theory.
 
-Caveat: 5 nm is about 0.1 pixel at res 20. MEEP's subpixel smoothing gives a smooth response, but its accuracy at that scale is a known limit (review section 4).
+Validation (local, res 20, SiN suspended with non-overlapping holes; validation scale only):
+- Perturbation theory and FDTD agree in sign in 6 of 6 perturbations, with ratios of 0.59-1.72.
+- The FDTD reference is itself nonlinear at that resolution: radius +5 / -5 nm gives df = +0.0067 / -0.0050.
+- The gradients are identical at 1, 2 and 4 MPI ranks, and within 3-6% of a run without mirror symmetry.
+- The data is in `tests/fixtures/pt_validation_res20.json`.
 
 **E5 (optional): ring closure.** Runs unrolled-ring supercells (one A and one B wall, periodic, length = 2 pi R) and one full 3D ring at res 20.
 
@@ -353,7 +376,7 @@ These are computed by `tpc_plan.cost()` from the manifests, except the row marke
 | E3 (first run, res 20/30, done) | 18 | 1.04 (measured job wall time) | 0.83 (from measured wall time × list price) | 0.17 h | superseded: unconverged on Si holes |
 | E3 stage 1 + 2, r = 35.6 nm | 29 | 39 | 65 | 6.3 h | see "Cost problem" under E3 |
 | E3 stage 1 + 2, r = 50 nm | 29 | 12 | 15 | 1.5 h | |
-| E4, N = 48, r = 35.6 / 50 nm | 1156 | 895 / 301 | 1535 / 328 | 1.8 / 0.4 h | perturbation theory + FDTD spot checks is far cheaper |
+| E4 default (PT + N = 1 at 10 nm), r = 53.5 nm cell | 19 | 5.6 | 5.5 | 0.7 h | within the $10 budget; FDTD-only N = 48 would be $352 |
 
 **What the cost scales with.**
 
@@ -367,7 +390,7 @@ Resolution:
 
 Free credit:
 - Starter's $30 covers E0-E2, E3 stage 1 on either cell, and stage 2 on a large-hole cell.
-- E4 at N = 48 by FDTD needs $330-1,500 of credit or an academic grant. Perturbation theory with FDTD spot checks would need a small fraction of that.
+- **The program budget is $10** (`EXPERIMENT_LOG.md`). E4 at its default is about $5.5 on a big-hole cell; perturbation theory alone is about $1.9. FDTD-only N = 48 would be $352 there and about $1,500 on the r = 36 nm cell.
 
 ---
 
@@ -376,7 +399,7 @@ Free credit:
 | File | Role |
 |---|---|
 | `research/modal/app.py` | Modal App: micromamba image (conda-forge `pymeep=1.35.0=mpi_mpich*`, `mpb=1.12.0=mpi_mpich*`, `mpich=4.3.2`, numpy/scipy/h5py, python 3.11), Volume `tpc-results`, functions `run_light` / `run_3d` / `run_3d_big` / `run_ring` (each runs `mpirun -np <cores>`), entrypoints `e0`-`e5`, `report` |
-| `research/modal/tpc_physics.py` | Kernels: `mpb_cell`, `bend_q`, `nanobeam3d`, `supercell3d`, `ring3d`. MEEP/MPB only, no `modal` import |
+| `research/modal/tpc_physics.py` | Kernels: `mpb_cell`, `bend_q`, `nanobeam3d`, `sens3d` (perturbation-theory sensitivities), `supercell3d`, `ring3d`. MEEP/MPB only, no `modal` import |
 | `research/modal/tpc_geometry.py` | SSH wall none/A/B/tanh, Quan-Loncar Gaussian mirror, unrolled-ring supercell, fab rules, CRN disorder |
 | `research/modal/tpc_plan.py` | Manifest expansion, E2 → E3/E4/E5 selection, hash keys, tier routing, cost model, ensemble statistics, go/no-go checks |
 | `research/modal/manifests/e0.yaml` … `e5.yaml` | Experiment definitions |
@@ -427,4 +450,6 @@ Free credit:
 - Modal client 1.6.3 source (`modal/config.py`, `modal/_utils/proxy_support.py`, `modal/_utils/blob_utils.py`, `grpclib/client.py`), read from the installed package
 - Claude Code cloud environments, network access and environment variables: https://code.claude.com/docs/en/cloud-environments#network-access
 - Verified cloud-session Modal recipe (environment, proxy extra, SSL_CERT_FILE, token flow): `CLAUDE.md`, commit 2a0edf4
+- Johnson et al., "Perturbation theory for Maxwell's equations with shifting material boundaries", *Phys. Rev. E* 65, 066611 (2002)
+- Minkov, Dharanipathy, Houdre, Savona, *Opt. Express* 21, 28233 (2013)
 - Quan and Loncar, "Deterministic design of wavelength scale, ultra-high Q photonic crystal nanobeam cavities", *Opt. Express* 19, 18529 (2011)
