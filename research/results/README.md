@@ -7,6 +7,7 @@ Raw outputs of the Modal experiments, committed so the results do not depend on 
   - Each file holds the job parameters (`job.params`), the solver output, `meep_version`, and the Modal tier and wall time (`modal`).
   - Failed jobs, if any, are under `<EXP>/_failed/`.
 - `manifests/`: manifests used for runs that are not in `research/modal/manifests/` (the E3 convergence probes).
+- `budget_guard.sh <app-id> [cap_usd]`: polls `modal billing report` every 5 min, sums this program's apps (`tpc-experiments`, `ssh-ring-smoke`), and stops the given app when the cap (default $8) is reached. Run it in the background next to any detached run.
 - `logs/`: client-side run logs.
   - Box-drawing characters and local scratch paths have been stripped.
   - The `modal.com/apps/...` links point to the owner's dashboard.
@@ -20,4 +21,3 @@ modal volume get tpc-results / research/results/modal_volume_<DATE> --force
 ```
 
 Then add an entry to the experiment log.
-- `budget_guard.sh <app-id> [cap_usd]`: polls `modal billing report` every 5 min, sums this program's apps (`tpc-experiments`, `ssh-ring-smoke`), and stops the given app when the cap (default $8) is reached. Run it in the background next to any detached run.
