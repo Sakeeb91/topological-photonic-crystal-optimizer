@@ -27,25 +27,20 @@ No physics numbers are reported here. The validation runs used res 8-12, where S
 
 ## Your checklist, in order
 
-### 1. Create a Modal account and pick a plan
+### 1. Modal account: already set up
 
-Sign up at https://modal.com (GitHub or Google login).
+Modal is configured on your side (workspace `sakeeb91`; see `CLAUDE.md`). Nothing to do here.
 
-**Starter** plan:
-- $30/month of free credits;
-- 3 seats;
-- 100 containers.
+Plan limits, for reference ([modal.com/pricing](https://modal.com/pricing)):
 
-**Team** plan:
-- $100/month of free credits;
-- 5000 containers;
-- environment-level budgets.
+| Plan | Free credits per month | Seats | Containers |
+|---|---|---|---|
+| Starter | $30 | 3 | 100 |
+| Team | $100 | unlimited | 5000 |
 
-Academics can apply for credit grants of up to $10k. All three figures are from [modal.com/pricing](https://modal.com/pricing).
+Academics can apply for credit grants of up to $10k. E0 to E3 plus E5 fit inside the Starter credit; a paper-scale E4 (N = 48) does not.
 
-E0 to E3 plus E5 fit inside the Starter credit. A paper-scale E4 (N = 48) does not; see the [cost table](#expected-cost-and-time).
-
-### 2. Set a budget and a spend limit before running anything
+### 2. Optional: cap spend before E4 at N = 48
 
 Do this on the Modal dashboard, under **Settings → Usage & Billing**. Only Workspace Owners or Managers can change it. [Source](https://modal.com/docs/guide/budgets).
 
@@ -58,44 +53,39 @@ Suggested settings:
 - Set a **$10 spend limit**.
 - Raise both only when you get to E4 at N = 48.
 
-### 3. Run from a Claude Code cloud session (verified path, from `CLAUDE.md`)
+### 3. Cloud-session setup (Claude does this; nothing for you to configure)
 
-**Environment.** Start the session in the cloud environment **`topological-photonic-crystal-optimizer`**:
-- It already allows `api.modal.com` and `input-plane.us-east.modal.com`. The Default environment blocks Modal.
-- If the proxy refuses another Modal host, the denied host appears in `recentRelayFailures`:
+The recipe is from `CLAUDE.md`, commit 2a0edf4, verified on Modal on 2026-11-05.
+
+**1. Environment.** The session must run in the cloud environment **`topological-photonic-crystal-optimizer`**:
+- That environment allows `api.modal.com` and `input-plane.us-east.modal.com`.
+- The Default environment blocks Modal.
+- If the proxy refuses another Modal host, the refused host appears in `recentRelayFailures`; add that exact host to the environment. The likely candidate is `api.modal2.com`, the client's fail-over server.
 
 ```bash
 curl -sS "$HTTPS_PROXY/__agentproxy/status"
 ```
 
-- Add that exact host under the environment's **Edit → Network access → Allowed domains**, with **Also include default list of common package managers** ticked ([docs](https://code.claude.com/docs/en/cloud-environments#network-access)).
-- Candidates from the client source: `api.modal2.com` is the client's fail-over server (`DEFAULT_SERVER_URL` in `modal/config.py`, client 1.6.3). Uploads go to `*.amazonaws.com` / `*.r2.cloudflarestorage.com`, which are already on the default list.
-- A **new session** picks up environment changes.
-
-**Client.** Plain `modal` cannot use the HTTPS proxy and hangs. Install the proxy extra, and point TLS at the agent proxy CA:
+**2. Client.** `ccr_client_setup.sh` installs `modal[api-proxy-support]`. Plain `modal` cannot use the HTTPS proxy and hangs.
 
 ```bash
 bash research/modal/ccr_client_setup.sh
 ```
 
+**3. TLS.** Every Modal command runs with `SSL_CERT_FILE` pointing at the agent proxy CA:
+
 ```bash
 export SSL_CERT_FILE=/root/.ccr/ca-bundle.crt
 ```
 
-**Token.** `~/.modal.toml` does not persist across containers.
-- Claude runs the command below in the background and gives you the `https://modal.com/token-flow/...` URL it prints.
-- You click the URL and approve the token in the browser.
+**4. Token.** `~/.modal.toml` does not persist across containers. When it is missing:
+- Claude runs the command below in the background.
+- Claude gives you the `https://modal.com/token-flow/...` link it prints, and you click it.
+- Claude never asks for the token itself.
 
 ```bash
 ~/.venv-modal/bin/modal token new --source claude-code
 ```
-
-**Never paste a token into the chat.**
-
-If you prefer a long-lived token over the click flow:
-1. Create it on the Modal dashboard under **Settings → API Tokens**.
-2. Store it as `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` in the environment's **Edit → Environment variables**.
-3. Note that anyone who uses that environment can read those values ([docs](https://code.claude.com/docs/en/cloud-environments)).
 
 ### 4. Alternative: run from your own laptop
 
