@@ -1,0 +1,93 @@
+{
+ "a": 0.19375620964122423,
+ "b": 0.17885188582266848,
+ "r": 0.05589121431958391,
+ "L": 0.37260809546389273,
+ "freqs_edge": [
+  0.642472723667694,
+  0.6535466158286898,
+  0.834289418305828,
+  0.8360664760589921
+ ],
+ "edge_f1": 0.642472723667694,
+ "edge_f2": 0.6535466158286898,
+ "gap_abs": 0.011073892160995746,
+ "gap_mid_ratio": 0.017089084743594826,
+ "lambda1_um": 1.5564863116542667,
+ "lambda2_um": 1.530112735312708,
+ "lambda_mid_um": 1.5431868484132143,
+ "dlambda_nm": 26.37357634155868,
+ "f_lightline": 0.9292884186548448,
+ "below_lightline": true,
+ "wall_s": 9.133492469787598,
+ "platform": "si220",
+ "w": 0.55,
+ "t": 0.22,
+ "clad": "sub",
+ "res": 48,
+ "Ly": 2.0,
+ "Lz": 2.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 4,
+ "history": [
+  {
+   "L": 0.36,
+   "lambda_mid_um": 1.5167508972999544,
+   "dlambda_nm": 24.995309328799785
+  },
+  {
+   "L": 0.3671796080631313,
+   "lambda_mid_um": 1.5319054584372636,
+   "dlambda_nm": 25.875425893955306
+  },
+  {
+   "L": 0.3707975910296207,
+   "lambda_mid_um": 1.5394831199485028,
+   "dlambda_nm": 26.149519909697272
+  },
+  {
+   "L": 0.37260809546389273,
+   "lambda_mid_um": 1.5431868484132143,
+   "dlambda_nm": 26.37357634155868
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": true,
+  "violations": [],
+  "platform": "si220",
+  "min_hole_diameter_nm": 111.78242863916782,
+  "min_web_nm": 67.06945718350072,
+  "min_rail_nm": 219.1087856804161
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 41.82706904411316,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "si220",
+   "clad": "sub",
+   "res": 48,
+   "Ly": 2.0,
+   "Lz": 2.0,
+   "L0": 0.36,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "w": 0.55,
+   "delta": 0.04,
+   "r_over_L": 0.15
+  },
+  "tag": "si220-bighole",
+  "key": "d134ee2075be2e80e1cd",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 42.17839193344116,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

@@ -1,0 +1,93 @@
+{
+ "a": 0.2060925011548879,
+ "b": 0.17556027876157115,
+ "r": 0.053431389188304264,
+ "L": 0.3816527799164591,
+ "freqs_edge": [
+  0.6398617922880919,
+  0.6583252328166916,
+  0.8456695369803872,
+  0.8495532743735927
+ ],
+ "edge_f1": 0.6398617922880919,
+ "edge_f2": 0.6583252328166916,
+ "gap_abs": 0.018463440528599717,
+ "gap_mid_ratio": 0.028444962353724703,
+ "lambda1_um": 1.5628374940533394,
+ "lambda2_um": 1.5190060325068027,
+ "lambda_mid_um": 1.5406100672116712,
+ "dlambda_nm": 43.83146154653672,
+ "f_lightline": 0.9072654675473034,
+ "below_lightline": true,
+ "wall_s": 8.429518938064575,
+ "platform": "si220",
+ "w": 0.5,
+ "t": 0.22,
+ "clad": "sub",
+ "res": 48,
+ "Ly": 2.0,
+ "Lz": 2.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 4,
+ "history": [
+  {
+   "L": 0.36,
+   "lambda_mid_um": 1.4956333355156874,
+   "dlambda_nm": 43.9106643030458
+  },
+  {
+   "L": 0.37236399241394047,
+   "lambda_mid_um": 1.5214102979350548,
+   "dlambda_nm": 45.36370674263202
+  },
+  {
+   "L": 0.3786270521806051,
+   "lambda_mid_um": 1.5347354468415224,
+   "dlambda_nm": 43.563077887814885
+  },
+  {
+   "L": 0.3816527799164591,
+   "lambda_mid_um": 1.5406100672116712,
+   "dlambda_nm": 43.83146154653672
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": true,
+  "violations": [],
+  "platform": "si220",
+  "min_hole_diameter_nm": 106.86277837660853,
+  "min_web_nm": 68.6975003849627,
+  "min_rail_nm": 196.56861081169575
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 37.12718939781189,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "si220",
+   "clad": "sub",
+   "res": 48,
+   "Ly": 2.0,
+   "Lz": 2.0,
+   "L0": 0.36,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "w": 0.5,
+   "delta": 0.08,
+   "r_over_L": 0.14
+  },
+  "tag": "si220-bighole",
+  "key": "5dc935c16ca87bbcf0e1",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 37.54064679145813,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

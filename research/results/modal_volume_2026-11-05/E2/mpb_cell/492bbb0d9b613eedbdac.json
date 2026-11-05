@@ -1,0 +1,93 @@
+{
+ "a": 0.18704439673081988,
+ "b": 0.1797093223492191,
+ "r": 0.044010446289604675,
+ "L": 0.36675371908003895,
+ "freqs_edge": [
+  0.6454372798918343,
+  0.6490129202066957,
+  0.8525495795333757,
+  0.8532600976580262
+ ],
+ "edge_f1": 0.6454372798918343,
+ "edge_f2": 0.6490129202066957,
+ "gap_abs": 0.0035756403148613503,
+ "gap_mid_ratio": 0.0055245699132947445,
+ "lambda1_um": 1.5493372185870409,
+ "lambda2_um": 1.5408013752353698,
+ "lambda_mid_um": 1.5450575076953639,
+ "dlambda_nm": 8.535843351671124,
+ "f_lightline": 0.9441223627675547,
+ "below_lightline": true,
+ "wall_s": 8.918194055557251,
+ "platform": "si220",
+ "w": 0.5,
+ "t": 0.22,
+ "clad": "sub",
+ "res": 48,
+ "Ly": 2.0,
+ "Lz": 2.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 4,
+ "history": [
+  {
+   "L": 0.36,
+   "lambda_mid_um": 1.5306209245721043,
+   "dlambda_nm": 8.521478138372673
+  },
+  {
+   "L": 0.36385233669511663,
+   "lambda_mid_um": 1.53874075291057,
+   "dlambda_nm": 8.511307248812328
+  },
+  {
+   "L": 0.36580532737736576,
+   "lambda_mid_um": 1.5429995989469019,
+   "dlambda_nm": 8.52256001500562
+  },
+  {
+   "L": 0.36675371908003895,
+   "lambda_mid_um": 1.5450575076953639,
+   "dlambda_nm": 8.535843351671124
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": true,
+  "violations": [],
+  "platform": "si220",
+  "min_hole_diameter_nm": 88.02089257920935,
+  "min_web_nm": 91.68842977000973,
+  "min_rail_nm": 205.9895537103953
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 38.594125270843506,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "si220",
+   "clad": "sub",
+   "res": 48,
+   "Ly": 2.0,
+   "Lz": 2.0,
+   "L0": 0.36,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "w": 0.5,
+   "delta": 0.02,
+   "r_over_L": 0.12
+  },
+  "tag": "si220-bighole",
+  "key": "492bbb0d9b613eedbdac",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 38.892826318740845,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

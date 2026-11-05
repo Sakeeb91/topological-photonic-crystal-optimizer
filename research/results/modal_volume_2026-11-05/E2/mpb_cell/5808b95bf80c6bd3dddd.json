@@ -1,0 +1,88 @@
+{
+ "a": 0.19751816254375,
+ "b": 0.1682562125372685,
+ "r": 0.04389292500972221,
+ "L": 0.3657743750810185,
+ "freqs_edge": [
+  0.6413894863620554,
+  0.6546387359975553,
+  0.8516385393955559,
+  0.854989585140199
+ ],
+ "edge_f1": 0.6413894863620554,
+ "edge_f2": 0.6546387359975553,
+ "gap_abs": 0.013249249635499893,
+ "gap_mid_ratio": 0.02044592765330014,
+ "lambda1_um": 1.559115048286766,
+ "lambda2_um": 1.5275600801046005,
+ "lambda_mid_um": 1.5431762715465445,
+ "dlambda_nm": 31.55496818216541,
+ "f_lightline": 0.9466502067973958,
+ "below_lightline": true,
+ "wall_s": 8.589126586914062,
+ "platform": "si220",
+ "w": 0.5,
+ "t": 0.22,
+ "clad": "sub",
+ "res": 48,
+ "Ly": 2.0,
+ "Lz": 2.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 3,
+ "history": [
+  {
+   "L": 0.36,
+   "lambda_mid_um": 1.530439264806635,
+   "dlambda_nm": 31.26693972833028
+  },
+  {
+   "L": 0.36389552516503465,
+   "lambda_mid_um": 1.5390536237143917,
+   "dlambda_nm": 31.464162314152055
+  },
+  {
+   "L": 0.3657743750810185,
+   "lambda_mid_um": 1.5431762715465445,
+   "dlambda_nm": 31.55496818216541
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": true,
+  "violations": [],
+  "platform": "si220",
+  "min_hole_diameter_nm": 87.78585001944441,
+  "min_web_nm": 80.4703625178241,
+  "min_rail_nm": 206.1070749902778
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 29.298879861831665,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "si220",
+   "clad": "sub",
+   "res": 48,
+   "Ly": 2.0,
+   "Lz": 2.0,
+   "L0": 0.36,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "w": 0.5,
+   "delta": 0.08,
+   "r_over_L": 0.12
+  },
+  "tag": "si220-bighole",
+  "key": "5808b95bf80c6bd3dddd",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 29.90606427192688,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

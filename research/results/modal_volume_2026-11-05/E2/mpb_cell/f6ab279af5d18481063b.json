@@ -1,0 +1,93 @@
+{
+ "a": 0.1827291878871122,
+ "b": 0.16867309651118045,
+ "r": 0.04216827412779511,
+ "L": 0.3514022843982927,
+ "freqs_edge": [
+  0.64235287199501,
+  0.6486480926863468,
+  0.8434953286012074,
+  0.8447036119616838
+ ],
+ "edge_f1": 0.64235287199501,
+ "edge_f2": 0.6486480926863468,
+ "gap_abs": 0.006295220691336811,
+ "gap_mid_ratio": 0.009752464736369254,
+ "lambda1_um": 1.5567767244415283,
+ "lambda2_um": 1.5416679880434785,
+ "lambda_mid_um": 1.54918551938777,
+ "dlambda_nm": 15.108736398049771,
+ "f_lightline": 0.9853674924297581,
+ "below_lightline": true,
+ "wall_s": 8.349460363388062,
+ "platform": "si220",
+ "w": 0.55,
+ "t": 0.22,
+ "clad": "sub",
+ "res": 48,
+ "Ly": 2.0,
+ "Lz": 2.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 4,
+ "history": [
+  {
+   "L": 0.36,
+   "lambda_mid_um": 1.5694456167745874,
+   "dlambda_nm": 15.517321866810985
+  },
+  {
+   "L": 0.3548514163520633,
+   "lambda_mid_um": 1.5574458833932543,
+   "dlambda_nm": 15.172760241405792
+  },
+  {
+   "L": 0.35247140651886844,
+   "lambda_mid_um": 1.5517066624036402,
+   "dlambda_nm": 15.165495174244814
+  },
+  {
+   "L": 0.3514022843982927,
+   "lambda_mid_um": 1.54918551938777,
+   "dlambda_nm": 15.108736398049771
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": true,
+  "violations": [],
+  "platform": "si220",
+  "min_hole_diameter_nm": 84.33654825559023,
+  "min_web_nm": 84.33654825559023,
+  "min_rail_nm": 232.8317258722049
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 33.763678550720215,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "si220",
+   "clad": "sub",
+   "res": 48,
+   "Ly": 2.0,
+   "Lz": 2.0,
+   "L0": 0.36,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "w": 0.55,
+   "delta": 0.04,
+   "r_over_L": 0.12
+  },
+  "tag": "si220-bighole",
+  "key": "f6ab279af5d18481063b",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 34.08280563354492,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}
