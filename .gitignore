@@ -147,3 +147,7 @@ eps-*.h5
 *.tmp
 *.bak
 *.backup
+
+# Pilot simulation logs are research data; keep them
+!research/pilot_sims/out/*.log
+!research/results/logs/*.log

@@ -1,0 +1,100 @@
+{
+ "a": 0.1731443284827443,
+ "b": 0.1416635414858817,
+ "r": 0.018888472198117557,
+ "L": 0.314807869968626,
+ "freqs_edge": [
+  0.6438812976827836,
+  0.6461263258348171,
+  0.8491575843084161,
+  0.849517906011693
+ ],
+ "edge_f1": 0.6438812976827836,
+ "edge_f2": 0.6461263258348171,
+ "gap_abs": 0.0022450281520335347,
+ "gap_mid_ratio": 0.0034806432320326573,
+ "lambda1_um": 1.5530812955723756,
+ "lambda2_um": 1.5476849650228477,
+ "lambda_mid_um": 1.5503784346222602,
+ "dlambda_nm": 5.396330549527928,
+ "f_lightline": 1.0999102018832725,
+ "below_lightline": true,
+ "wall_s": 2.381925106048584,
+ "platform": "si220",
+ "w": 0.6,
+ "t": 0.22,
+ "clad": "sub",
+ "res": 40,
+ "Ly": 2.0,
+ "Lz": 2.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 5,
+ "history": [
+  {
+   "L": 0.36,
+   "lambda_mid_um": 1.6753256957879703,
+   "dlambda_nm": 8.423469869028644
+  },
+  {
+   "L": 0.332424913794484,
+   "lambda_mid_um": 1.6012222439465114,
+   "dlambda_nm": 6.876394808914554
+  },
+  {
+   "L": 0.3211679974995686,
+   "lambda_mid_um": 1.5694070156922166,
+   "dlambda_nm": 5.490608503773808
+  },
+  {
+   "L": 0.3165825609060941,
+   "lambda_mid_um": 1.5557210236533692,
+   "dlambda_nm": 5.423033013727041
+  },
+  {
+   "L": 0.314807869968626,
+   "lambda_mid_um": 1.5503784346222602,
+   "dlambda_nm": 5.396330549527928
+  }
+ ],
+ "gap_contains_target": false,
+ "fab": {
+  "ok": false,
+  "violations": [
+   "hole diameter 37.8 nm < min feature 60 nm"
+  ],
+  "platform": "si220",
+  "min_hole_diameter_nm": 37.776944396235116,
+  "min_web_nm": 103.88659708964657,
+  "min_rail_nm": 281.1115278018824
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 13.649127960205078,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "si220",
+   "res": 40,
+   "Ly": 2.0,
+   "Lz": 2.0,
+   "L0": 0.36,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "clad": "sub",
+   "w": 0.6,
+   "delta": 0.1,
+   "r_over_L": 0.06
+  },
+  "tag": "si220",
+  "key": "05a6234965aae2641460",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 13.861294746398926,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

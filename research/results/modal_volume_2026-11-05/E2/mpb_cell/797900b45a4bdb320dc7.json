@@ -1,0 +1,95 @@
+{
+ "a": 0.19916580348086949,
+ "b": 0.11949948208852171,
+ "r": 0.03186652855693912,
+ "L": 0.3186652855693912,
+ "freqs_edge": [
+  0.6356610467741626,
+  0.651682255448067,
+  0.8237206857576533,
+  0.8263261459139831
+ ],
+ "edge_f1": 0.6356610467741626,
+ "edge_f2": 0.651682255448067,
+ "gap_abs": 0.01602120867390444,
+ "gap_mid_ratio": 0.02489034377426505,
+ "lambda1_um": 1.573165455197823,
+ "lambda2_um": 1.5344901470616927,
+ "lambda_mid_um": 1.553587140700987,
+ "dlambda_nm": 38.675308136130184,
+ "f_lightline": 1.0865958844338384,
+ "below_lightline": true,
+ "wall_s": 2.223961353302002,
+ "platform": "si220",
+ "w": 0.6,
+ "t": 0.22,
+ "clad": "oxide_fill",
+ "res": 40,
+ "Ly": 2.0,
+ "Lz": 2.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 4,
+ "history": [
+  {
+   "L": 0.36,
+   "lambda_mid_um": 1.6741155358683042,
+   "dlambda_nm": 44.16968318764769
+  },
+  {
+   "L": 0.3326652122077975,
+   "lambda_mid_um": 1.596135722023975,
+   "dlambda_nm": 40.099292734922855
+  },
+  {
+   "L": 0.32242438796676,
+   "lambda_mid_um": 1.5652490270263943,
+   "dlambda_nm": 38.94670955856139
+  },
+  {
+   "L": 0.3186652855693912,
+   "lambda_mid_um": 1.553587140700987,
+   "dlambda_nm": 38.675308136130184
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": false,
+  "violations": [
+   "web 55.8 nm < min web 60 nm (1 of 2 webs)"
+  ],
+  "platform": "si220",
+  "min_hole_diameter_nm": 63.73305711387824,
+  "min_web_nm": 55.766424974643506,
+  "min_rail_nm": 268.1334714430609
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 10.59434461593628,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "si220",
+   "res": 40,
+   "Ly": 2.0,
+   "Lz": 2.0,
+   "L0": 0.36,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "clad": "oxide_fill",
+   "w": 0.6,
+   "delta": 0.25,
+   "r_over_L": 0.1
+  },
+  "tag": "si220",
+  "key": "797900b45a4bdb320dc7",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 11.074121952056885,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

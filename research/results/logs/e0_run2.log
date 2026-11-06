@@ -1,0 +1,43 @@
+œ“ Initialized. View run at 
+https://modal.com/apps/sakeeb91/main/ap-RBua2mhcwEOiT0oofchSzK
+œ“ Created objects.
+œ œ“ Uploaded 
+   <checkout>/wt-
+   modal/research/modal/app.py
+œ œ“ Uploaded 
+   <checkout>/wt-
+   modal/research/modal
+œ œ“ Created Function run_light.
+œ œ“ Created Function run_3d.
+œ œ“ Created Function run_3d_big.
+ œ“ Created Function run_ring.
+[plan] 2 jobs by tier {'light': 2}; estimated 0.03 container-h, ~$0.00, longest job 0.03 h (estimates; see docs/MODAL_RUNBOOK.md)
+   cfb6305989b8b26c7309 mpb_cell    light      1.5 min $0.002  smoke-mpb
+   b8f47ceaf33a4f63231a bend_q      light      0.5 min $0.001  smoke-ring
+[skip] 2 already on the Volume; 0 to run
+{
+ "exp": "E0",
+ "go": true,
+ "mpb": [
+  {
+   "lambda1_um": 1.5570236865921792,
+   "lambda2_um": 1.5406045275580733,
+   "dlambda_nm": 16.419159034105846,
+   "wall_s": 0.6967175006866455
+  }
+ ],
+ "bend": [
+  {
+   "R": 10.0,
+   "w": 1.0,
+   "m": 67,
+   "Q_bend": 2543.356552593293,
+   "lam_bend_um": 1.5718477703864768,
+   "kernel_wall_s": 18.766048908233643
+  }
+ ],
+ "criterion": "both kernels ran on Modal, MPB gap > 0, Harminv found a bend mode"
+}
+Stopping app - local entrypoint completed.
+œ“ App completed. View run at 
+https://modal.com/apps/sakeeb91/main/ap-RBua2mhcwEOiT0oofchSzK

@@ -1,0 +1,354 @@
+œ“ Initialized. View run at 
+https://modal.com/apps/sakeeb91/main/ap-Jr7GW1aAM2fJ5vZmh3WtQP
+œ“ Created objects.
+œ œ“ Uploaded 
+   <checkout>/wt-
+   modal/research/modal/app.py
+œ œ“ Uploaded 
+   <checkout>/wt-
+   modal/research/modal
+œ œ“ Created Function run_light.
+œ œ“ Created Function run_3d.
+œ œ“ Created Function run_3d_big.
+ œ“ Created Function run_ring.
+[plan] 160 jobs by tier {'light': 160}; estimated 4.00 container-h, ~$0.25, longest job 0.03 h (estimates; see docs/MODAL_RUNBOOK.md)
+   f88f6040f5187183e974 mpb_cell    light      1.5 min $0.002  si220
+   ae81f6bd9b5fc37f5f70 mpb_cell    light      1.5 min $0.002  si220
+   d896ca839609e45dde67 mpb_cell    light      1.5 min $0.002  si220
+   902b4cf7f8874035720f mpb_cell    light      1.5 min $0.002  si220
+   0d97500cb7a8d8c9d1a4 mpb_cell    light      1.5 min $0.002  si220
+   039cc984f8f28a18762f mpb_cell    light      1.5 min $0.002  si220
+   d07c2c8080954d3b55f5 mpb_cell    light      1.5 min $0.002  si220
+   3231f9dd64cf1d4dce65 mpb_cell    light      1.5 min $0.002  si220
+   d448c30f7dfef1ec23bb mpb_cell    light      1.5 min $0.002  si220
+   eaf682e0c23dab529cc8 mpb_cell    light      1.5 min $0.002  si220
+   dd9caea4253ca1a734b6 mpb_cell    light      1.5 min $0.002  si220
+   b2680cfb86aa6078f0d2 mpb_cell    light      1.5 min $0.002  si220
+   ... 148 more
+[skip] 0 already on the Volume; 160 to run
+[run] 160 x light {'cpu': 1.0, 'memory': 2048, 'timeout': 3600, 'np': 1}
+ Modal Deprecation Warning (2026-03-24) 
+ The `wrap_returned_exceptions` parameter of `Function.map` no longer has any 
+ effect and can be removed from your code. Exceptions are no longer wrapped   
+ before being returned from `Function.map`.                                   
+ Source:                                                                      
+ <checkout>/wt- 
+ modal/research/modal/app.py:193                                              
+   for r in FN[tier].map(group, order_outputs=False, return_exceptions=True,  
+ wrap_returned_exceptions=False):                                             
+   ok           82fd674b9dbd69b7b0cc si220 
+   ok           99a50dc9696901f60403 si220 
+   ok           f0455284d80123487ed7 si220 
+   ok           168082250d5b12a18cd3 si220 
+   ok           5aedf43347884025a2c9 si220 
+   ok           d448c30f7dfef1ec23bb si220 
+   ok           07ed4acceeddaf182c7a si220 
+   ok           902b4cf7f8874035720f si220 
+   ok           6df8a93286c30f167685 si220 
+   ok           40315f1fb129d2f2eccf si220 
+   ok           3231f9dd64cf1d4dce65 si220 
+   ok           eaf682e0c23dab529cc8 si220 
+   ok           f14e0182d5a6f6a518d5 si220 
+   ok           f88f6040f5187183e974 si220 
+   ok           f98dba21708a999ca83b si220 
+   ok           46c93d4818b2c4e8b52d si220 
+   ok           0d97500cb7a8d8c9d1a4 si220 
+   ok           6082e15f0e8a50773354 si220 
+   ok           3b4709a6d972a1b7ff2e si220 
+   ok           8ada5b4c92fa5480397a si220 
+   ok           cdcc57d36097d096e697 si220 
+   ok           9055e4e6901b8c0c70e1 si220 
+   ok           d07c2c8080954d3b55f5 si220 
+   ok           ed1b9dddc4ba079da71d si220 
+   ok           02035840f86bc61a370c si220 
+   ok           d896ca839609e45dde67 si220 
+   ok           8a5424c502548a555698 si220 
+   ok           b2680cfb86aa6078f0d2 si220 
+   ok           dd9caea4253ca1a734b6 si220 
+   ok           ac63e6ced6fca71a8d9e si220 
+   ok           131ac3b463df8ffa7a15 si220 
+   ok           1d06d8e9c00ef464abf0 si220 
+   ok           782452b0e29796fa7cde si220 
+   ok           74bec68c827465d55719 si220 
+   ok           eb4c3eb64c966ef64667 si220 
+   ok           953dced675e00f8fc3f6 si220 
+   ok           3dd14ab37023a2e3c69a si220 
+   ok           10d4e75fde3f0a4dd17b si220 
+   ok           d5ed0199e1730511f371 si220 
+   ok           5cd15db34688336c22e0 si220 
+   ok           1cb89eded3f0bca69dbc si220 
+   ok           032b284e282c105d6a46 si220 
+   ok           3e6dfc55b66a30bb517f si220 
+   ok           14a52852083e6a0e991b si220 
+   ok           e597083dd0b13ed52efc si220 
+   ok           e65f615635fc47f612be si220 
+   ok           f29023857c00d487f391 si220 
+   ok           f27a9d60536a6777a188 si220 
+   ok           f7bbc65844e0ed7099c0 si220 
+   ok           a6d1df371fff5923ab10 si220 
+   ok           880b077c9324af13322f si220 
+   ok           ae81f6bd9b5fc37f5f70 si220 
+   ok           ecc1c7ffd4eab9ecc80e si220 
+   ok           05a6234965aae2641460 si220 
+   ok           05267a2ba63c766f6fb7 si220 
+   ok           93a7945d730116ce27e5 si220 
+   ok           b8b109d82d78c395a8e1 si220 
+   ok           a77b78fc4bf5b5b71fb1 si220 
+   ok           231c09ed1396a71b8ac9 si220 
+   ok           25905baa2d9f2a38ad12 si220 
+   ok           d7f5559c6f6c8a484478 si220 
+   ok           81fb9e01fefc12ca70c1 si220 
+   ok           856e0b169f767a8a5642 si220 
+   ok           039cc984f8f28a18762f si220 
+   ok           086aa74ec1f3abe34218 si220 
+   ok           88ebf378e985d6e8ac48 si220 
+   ok           fb6efc52fd937e419ef2 si220 
+   ok           e6891765f8c63128bd2c si220 
+   ok           48ff7f73aaeef652dcac si220 
+   ok           d223f760c5ec7d3151a2 si220 
+   ok           bcfdb7878ee8b56691dd si220 
+   ok           ae6a52479f2632c3165b si220 
+   ok           ec8d28bf0af86cd0c1ea si220 
+   ok           3d64ba43f1a42056f4fa si220 
+   ok           e5ac3200a57ae288df18 si220 
+   ok           40b5efe987e9440adc0c si220 
+   ok           1d9e617930ab01c32910 si220 
+   ok           4c9f504f9eda83ae70ee si220 
+   ok           da78425792e1bf6ac0ec si220 
+   ok           052b95be10213de417a2 si220 
+   ok           56244c74bda703ede2eb si220 
+   ok           03f2efa78f8c8868c01b si220 
+   ok           630d16ad6f6042bb9855 si220 
+   ok           4d6c29b71640419e0a13 si220 
+   ok           e9d4b3a0a1c5e6884064 si220 
+   ok           8ca0ea9a5614e6ad41e1 si220 
+   ok           98a1b3d8e0cba08c3690 si220 
+   ok           0c726564d8c1f8df91fd si220 
+   ok           1fac78c2887c2fdee799 si220 
+   ok           eefb16bc4daed4db7bfe si220 
+   ok           744b0ec219b306fffeb0 si220 
+   ok           efad582bbd02f0555b80 si220 
+   ok           ac92fd44ed87267aa4a6 si220 
+   ok           9817945af4029660cab9 si220 
+   ok           5f76d94c310033421dff si220 
+   ok           dc6214db401468c32811 si220 
+   ok           092d0eebe206f31ae710 si220 
+   ok           889099e5e44f34e579fe si220 
+   ok           31ec99c7ae1e870668d7 si220 
+   ok           3b87330b28e1ab89736c si220 
+   ok           801ae124b669074f94df si220 
+   ok           127bc81bad39896aa027 si220 
+   ok           4446d2353a0b26e3f3f9 si220 
+   ok           935f5d8e5abc866ed31d si220 
+   ok           9b43fb38ed57a5863d6e si220 
+   ok           c72f54e19cb258d125dc si220 
+   ok           bee995f200ae0b94a0e1 si220 
+   ok           e917e8e71f7a9ba62e0d si220 
+   ok           a6923fa9b368e6dcff7b si220 
+   ok           797900b45a4bdb320dc7 si220 
+   ok           1d43105848d487a129b4 si220 
+   ok           56f6bdbefb63fbd34cc3 si220 
+   ok           6aab31a8f842c2095a00 si220 
+   ok           0c41b5ddc2edbb475230 si220 
+   ok           eba7fea7e60293683ded si220 
+   ok           73aef0c5b0e0ebcc9bf9 si220 
+   ok           f51b63bf46d755688810 si220 
+   ok           6982b8294092a7904919 si220 
+   ok           688253a9bcdeec8e1e12 si220 
+   ok           376777aa673577079e5f si220 
+   ok           4ab71abf3320677e5194 sin400 
+   ok           428d5b532e8c2682e7d6 sin400 
+   ok           5c5051b632c03ae7061a sin400 
+   ok           d53f188dab53bf4fc6b8 sin400 
+   ok           c12645daea8aa0a581a4 sin400 
+   ok           e50a0d510fbd5606e34b sin400 
+   ok           423dc778b822903e7615 sin400 
+   ok           b85c177d551c7fb9012d sin400 
+   ok           162981c38fcd6d56a8c5 sin400 
+   ok           d74f312493e02990b945 sin400 
+   ok           fa4f6971df6e157603f8 sin400 
+   ok           2dfa38c1dd1685291156 sin400 
+   ok           b0010e8358f184ffb7fd sin400 
+   ok           07d98c3949fe7aa4e8f7 sin400 
+   ok           e0973a823fca279542db sin400 
+   ok           b4e2c5a340471fcb12e5 sin400 
+   ok           6f519cec6cafab0a61de sin400 
+   ok           cdd329bcdd39985e4b6c sin400 
+   ok           2a1f9f4090a73453518f sin400 
+   ok           7486de06b09a918f5870 sin400 
+   ok           171c10c183a6ffae93ba sin400 
+   ok           d7399cb428d683266869 sin400 
+   ok           f79ddf1a91a1c1d0e48f sin400 
+   ok           012507d7a58eff57355e sin400 
+   ok           7d35f58c67539c9186f4 sin400 
+   ok           776e54087e8194d75d08 sin400 
+   ok           2da264617b952087fa4b sin400 
+   ok           53daa7391463ac9762a7 sin400 
+   ok           0432aca59c6c2c8c4897 sin400 
+   ok           0febca69d392ba6cb2f4 sin400 
+   ok           fc49b0991819f782c138 sin400 
+   ok           53409c325ec839891925 sin400 
+   ok           6b30b29650f29073d2d1 sin400 
+   ok           1de6548c1f8d8bc4555d sin400 
+   ok           29f80e063e0b2c7d527d sin400 
+   ok           35ad8c9cb36551bf15f2 sin400 
+   ok           25892fe2775e1e30f251 sin400 
+   ok           64e54bee3fa8a082e2c8 sin400 
+   ok           5b9c149e342fc9a8dae3 sin400 
+   ok           0065bd683611a1c1f1b4 sin400 
+{
+ "exp": "E2",
+ "go": true,
+ "by_stack": {
+  "sin400|oxide_fill|w1.0": {
+   "n": 20,
+   "fab_ok": 0,
+   "feasible": 0,
+   "best": null
+  },
+  "sin400|oxide_fill|w1.2": {
+   "n": 20,
+   "fab_ok": 0,
+   "feasible": 0,
+   "best": null
+  },
+  "si220|oxide_fill|w0.6": {
+   "n": 30,
+   "fab_ok": 8,
+   "feasible": 8,
+   "best": {
+    "a": 0.18700740544395617,
+    "b": 0.1382228648933589,
+    "r": 0.03902763244047781,
+    "L": 0.32523027033731505,
+    "dlambda_nm": 33.98529202920408,
+    "gap_mid_ratio": 0.021863427620441998,
+    "lambda_mid_um": 1.5542499234931153,
+    "min_web_nm": 60.167600012403284
+   }
+  },
+  "si220|sub|w0.6": {
+   "n": 30,
+   "fab_ok": 9,
+   "feasible": 9,
+   "best": {
+    "a": 0.19605969102438878,
+    "b": 0.1449136846702004,
+    "r": 0.0409168050833507,
+    "L": 0.3409733756945892,
+    "dlambda_nm": 47.68451262868045,
+    "gap_mid_ratio": 0.03058452633492663,
+    "lambda_mid_um": 1.5587412054504264,
+    "min_web_nm": 63.08007450349898
+   }
+  },
+  "si220|oxide_fill|w0.5": {
+   "n": 30,
+   "fab_ok": 9,
+   "feasible": 9,
+   "best": {
+    "a": 0.20000759721265732,
+    "b": 0.14783170228761627,
+    "r": 0.04174071594003283,
+    "L": 0.3478392995002736,
+    "dlambda_nm": 42.010975100733596,
+    "gap_mid_ratio": 0.02703580435168693,
+    "lambda_mid_um": 1.5536174819989834,
+    "min_web_nm": 64.35027040755062
+   }
+  },
+  "si220|sub|w0.5": {
+   "n": 30,
+   "fab_ok": 10,
+   "feasible": 10,
+   "best": {
+    "a": 0.2225339160584389,
+    "b": 0.13352034963506335,
+    "r": 0.03560542656935022,
+    "L": 0.35605426569350224,
+    "dlambda_nm": 59.17603000565652,
+    "gap_mid_ratio": 0.03804059085900975,
+    "lambda_mid_um": 1.5550395107053694,
+    "min_web_nm": 62.309496496362925
+   }
+  }
+ },
+ "violation_counts": {
+  "hole diameter": 58,
+  "web 119.2": 1,
+  "web 112.1": 1,
+  "web 100.7": 1,
+  "web 100.2": 1,
+  "web 93.5": 1,
+  "web 74.8": 1,
+  "web 38.7": 1,
+  "web 76.4": 1,
+  "web 61.6": 1,
+  "web 63.1": 1,
+  "web 43.8": 1,
+  "web 19.4": 1,
+  "web 99.0": 1,
+  "web 81.6": 1,
+  "web 80.6": 1,
+  "web 31.6": 1,
+  "web 69.6": 1,
+  "web 62.0": 1,
+  "web 82.0": 1,
+  "web 54.8": 1,
+  "web 55.9": 1,
+  "web 38.0": 1,
+  "web 117.3": 1,
+  "web 86.8": 1,
+  "web 98.5": 1,
+  "web 19.1": 1,
+  "web 75.2": 1,
+  "web 110.3": 1,
+  "web 50.7": 1,
+  "web 91.9": 1,
+  "web 73.5": 1,
+  "web 57.6": 3,
+  "web 80.2": 1,
+  "web 31.0": 1,
+  "web 88.4": 1,
+  "web 49.8": 1,
+  "web 68.5": 1,
+  "web 43.0": 1,
+  "web 56.7": 2,
+  "web 62.8": 1,
+  "web 47.8": 1,
+  "web 55.8": 1,
+  "web 23.7": 1,
+  "web 48.4": 1,
+  "web 44.0": 1,
+  "web 49.4": 1,
+  "web 59.6": 1,
+  "web 52.1": 1,
+  "web 32.1": 1,
+  "web 36.2": 1,
+  "web 40.5": 1,
+  "web 45.6": 1,
+  "web 51.1": 1,
+  "web 59.1": 1,
+  "web 38.8": 1,
+  "web 37.7": 1,
+  "web 55.7": 1,
+  "web 46.2": 1,
+  "web 54.7": 1,
+  "web 25.2": 2,
+  "web 47.5": 1,
+  "web 43.2": 2,
+  "web 51.5": 1,
+  "web 34.2": 2,
+  "web 52.2": 1,
+  "web 55.0": 1,
+  "web 26.3": 1,
+  "web 35.6": 1,
+  "web 39.6": 1,
+  "web 54.0": 1,
+  "web 48.6": 1
+ },
+ "criterion": "at least one fabricable cell (rules of its platform) whose zone-edge gap contains 1547 nm, below the light line"
+}
+Stopping app - local entrypoint completed.
+œ“ App completed. View run at 
+https://modal.com/apps/sakeeb91/main/ap-Jr7GW1aAM2fJ5vZmh3WtQP

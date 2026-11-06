@@ -1,0 +1,891 @@
+Note that running a local entrypoint in detached mode only keeps the last triggered Modal function alive after the parent process has been killed or disconnected.
+œ“ Initialized. View run at 
+https://modal.com/apps/sakeeb91/main/ap-YLVGY4cvcNhwCn1dAA49L3
+œ“ Created objects.
+œ œ“ Uploaded 
+   <checkout>/wt-
+   e2b/research/modal/app.py
+œ œ“ Uploaded 
+   <checkout>/wt-
+   e2b/research/modal
+œ œ“ Created Function run_light.
+œ œ“ Created Function run_3d.
+œ œ“ Created Function run_3d_big.
+œ œ“ Created Function run_3d_xl.
+ œ“ Created Function run_ring.
+[plan] 16 jobs by tier {'light': 1, '3d_big': 9, '3d': 6}; estimated 11.17 container-h, ~$8.89, longest job 1.28 h (estimates; see docs/MODAL_RUNBOOK.md)
+   6885a3954b0c744614ca mpb_cell    light      1.5 min $0.002  parity_check
+   7b0d4b3092db1d849758 nanobeam3d  3d_big    43.2 min $0.635  ssh_A[Nside=20]|res29|nominal
+   1795c1f282ac0d07660a nanobeam3d  3d_big    60.1 min $0.884  ssh_A[Nside=30]|res29|nominal
+   7f9dc0dfae5e698ba184 nanobeam3d  3d_big    77.0 min $1.132  ssh_A[Nside=40]|res29|nominal
+   f5259735e66ca196fc61 nanobeam3d  3d_big    43.2 min $0.635  ssh_B[Nside=20]|res29|nominal
+   aab54245b1861e6b5b76 nanobeam3d  3d_big    60.1 min $0.884  ssh_B[Nside=30]|res29|nominal
+   f87f435c26fa1cc5b1e2 nanobeam3d  3d_big    77.0 min $1.132  ssh_B[Nside=40]|res29|nominal
+   381a833a9ccdc1258dc1 nanobeam3d  3d_big    43.2 min $0.635  ssh_tanh[Nside=20]|res29|nominal
+   1b2ad1c0272a5ef764d3 nanobeam3d  3d_big    60.1 min $0.884  ssh_tanh[Nside=30]|res29|nominal
+   c5728dae113493551530 nanobeam3d  3d_big    77.0 min $1.132  ssh_tanh[Nside=40]|res29|nominal
+   077ddcdd531f78754a10 nanobeam3d  3d        18.1 min $0.133  quan_loncar[n_mirror=15,period_scale=0.94]|res20|nominal
+   c20dc1a91f60d8ef10dd nanobeam3d  3d        18.3 min $0.135  quan_loncar[n_mirror=15,period_scale=0.955]|res20|nominal
+   ... 4 more
+[skip] 0 already on the Volume; 16 to run
+[run] 1 x light {'cpu': 1.0, 'memory': 2048, 'timeout': 3600, 'np': 1}
+ Modal Deprecation Warning (2026-03-24) 
+ The `wrap_returned_exceptions` parameter of `Function.map` no longer has any 
+ effect and can be removed from your code. Exceptions are no longer wrapped   
+ before being returned from `Function.map`.                                   
+ Source:                                                                      
+ <checkout>/wt- 
+ e2b/research/modal/app.py:207                                                
+   for r in FN[tier].map(group, order_outputs=False, return_exceptions=True,  
+ wrap_returned_exceptions=False):                                             
+   ok           6885a3954b0c744614ca parity_check 
+[run] 6 x 3d {'cpu': 8.0, 'memory': 8192, 'timeout': 21600, 'np': 8}
+ Modal Deprecation Warning (2026-03-24) 
+ The `wrap_returned_exceptions` parameter of `Function.map` no longer has any 
+ effect and can be removed from your code. Exceptions are no longer wrapped   
+ before being returned from `Function.map`.                                   
+ Source:                                                                      
+ <checkout>/wt- 
+ e2b/research/modal/app.py:207                                                
+   for r in FN[tier].map(group, order_outputs=False, return_exceptions=True,  
+ wrap_returned_exceptions=False):                                             
+   ok           97fdc34a098b69b3257d quan_loncar[n_mirror=25,period_scale=0.955]|res20|nominal 
+   ok           c20dc1a91f60d8ef10dd quan_loncar[n_mirror=15,period_scale=0.955]|res20|nominal 
+   ok           077ddcdd531f78754a10 quan_loncar[n_mirror=15,period_scale=0.94]|res20|nominal 
+   ok           40d33e47f2af91c5623e quan_loncar[n_mirror=25,period_scale=0.94]|res20|nominal 
+   ok           7bd4435502cb1a5a39aa quan_loncar[n_mirror=25,period_scale=0.97]|res20|nominal 
+   ok           4e3055137b2976ac5b61 quan_loncar[n_mirror=15,period_scale=0.97]|res20|nominal 
+[run] 9 x 3d_big {'cpu': 16.0, 'memory': 16384, 'timeout': 43200, 'np': 16}
+ Modal Deprecation Warning (2026-03-24) 
+ The `wrap_returned_exceptions` parameter of `Function.map` no longer has any 
+ effect and can be removed from your code. Exceptions are no longer wrapped   
+ before being returned from `Function.map`.                                   
+ Source:                                                                      
+ <checkout>/wt- 
+ e2b/research/modal/app.py:207                                                
+   for r in FN[tier].map(group, order_outputs=False, return_exceptions=True,  
+ wrap_returned_exceptions=False):                                             
+   ok           7b0d4b3092db1d849758 ssh_A[Nside=20]|res29|nominal 
+   ok           381a833a9ccdc1258dc1 ssh_tanh[Nside=20]|res29|nominal 
+   ok           f5259735e66ca196fc61 ssh_B[Nside=20]|res29|nominal 
+Container terminated due to preemption. Your Function will be restarted with the same input. For more details, see https://modal.com/docs/guide/preemption
+   ok           aab54245b1861e6b5b76 ssh_B[Nside=30]|res29|nominal 
+   ok           f87f435c26fa1cc5b1e2 ssh_B[Nside=40]|res29|nominal 
+   ok           1b2ad1c0272a5ef764d3 ssh_tanh[Nside=30]|res29|nominal 
+   ok           1795c1f282ac0d07660a ssh_A[Nside=30]|res29|nominal 
+   ok           c5728dae113493551530 ssh_tanh[Nside=40]|res29|nominal 
+   ok           7f9dc0dfae5e698ba184 ssh_A[Nside=40]|res29|nominal 
+{
+ "exp": "E3",
+ "go": false,
+ "design_usable": {
+  "L356.1nm|quan_loncar": false,
+  "L356.1nm|ssh_A": false,
+  "L356.1nm|ssh_B": false,
+  "L356.1nm|ssh_tanh": false,
+  "L358.6nm|quan_loncar": false,
+  "L360.0nm|quan_loncar": false,
+  "L360.0nm|ssh_A": false,
+  "L360.0nm|ssh_B": false,
+  "L360.0nm|ssh_tanh": false,
+  "L364.3nm|quan_loncar": false,
+  "L370.0nm|quan_loncar": false,
+  "L381.5nm|ssh_A": false,
+  "L381.5nm|ssh_B": false,
+  "L381.5nm|ssh_tanh": false
+ },
+ "variants": {
+  "L381.5nm|ssh_A[Nside=40]|Nside=40,wall=A": {
+   "cell": "L381.5nm",
+   "design": "ssh_A",
+   "variant": "ssh_A[Nside=40]",
+   "by_res": {
+    "29": {
+     "Q_total": 3585.570827878861,
+     "Q_rad": 280534.122897919,
+     "Q_axial": 3631.992150776713,
+     "lam_um": 1.5471794695854562,
+     "px_on_rmin": 1.5488444284586862,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 29,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 0.1794695854562267,
+   "converged": false,
+   "usable": false
+  },
+  "L381.5nm|ssh_tanh[Nside=40]|M=6.0,Nside=40,wall=tanh": {
+   "cell": "L381.5nm",
+   "design": "ssh_tanh",
+   "variant": "ssh_tanh[Nside=40]",
+   "by_res": {
+    "29": {
+     "Q_total": 2798.029760392537,
+     "Q_rad": 391310.0364441646,
+     "Q_axial": 2818.180927937829,
+     "lam_um": 1.5454666273775464,
+     "px_on_rmin": 1.5488444284586862,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 29,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": -1.533372622453566,
+   "converged": false,
+   "usable": false
+  },
+  "L381.5nm|ssh_A[Nside=30]|Nside=30,wall=A": {
+   "cell": "L381.5nm",
+   "design": "ssh_A",
+   "variant": "ssh_A[Nside=30]",
+   "by_res": {
+    "29": {
+     "Q_total": 972.3721934702305,
+     "Q_rad": 123540.7610321482,
+     "Q_axial": 980.0863169207603,
+     "lam_um": 1.5474007962891245,
+     "px_on_rmin": 1.5488444284586862,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 29,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 0.4007962891245942,
+   "converged": false,
+   "usable": false
+  },
+  "L381.5nm|ssh_tanh[Nside=30]|M=6.0,Nside=30,wall=tanh": {
+   "cell": "L381.5nm",
+   "design": "ssh_tanh",
+   "variant": "ssh_tanh[Nside=30]",
+   "by_res": {
+    "29": {
+     "Q_total": 815.4296590555691,
+     "Q_rad": 160477.70767894585,
+     "Q_axial": 819.5942340391771,
+     "lam_um": 1.5452999757621255,
+     "px_on_rmin": 1.5488444284586862,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 29,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": -1.700024237874409,
+   "converged": false,
+   "usable": false
+  },
+  "L381.5nm|ssh_B[Nside=40]|Nside=40,wall=B": {
+   "cell": "L381.5nm",
+   "design": "ssh_B",
+   "variant": "ssh_B[Nside=40]",
+   "by_res": {
+    "29": {
+     "Q_total": 3290.555065118767,
+     "Q_rad": 105212.90410655073,
+     "Q_axial": 3396.7903779663666,
+     "lam_um": 1.543777757167392,
+     "px_on_rmin": 1.5488444284586862,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 29,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": -3.222242832607858,
+   "converged": false,
+   "usable": false
+  },
+  "L381.5nm|ssh_B[Nside=30]|Nside=30,wall=B": {
+   "cell": "L381.5nm",
+   "design": "ssh_B",
+   "variant": "ssh_B[Nside=30]",
+   "by_res": {
+    "29": {
+     "Q_total": 981.2466710197745,
+     "Q_rad": 79850.056596077,
+     "Q_axial": 993.4548561097017,
+     "lam_um": 1.5435894769184249,
+     "px_on_rmin": 1.5488444284586862,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 29,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": -3.4105230815750787,
+   "converged": false,
+   "usable": false
+  },
+  "L381.5nm|ssh_B[Nside=20]|Nside=20,wall=B": {
+   "cell": "L381.5nm",
+   "design": "ssh_B",
+   "variant": "ssh_B[Nside=20]",
+   "by_res": {
+    "29": {
+     "Q_total": 276.6869476029613,
+     "Q_rad": 48520.19891769193,
+     "Q_axial": 278.2738069307256,
+     "lam_um": 1.5425292283693168,
+     "px_on_rmin": 1.5488444284586862,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 29,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": -4.470771630683101,
+   "converged": false,
+   "usable": false
+  },
+  "L381.5nm|ssh_tanh[Nside=20]|M=6.0,Nside=20,wall=tanh": {
+   "cell": "L381.5nm",
+   "design": "ssh_tanh",
+   "variant": "ssh_tanh[Nside=20]",
+   "by_res": {
+    "29": {
+     "Q_total": 223.20464944420783,
+     "Q_rad": 60291.814437034955,
+     "Q_axial": 224.0340396316898,
+     "lam_um": 1.544175208540718,
+     "px_on_rmin": 1.5488444284586862,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 29,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": -2.824791459281828,
+   "converged": false,
+   "usable": false
+  },
+  "L381.5nm|ssh_A[Nside=20]|Nside=20,wall=A": {
+   "cell": "L381.5nm",
+   "design": "ssh_A",
+   "variant": "ssh_A[Nside=20]",
+   "by_res": {
+    "29": {
+     "Q_total": 269.90768026188744,
+     "Q_rad": 42465.54331765506,
+     "Q_axial": 271.6341658276078,
+     "lam_um": 1.5480933288028818,
+     "px_on_rmin": 1.5488444284586862,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 29,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 1.093328802881821,
+   "converged": false,
+   "usable": false
+  },
+  "L370.0nm|quan_loncar[n_mirror=15,period_scale=0.97]|n_mirror=15,n_taper=10": {
+   "cell": "L370.0nm",
+   "design": "quan_loncar",
+   "variant": "quan_loncar[n_mirror=15,period_scale=0.97]",
+   "by_res": {
+    "20": {
+     "Q_total": 113.89861267720961,
+     "Q_rad": 4461.398365952235,
+     "Q_axial": 116.88260225881233,
+     "lam_um": 1.5839176943050477,
+     "px_on_rmin": 1.5541852713154403,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 20,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 36.91769430504777,
+   "converged": false,
+   "usable": false
+  },
+  "L370.0nm|quan_loncar[n_mirror=25,period_scale=0.97]|n_mirror=25,n_taper=10": {
+   "cell": "L370.0nm",
+   "design": "quan_loncar",
+   "variant": "quan_loncar[n_mirror=25,period_scale=0.97]",
+   "by_res": {
+    "20": {
+     "Q_total": 206.3895532269727,
+     "Q_rad": 6304.21577143728,
+     "Q_axial": 213.37509957691958,
+     "lam_um": 1.5798214488602325,
+     "px_on_rmin": 1.5541852713154403,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 20,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 32.82144886023253,
+   "converged": false,
+   "usable": false
+  },
+  "L358.6nm|quan_loncar[n_mirror=25,period_scale=0.94]|n_mirror=25,n_taper=10": {
+   "cell": "L358.6nm",
+   "design": "quan_loncar",
+   "variant": "quan_loncar[n_mirror=25,period_scale=0.94]",
+   "by_res": {
+    "20": {
+     "Q_total": 1182.635084723895,
+     "Q_rad": 37472.47486069872,
+     "Q_axial": 1221.1755068435275,
+     "lam_um": 1.5774846410650019,
+     "px_on_rmin": 1.5061176856046534,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 20,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 30.484641065001927,
+   "converged": false,
+   "usable": false
+  },
+  "L358.6nm|quan_loncar[n_mirror=15,period_scale=0.94]|n_mirror=15,n_taper=10": {
+   "cell": "L358.6nm",
+   "design": "quan_loncar",
+   "variant": "quan_loncar[n_mirror=15,period_scale=0.94]",
+   "by_res": {
+    "20": {
+     "Q_total": 1453.482460270166,
+     "Q_rad": 46136.55343836538,
+     "Q_axial": 1500.762363286426,
+     "lam_um": 1.5728219293634271,
+     "px_on_rmin": 1.5061176856046534,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 20,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 25.8219293634272,
+   "converged": false,
+   "usable": false
+  },
+  "L364.3nm|quan_loncar[n_mirror=15,period_scale=0.955]|n_mirror=15,n_taper=10": {
+   "cell": "L364.3nm",
+   "design": "quan_loncar",
+   "variant": "quan_loncar[n_mirror=15,period_scale=0.955]",
+   "by_res": {
+    "20": {
+     "Q_total": 1564.211570533851,
+     "Q_rad": 41212.74606764902,
+     "Q_axial": 1625.9227502388662,
+     "lam_um": 1.585801698336439,
+     "px_on_rmin": 1.5301514784600467,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 20,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 38.80169833643898,
+   "converged": false,
+   "usable": false
+  },
+  "L364.3nm|quan_loncar[n_mirror=25,period_scale=0.955]|n_mirror=25,n_taper=10": {
+   "cell": "L364.3nm",
+   "design": "quan_loncar",
+   "variant": "quan_loncar[n_mirror=25,period_scale=0.955]",
+   "by_res": {
+    "20": {
+     "Q_total": 1343.5325803245175,
+     "Q_rad": 42773.589580539,
+     "Q_axial": 1387.1019095770482,
+     "lam_um": 1.590223306959458,
+     "px_on_rmin": 1.5301514784600467,
+     "T_harm": 1000.0,
+     "window_um": [
+      1.491693687636087,
+      1.5922016036175863
+     ]
+    }
+   },
+   "max_res": 20,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 43.223306959458085,
+   "converged": false,
+   "usable": false
+  },
+  "L356.1nm|ssh_A|Nside=30,wall=A": {
+   "cell": "L356.1nm",
+   "design": "ssh_A",
+   "variant": "ssh_A",
+   "by_res": {
+    "40": {
+     "Q_total": 8470.44202185561,
+     "Q_rad": 179031.971272349,
+     "Q_axial": 8891.101876166866,
+     "lam_um": 1.5729241951075381,
+     "px_on_rmin": 1.424217062774009,
+     "T_harm": 600.0,
+     "window_um": [
+      1.4710973898252215,
+      1.6491409552252074
+     ]
+    }
+   },
+   "max_res": 40,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 25.924195107538182,
+   "converged": false,
+   "usable": false
+  },
+  "L356.1nm|ssh_tanh|M=6.0,Nside=30,wall=tanh": {
+   "cell": "L356.1nm",
+   "design": "ssh_tanh",
+   "variant": "ssh_tanh",
+   "by_res": {
+    "40": {
+     "Q_total": 9564.024390717117,
+     "Q_rad": 1042287.0428808811,
+     "Q_axial": 9652.5966031192,
+     "lam_um": 1.5542349926204864,
+     "px_on_rmin": 1.424217062774009,
+     "T_harm": 600.0,
+     "window_um": [
+      1.4710973898252215,
+      1.6491409552252074
+     ]
+    }
+   },
+   "max_res": 40,
+   "n_res": 1,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 7.234992620486436,
+   "converged": false,
+   "usable": false
+  },
+  "L360.0nm|ssh_A|Nside=20,wall=A": {
+   "cell": "L360.0nm",
+   "design": "ssh_A",
+   "variant": "ssh_A",
+   "by_res": {
+    "30": {
+     "Q_total": 929.1076469375976,
+     "Q_rad": 138672.36291414135,
+     "Q_axial": 935.3746762590939,
+     "lam_um": 1.5468834631723356,
+     "px_on_rmin": 1.2959999999999998,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4570820706531897,
+      1.6190907112824058
+     ]
+    },
+    "20": {
+     "Q_total": 1346.783198031539,
+     "Q_rad": 42780.78672208888,
+     "Q_axial": 1390.5594404467072,
+     "lam_um": 1.5440449916533967,
+     "px_on_rmin": 0.8639999999999999,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4570820706531897,
+      1.6190907112824058
+     ]
+    }
+   },
+   "max_res": 30,
+   "n_res": 2,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": -0.11653682766432638,
+   "dQrad_rel": 0.6914973840275839,
+   "dlam_nm": 2.838471518938901,
+   "converged": false,
+   "usable": false
+  },
+  "L360.0nm|quan_loncar|n_mirror=10,n_taper=10": {
+   "cell": "L360.0nm",
+   "design": "quan_loncar",
+   "variant": "quan_loncar",
+   "by_res": {
+    "30": {
+     "Q_total": 263.6396995826244,
+     "Q_rad": 11081.408380854684,
+     "Q_axial": 270.0648592660947,
+     "lam_um": 1.6005626064527259,
+     "px_on_rmin": 2.268,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4570820706531897,
+      1.6190907112824058
+     ]
+    },
+    "20": {
+     "Q_total": 279.5880782586843,
+     "Q_rad": 10486.828338780737,
+     "Q_axial": 287.24631804821047,
+     "lam_um": 1.6115655560962505,
+     "px_on_rmin": 1.512,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4570820706531897,
+      1.6190907112824058
+     ]
+    }
+   },
+   "max_res": 30,
+   "n_res": 2,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 53.56260645272592,
+   "dQrad_rel": 0.05365563849277508,
+   "dlam_nm": 11.002949643524662,
+   "converged": false,
+   "usable": false
+  },
+  "L360.0nm|ssh_tanh|M=6.0,Nside=20,wall=tanh": {
+   "cell": "L360.0nm",
+   "design": "ssh_tanh",
+   "variant": "ssh_tanh",
+   "by_res": {
+    "30": {
+     "Q_total": 671.0421733507995,
+     "Q_rad": 248726.90398770105,
+     "Q_axial": 672.8574805768484,
+     "lam_um": 1.5362963535562075,
+     "px_on_rmin": 1.2959999999999998,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4570820706531897,
+      1.6190907112824058
+     ]
+    },
+    "20": {
+     "Q_total": 949.5958200803855,
+     "Q_rad": 50073.75494127959,
+     "Q_axial": 967.9520064792077,
+     "lam_um": 1.531477045480849,
+     "px_on_rmin": 0.8639999999999999,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4570820706531897,
+      1.6190907112824058
+     ]
+    }
+   },
+   "max_res": 30,
+   "n_res": 2,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": -10.703646443792403,
+   "dQrad_rel": 0.7986797803596043,
+   "dlam_nm": 4.819308075358464,
+   "converged": false,
+   "usable": false
+  },
+  "L356.1nm|ssh_A|Nside=20,wall=A": {
+   "cell": "L356.1nm",
+   "design": "ssh_A",
+   "variant": "ssh_A",
+   "by_res": {
+    "30": {
+     "Q_total": 1090.744167089081,
+     "Q_rad": 118113.33523422873,
+     "Q_axial": 1100.910775324206,
+     "lam_um": 1.573717794165835,
+     "px_on_rmin": 1.0681627970805068,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4710973898252215,
+      1.6491409552252074
+     ]
+    },
+    "20": {
+     "Q_total": 2615.2746214152517,
+     "Q_rad": 81142.81551887224,
+     "Q_axial": 2702.3735075799163,
+     "lam_um": 1.5640711164948415,
+     "px_on_rmin": 0.7121085313870045,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4710973898252215,
+      1.6491409552252074
+     ]
+    }
+   },
+   "max_res": 30,
+   "n_res": 2,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 26.717794165834974,
+   "dQrad_rel": 0.31300885409797985,
+   "dlam_nm": 9.646677670993364,
+   "converged": false,
+   "usable": false
+  },
+  "L360.0nm|ssh_B|Nside=20,wall=B": {
+   "cell": "L360.0nm",
+   "design": "ssh_B",
+   "variant": "ssh_B",
+   "by_res": {
+    "30": {
+     "Q_total": 973.8671684671309,
+     "Q_rad": 34540.094622723846,
+     "Q_axial": 1002.1222728904881,
+     "lam_um": 1.5310531944265227,
+     "px_on_rmin": 1.2959999999999998,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4570820706531897,
+      1.6190907112824058
+     ]
+    },
+    "20": {
+     "Q_total": 1416.8190482241662,
+     "Q_rad": 14331.717922548329,
+     "Q_axial": 1572.2500922412164,
+     "lam_um": 1.5260053134733396,
+     "px_on_rmin": 0.8639999999999999,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4570820706531897,
+      1.6190907112824058
+     ]
+    }
+   },
+   "max_res": 30,
+   "n_res": 2,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": -15.946805573477274,
+   "dQrad_rel": 0.5850701024681176,
+   "dlam_nm": 5.047880953183093,
+   "converged": false,
+   "usable": false
+  },
+  "L356.1nm|ssh_tanh|M=6.0,Nside=20,wall=tanh": {
+   "cell": "L356.1nm",
+   "design": "ssh_tanh",
+   "variant": "ssh_tanh",
+   "by_res": {
+    "30": {
+     "Q_total": 951.8380037348543,
+     "Q_rad": 205011.31264515157,
+     "Q_axial": 956.2778641576355,
+     "lam_um": 1.5555769564375876,
+     "px_on_rmin": 1.0681627970805068,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4710973898252215,
+      1.6491409552252074
+     ]
+    },
+    "20": {
+     "Q_total": 2035.7351473108572,
+     "Q_rad": 295020.96147184377,
+     "Q_axial": 2049.879947859286,
+     "lam_um": 1.5422316854787568,
+     "px_on_rmin": 0.7121085313870045,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4710973898252215,
+      1.6491409552252074
+     ]
+    }
+   },
+   "max_res": 30,
+   "n_res": 2,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 8.576956437587713,
+   "dQrad_rel": 0.43904722946917285,
+   "dlam_nm": 13.345270958830868,
+   "converged": false,
+   "usable": false
+  },
+  "L356.1nm|ssh_B|Nside=20,wall=B": {
+   "cell": "L356.1nm",
+   "design": "ssh_B",
+   "variant": "ssh_B",
+   "by_res": {
+    "30": {
+     "Q_total": 1259.2272454041108,
+     "Q_rad": 28311.131945023782,
+     "Q_axial": 1317.8424620838562,
+     "lam_um": 1.547457781787107,
+     "px_on_rmin": 1.0681627970805068,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4710973898252215,
+      1.6491409552252074
+     ]
+    },
+    "20": {
+     "Q_total": 2216.476245335059,
+     "Q_rad": 9738.328840415941,
+     "Q_axial": 2869.6088192633806,
+     "lam_um": 1.5327370461518794,
+     "px_on_rmin": 0.7121085313870045,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4710973898252215,
+      1.6491409552252074
+     ]
+    }
+   },
+   "max_res": 30,
+   "n_res": 2,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 0.45778178710698114,
+   "dQrad_rel": 0.6560247446366185,
+   "dlam_nm": 14.720735635227467,
+   "converged": false,
+   "usable": false
+  },
+  "L356.1nm|quan_loncar|n_mirror=10,n_taper=10": {
+   "cell": "L356.1nm",
+   "design": "quan_loncar",
+   "variant": "quan_loncar",
+   "by_res": {
+    "30": {
+     "Q_total": 337.45946316948164,
+     "Q_rad": 12928.490970806275,
+     "Q_axial": 346.50390795651634,
+     "lam_um": 1.6153183715316612,
+     "px_on_rmin": 2.243141873869064,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4710973898252215,
+      1.6491409552252074
+     ]
+    },
+    "20": {
+     "Q_total": 345.0749503097648,
+     "Q_rad": 13558.270960217253,
+     "Q_axial": 354.0869048166079,
+     "lam_um": 1.6241758015682233,
+     "px_on_rmin": 1.4954279159127093,
+     "T_harm": 400.0,
+     "window_um": [
+      1.4710973898252215,
+      1.6491409552252074
+     ]
+    }
+   },
+   "max_res": 30,
+   "n_res": 2,
+   "mirror_limited": true,
+   "in_window": true,
+   "detuning_nm": 68.31837153166131,
+   "dQrad_rel": 0.048712567524939986,
+   "dlam_nm": 8.85743003656203,
+   "converged": false,
+   "usable": false
+  }
+ },
+ "refused": [],
+ "other_parity": [
+  {
+   "a": 0.20218905100569057,
+   "b": 0.17929972447674447,
+   "r": 0.053408428567540904,
+   "w": 0.5,
+   "clear": true,
+   "in_gap": []
+  },
+  {
+   "a": 0.2225339160584389,
+   "b": 0.13352034963506335,
+   "r": 0.03560542656935022,
+   "w": 0.5,
+   "clear": true,
+   "in_gap": []
+  },
+  {
+   "a": 0.207,
+   "b": 0.153,
+   "r": 0.043199999999999995,
+   "w": 0.5,
+   "clear": true,
+   "in_gap": []
+  }
+ ],
+ "criterion": "for every (cell, design) incl. the Quan-Loncar control, some variant is: converged over >= 3 resolutions (top two: |dQ_rad|/Q_rad < 0.2, |dlambda| < 2 nm, >= 2 px on the smallest hole radius), not mirror-limited (Q_axial >= 10 x Q_rad), and resonant inside the source window. Compare designs on Q_rad, not Q_total."
+}
+œ“ App completed. View run at 
+https://modal.com/apps/sakeeb91/main/ap-YLVGY4cvcNhwCn1dAA49L3

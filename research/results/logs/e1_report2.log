@@ -1,0 +1,640 @@
+œ“ Initialized. View run at 
+https://modal.com/apps/sakeeb91/main/ap-GBNwktNAUgJnwB126mxFh3
+œ“ Created objects.
+œ œ“ Uploaded 
+   <checkout>/wt-
+   report/research/modal/app.py
+œ œ“ Uploaded 
+   <checkout>/wt-
+   report/research/modal
+œ œ“ Created Function run_light.
+œ œ“ Created Function run_3d.
+œ œ“ Created Function run_3d_big.
+ œ“ Created Function run_ring.
+{
+ "exp": "E1",
+ "go": true,
+ "smallest_R_with_Qbend_ge_1e5": {
+  "si220": {
+   "clad": "oxide",
+   "w": 0.45,
+   "R": 2.0,
+   "res": 40,
+   "Q_bend": 290543.43344144634
+  },
+  "sin400": {
+   "clad": "oxide",
+   "w": 1.2,
+   "R": 15.0,
+   "res": 30,
+   "Q_bend": 139477.46903234406
+  }
+ },
+ "resolution_convergence": {
+  "si220|oxide|w0.5|R3.0": {
+   "res": [
+    40,
+    60
+   ],
+   "T": [
+    2000.0,
+    4000.0
+   ],
+   "Q": [
+    1222810084.222626,
+    798683733.7618266
+   ],
+   "verdict": "agree",
+   "Q_display": ">1e+06",
+   "note": "both at or beyond the resolvable limit: bend loss negligible"
+  },
+  "si220|oxide|w0.5|R5.0": {
+   "res": [
+    40,
+    60
+   ],
+   "T": [
+    2000.0,
+    4000.0
+   ],
+   "Q": [
+    44002402354.458115,
+    190858101.44235304
+   ],
+   "verdict": "agree",
+   "Q_display": ">1e+06",
+   "note": "one member unresolved, the other > 1e+06: treated as > cap"
+  },
+  "sin400|oxide|w1.0|R10.0": {
+   "res": [
+    30,
+    45
+   ],
+   "T": [
+    2000.0,
+    4000.0
+   ],
+   "Q": [
+    2021.631231607729,
+    1743.4466892478965
+   ],
+   "dQ_rel": 0.15956010818996602,
+   "dlam_nm": 4.339633334913051,
+   "verdict": "agree"
+  },
+  "sin400|oxide|w1.0|R20.0": {
+   "res": [
+    30,
+    45
+   ],
+   "T": [
+    2000.0,
+    4000.0
+   ],
+   "Q": [
+    647568.5385697779,
+    471962.37095740094
+   ],
+   "dQ_rel": 0.3720766281772642,
+   "dlam_nm": 4.559008589688052,
+   "verdict": "same_side_of_threshold",
+   "note": "|dQ|/Q = 37% but both on the same side of 1e+05: the E1 decision is unchanged"
+  }
+ },
+ "flagged_pairs": [],
+ "Q_cap": 1000000.0,
+ "table": [
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.45,
+   "R": 2.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 290543.43344144634,
+   "lam_um": 1.5653189226329625,
+   "dQ_half": 5.222384740125627e-05,
+   "q_status": "ok"
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.45,
+   "R": 3.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 145538799.13071784,
+   "lam_um": 1.5483934492084612,
+   "dQ_half": 5.136519508004377e-05,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.45,
+   "R": 5.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 2447731045065.7573,
+   "lam_um": 1.5538282433988886,
+   "dQ_half": 0.2739885271991941,
+   "q_status": "unresolved"
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.45,
+   "R": 10.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 85714959.20860286,
+   "lam_um": 1.5716082142308283,
+   "dQ_half": 264048.79313229636,
+   "q_status": "unresolved"
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.5,
+   "R": 2.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 1596359.099590563,
+   "lam_um": 1.554317241622037,
+   "dQ_half": 2.3352388148916233e-05,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.5,
+   "R": 3.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 1222810084.222626,
+   "lam_um": 1.552440101981447,
+   "dQ_half": 0.003804892690771379,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.5,
+   "R": 3.0,
+   "res": 60,
+   "T_after": 4000.0,
+   "Q_bend": 798683733.7618266,
+   "lam_um": 1.540200652782961,
+   "dQ_half": 0.0008662633069763313,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.5,
+   "R": 5.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 44002402354.458115,
+   "lam_um": 1.5587488160293683,
+   "dQ_half": 44.90830139204145,
+   "q_status": "unresolved"
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.5,
+   "R": 5.0,
+   "res": 60,
+   "T_after": 4000.0,
+   "Q_bend": 190858101.44235304,
+   "lam_um": 1.541221885965211,
+   "dQ_half": 7298.222376075983,
+   "q_status": "unresolved"
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.5,
+   "R": 10.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 5681312725.562201,
+   "lam_um": 1.5718354611612755,
+   "dQ_half": 392.12742141822565,
+   "q_status": "unresolved"
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.6,
+   "R": 2.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 8857130.04478896,
+   "lam_um": 1.557160234209335,
+   "dQ_half": 3.5316282020795498e-06,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.6,
+   "R": 3.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 12038739480.63177,
+   "lam_um": 1.5695891763271215,
+   "dQ_half": 0.016588705830503436,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.6,
+   "R": 5.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 960113655804.0876,
+   "lam_um": 1.561043503203527,
+   "dQ_half": 1.4055033504511267,
+   "q_status": "unresolved"
+  },
+  {
+   "platform": "si220",
+   "clad": "oxide",
+   "w": 0.6,
+   "R": 10.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 104358722.08262444,
+   "lam_um": 1.5689316474132167,
+   "dQ_half": 1179.667324099836,
+   "q_status": "unresolved"
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.45,
+   "R": 2.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 957670.3265605151,
+   "lam_um": 1.5790727754069334,
+   "dQ_half": 1.9357886405174747e-07,
+   "q_status": "ok"
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.45,
+   "R": 3.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 559701499.404097,
+   "lam_um": 1.5492153758386034,
+   "dQ_half": 0.0015344234577672601,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.45,
+   "R": 5.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": -501437234408.0631,
+   "lam_um": 1.5606109203465246,
+   "dQ_half": 1.486742265940623e+42,
+   "q_status": "unresolved"
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.45,
+   "R": 10.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 77615645.8814138,
+   "lam_um": 1.571869046739828,
+   "dQ_half": 38426.562481130386,
+   "q_status": "unresolved"
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.5,
+   "R": 2.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 6422089.984867279,
+   "lam_um": 1.5763016961323428,
+   "dQ_half": 6.556971326616286e-05,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.5,
+   "R": 3.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 5818831460.823389,
+   "lam_um": 1.5602126053468734,
+   "dQ_half": 0.025085401649088936,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.5,
+   "R": 5.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": -493194953804.4517,
+   "lam_um": 1.5659055143428944,
+   "dQ_half": 8.46080712849182e+39,
+   "q_status": "unresolved"
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.5,
+   "R": 10.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": -1183496180262.5933,
+   "lam_um": 1.556616274127048,
+   "dQ_half": 2.366874012374321e+41,
+   "q_status": "unresolved"
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.6,
+   "R": 2.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 155438142.13334253,
+   "lam_um": 1.5398668021300586,
+   "dQ_half": 5.107327036611949e-05,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.6,
+   "R": 3.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 406725957234.0832,
+   "lam_um": 1.5529581023128372,
+   "dQ_half": 0.34194242078242726,
+   "q_status": "unresolved"
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.6,
+   "R": 5.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": -856415787679.2115,
+   "lam_um": 1.564447754609087,
+   "dQ_half": 1.2660110668167294e+42,
+   "q_status": "unresolved"
+  },
+  {
+   "platform": "si220",
+   "clad": "sub",
+   "w": 0.6,
+   "R": 10.0,
+   "res": 40,
+   "T_after": 2000.0,
+   "Q_bend": 98842428252.26175,
+   "lam_um": 1.5640485487905462,
+   "dQ_half": 3.8572628554164896,
+   "q_status": "unresolved"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 0.8,
+   "R": 10.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 657.0476574623348,
+   "lam_um": 1.573702632965066,
+   "dQ_half": 0.0011472687427793464,
+   "q_status": "ok"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 0.8,
+   "R": 15.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 5968.769100382961,
+   "lam_um": 1.5632564980748038,
+   "dQ_half": 4.0136186322394176e-05,
+   "q_status": "ok"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 0.8,
+   "R": 20.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 57628.562267032634,
+   "lam_um": 1.5590808010489179,
+   "dQ_half": 2.3524122389543582e-05,
+   "q_status": "ok"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 0.8,
+   "R": 30.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 4122476.3776597735,
+   "lam_um": 1.561397684378366,
+   "dQ_half": 0.00012558715434373127,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.0,
+   "R": 10.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 2021.631231607729,
+   "lam_um": 1.5658078536760105,
+   "dQ_half": 5.087593594219683e-05,
+   "q_status": "ok"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.0,
+   "R": 10.0,
+   "res": 45,
+   "T_after": 4000.0,
+   "Q_bend": 1743.4466892478965,
+   "lam_um": 1.5614682203410974,
+   "dQ_half": 1.2730035096895913e-05,
+   "q_status": "ok"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.0,
+   "R": 15.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 37568.671720171,
+   "lam_um": 1.5681120785737142,
+   "dQ_half": 0.00011148157703247478,
+   "q_status": "ok"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.0,
+   "R": 20.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 647568.5385697779,
+   "lam_um": 1.5604409463972024,
+   "dQ_half": 0.00013327564151977909,
+   "q_status": "ok"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.0,
+   "R": 20.0,
+   "res": 45,
+   "T_after": 4000.0,
+   "Q_bend": 471962.37095740094,
+   "lam_um": 1.5558819378075144,
+   "dQ_half": 5.732992919234544e-05,
+   "q_status": "ok"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.0,
+   "R": 30.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 164099205.34794813,
+   "lam_um": 1.5595133597132944,
+   "dQ_half": 0.03249813558486792,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.2,
+   "R": 10.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 3777.420593717956,
+   "lam_um": 1.5685644268037677,
+   "dQ_half": 0.00011199506880317757,
+   "q_status": "ok"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.2,
+   "R": 15.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 139477.46903234406,
+   "lam_um": 1.5633836509191064,
+   "dQ_half": 0.00016828216115554446,
+   "q_status": "ok"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.2,
+   "R": 20.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 3226664.7733916715,
+   "lam_um": 1.561818982595598,
+   "dQ_half": 0.002463582081819224,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.2,
+   "R": 30.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 360779260.8164513,
+   "lam_um": 1.5605884306936133,
+   "dQ_half": 0.018403746426958977,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.6,
+   "R": 10.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 5983.851802000832,
+   "lam_um": 1.5815843398381808,
+   "dQ_half": 0.00016829682572040607,
+   "q_status": "ok"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.6,
+   "R": 15.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 439556.9972872999,
+   "lam_um": 1.5654245883614388,
+   "dQ_half": 0.00029841429545706863,
+   "q_status": "ok"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.6,
+   "R": 20.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 17471845.394813903,
+   "lam_um": 1.5683852345160891,
+   "dQ_half": 0.00604375940810062,
+   "q_status": "above_cap"
+  },
+  {
+   "platform": "sin400",
+   "clad": "oxide",
+   "w": 1.6,
+   "R": 30.0,
+   "res": 30,
+   "T_after": 2000.0,
+   "Q_bend": 1912718635.480699,
+   "lam_um": 1.5658313780866489,
+   "dQ_half": 74.2727649826684,
+   "q_status": "unresolved"
+  }
+ ],
+ "criterion": "some (platform, w, clad) reaches Q_bend >= 1e+05; every convergence pair agrees (|dQ|/Q < 0.2 below Q_cap = 1e+06, or both >= cap) or stays on the same side of 1e+05; unresolved rows (Q <= 0 or T/2-vs-T change > 10%) agree as '>cap' when no member is a resolved below-cap value and at least one member is positive and > cap"
+}
+Stopping app - local entrypoint completed.
+œ“ App completed. View run at 
+https://modal.com/apps/sakeeb91/main/ap-GBNwktNAUgJnwB126mxFh3

@@ -1,0 +1,16 @@
+# E3 3D domain-wall Q at fabricable geometry, flux split (Q_rad vs axial/mirror leakage),
+# and a res-20 vs res-30 convergence check. Geometry comes from the best E2 cells that pass
+# the fab rules, contain 1547 nm in the gap and lie below the light line.
+# Designs failing the fab rules are refused (status refused_fab, reason logged) and not simulated.
+# For SiN, copy this file, set select.platform: sin400, clad: oxide_fill, and pass --manifest.
+experiment: E3
+kind: nanobeam
+select: {from: E2, platform: si220, clad: sub, top_k: 1, rank_by: gap_mid_ratio,
+         require: [fab_ok, gap_contains_target, below_lightline]}
+df_gap_multiple: 3.0     # Harminv/source window = max(3 x gap, 3% of mid-gap)
+df_min_rel: 0.03
+res: [40]
+designs:
+  - {kind: ssh, wall: A, Nside: 30}
+  - {kind: ssh, wall: tanh, M: 6, Nside: 30}
+sim: {T_harm: 600, nfreq: 101, flux: true}

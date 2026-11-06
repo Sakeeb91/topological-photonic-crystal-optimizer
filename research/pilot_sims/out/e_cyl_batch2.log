@@ -1,0 +1,5 @@
+CYL R=15.0 w=1.0 t=0.4 oxide m=100: lam=1.5681 um Q=3.756e+04 |amp|=5.6 err=7e-12+0j
+    print("RESULT " + json.dumps(out))
+CYL R=15.0 w=0.5 t=0.4 oxide m=92: lam=1.5725 um Q=157.1 |amp|=3.15 err=2e-10+0j
+    print("RESULT " + json.dumps(out))
+RESULT {"R": 10.0, "w": 0.5, "t": 0.4, "clad": "airtop", "m": 58, "res": 30, "T_after": 600.0, "wall_s": 90.83721208572388, "modes": []}

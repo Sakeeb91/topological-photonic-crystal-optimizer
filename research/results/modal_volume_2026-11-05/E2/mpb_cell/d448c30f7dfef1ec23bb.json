@@ -1,0 +1,83 @@
+{
+ "a": 0.19991239662761062,
+ "b": 0.16356468814986322,
+ "r": 0.04361725017329686,
+ "L": 0.36347708477747387,
+ "freqs_edge": [
+  0.6414386469165314,
+  0.6574976777410516,
+  0.8503914168996086,
+  0.8542506833428135
+ ],
+ "edge_f1": 0.6414386469165314,
+ "edge_f2": 0.6574976777410516,
+ "gap_abs": 0.016059030824520204,
+ "gap_mid_ratio": 0.024726432727568196,
+ "lambda1_um": 1.5589955560163296,
+ "lambda2_um": 1.52091791933878,
+ "lambda_mid_um": 1.539721356647122,
+ "dlambda_nm": 38.077636677549485,
+ "f_lightline": 0.9526333359463918,
+ "below_lightline": true,
+ "wall_s": 3.1981537342071533,
+ "platform": "si220",
+ "w": 0.5,
+ "t": 0.22,
+ "clad": "sub",
+ "res": 40,
+ "Ly": 2.0,
+ "Lz": 2.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 2,
+ "history": [
+  {
+   "L": 0.36,
+   "lambda_mid_um": 1.5322011299308038,
+   "dlambda_nm": 37.72832908942103
+  },
+  {
+   "L": 0.36347708477747387,
+   "lambda_mid_um": 1.539721356647122,
+   "dlambda_nm": 38.077636677549485
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": true,
+  "violations": [],
+  "platform": "si220",
+  "min_hole_diameter_nm": 87.23450034659372,
+  "min_web_nm": 76.33018780326952,
+  "min_rail_nm": 206.38274982670313
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 7.986957550048828,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "si220",
+   "res": 40,
+   "Ly": 2.0,
+   "Lz": 2.0,
+   "L0": 0.36,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "clad": "sub",
+   "w": 0.5,
+   "delta": 0.1,
+   "r_over_L": 0.12
+  },
+  "tag": "si220",
+  "key": "d448c30f7dfef1ec23bb",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 8.379917621612549,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

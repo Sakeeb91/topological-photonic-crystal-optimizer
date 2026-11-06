@@ -41,6 +41,16 @@ Earlier work (tests, seeds, config validation) was merged to `main` in
 Decisions this session: `a`, `b` are center-to-center spacings; keep a, b near the ~0.45 µm Bragg period
 and shrink holes; infeasible corners penalized, not excluded.
 
+## Literature review (2026-11-05)
+
+`docs/LITERATURE_REVIEW.md` covers prior art, gaps, a physics audit, pilot MEEP/MPB results and a ranked research plan.
+Pilot scripts and logs are in `research/pilot_sims/`.
+
+Key findings:
+- The ring geometry has no SSH domain wall, so it hosts no topological state.
+- Bend loss alone caps the parameter box at Q of about 1e2.
+- Step 0 of section 7 lists the code changes needed before any optimization result means anything.
+
 ## Known issues, in priority order
 
 1. **Regenerate published results** with the fixed geometry and objectives: the 6 single-objective

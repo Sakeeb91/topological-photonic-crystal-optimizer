@@ -1,0 +1,100 @@
+{
+ "a": 0.18113810382374626,
+ "b": 0.13388468543494292,
+ "r": 0.018901367355521347,
+ "L": 0.3150227892586892,
+ "freqs_edge": [
+  0.6427840212515693,
+  0.6473511531537071,
+  0.8488276704161662,
+  0.8496631075274056
+ ],
+ "edge_f1": 0.6427840212515693,
+ "edge_f2": 0.6473511531537071,
+ "gap_abs": 0.0045671319021377554,
+ "gap_mid_ratio": 0.007080082758371582,
+ "lambda1_um": 1.5557325119141776,
+ "lambda2_um": 1.5447566519782812,
+ "lambda_mid_um": 1.5502251544470569,
+ "dlambda_nm": 10.975859935896448,
+ "f_lightline": 1.0991598056332794,
+ "below_lightline": true,
+ "wall_s": 2.7645440101623535,
+ "platform": "si220",
+ "w": 0.6,
+ "t": 0.22,
+ "clad": "sub",
+ "res": 40,
+ "Ly": 2.0,
+ "Lz": 2.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 5,
+ "history": [
+  {
+   "L": 0.36,
+   "lambda_mid_um": 1.6762749016429153,
+   "dlambda_nm": 12.036700256522925
+  },
+  {
+   "L": 0.33223667517431854,
+   "lambda_mid_um": 1.6007627471083998,
+   "dlambda_nm": 11.790949119333094
+  },
+  {
+   "L": 0.32107827185702614,
+   "lambda_mid_um": 1.5683070758853892,
+   "dlambda_nm": 11.256507101003121
+  },
+  {
+   "L": 0.3167160910004837,
+   "lambda_mid_um": 1.5553153914061912,
+   "dlambda_nm": 11.053691764580487
+  },
+  {
+   "L": 0.3150227892586892,
+   "lambda_mid_um": 1.5502251544470569,
+   "dlambda_nm": 10.975859935896448
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": false,
+  "violations": [
+   "hole diameter 37.8 nm < min feature 60 nm"
+  ],
+  "platform": "si220",
+  "min_hole_diameter_nm": 37.802734711042696,
+  "min_web_nm": 96.08195072390022,
+  "min_rail_nm": 281.09863264447864
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 15.412681341171265,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "si220",
+   "res": 40,
+   "Ly": 2.0,
+   "Lz": 2.0,
+   "L0": 0.36,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "clad": "sub",
+   "w": 0.6,
+   "delta": 0.15,
+   "r_over_L": 0.06
+  },
+  "tag": "si220",
+  "key": "fb6efc52fd937e419ef2",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 15.831185340881348,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

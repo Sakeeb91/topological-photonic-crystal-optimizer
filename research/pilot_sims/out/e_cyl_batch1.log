@@ -1,0 +1,5 @@
+CYL R=10.0 w=1.6 t=0.8 oxide m=75: lam=1.5638 um Q=1.96e+06 |amp|=2.73 err=2e-12+0j
+CYL R=10.0 w=1.6 t=0.8 oxide m=75: lam=1.4482 um Q=5289 |amp|=0.199 err=2e-11+0j
+    print("RESULT " + json.dumps(out))
+CYL R=10.0 w=1.0 t=0.8 oxide m=72: lam=1.5625 um Q=3.231e+05 |amp|=4.32 err=3e-12+0j
+    print("RESULT " + json.dumps(out))

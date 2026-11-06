@@ -1,0 +1,100 @@
+{
+ "a": 0.2416990000730736,
+ "b": 0.2322206079133452,
+ "r": 0.075827137277827,
+ "L": 0.4739196079864188,
+ "freqs_edge": [
+  0.6461168687164691,
+  0.6466547841217862,
+  0.7119353614175463,
+  0.7120093425044798
+ ],
+ "edge_f1": 0.6461168687164691,
+ "edge_f2": 0.6466547841217862,
+ "gap_abs": 0.0005379154053171131,
+ "gap_mid_ratio": 0.0008321893570858089,
+ "lambda1_um": 1.5477076182618952,
+ "lambda2_um": 1.5464201681552352,
+ "lambda_mid_um": 1.5470636253579961,
+ "dlambda_nm": 1.287450106659982,
+ "f_lightline": 0.7226241490191131,
+ "below_lightline": true,
+ "wall_s": 7.6481218338012695,
+ "platform": "sin400",
+ "w": 1.2,
+ "t": 0.4,
+ "clad": "oxide_fill",
+ "res": 32,
+ "Ly": 3.0,
+ "Lz": 3.0,
+ "target_lambda_um": 1.547,
+ "n_mpb_solves": 5,
+ "history": [
+  {
+   "L": 0.5,
+   "lambda_mid_um": 1.616996535020528,
+   "dlambda_nm": 1.3625867133615355
+  },
+  {
+   "L": 0.47835600339748424,
+   "lambda_mid_um": 1.5589890017990167,
+   "dlambda_nm": 1.2774604945424706
+  },
+  {
+   "L": 0.47467733024540626,
+   "lambda_mid_um": 1.549106941079442,
+   "dlambda_nm": 1.2896497242937954
+  },
+  {
+   "L": 0.4740317213851961,
+   "lambda_mid_um": 1.5473659680354763,
+   "dlambda_nm": 1.2877675290325907
+  },
+  {
+   "L": 0.4739196079864188,
+   "lambda_mid_um": 1.5470636253579961,
+   "dlambda_nm": 1.287450106659982
+  }
+ ],
+ "gap_contains_target": true,
+ "fab": {
+  "ok": false,
+  "violations": [
+   "web 80.6 nm < min web 120 nm (2 of 2 webs)"
+  ],
+  "platform": "sin400",
+  "min_hole_diameter_nm": 151.654274555654,
+  "min_web_nm": 80.56633335769122,
+  "min_rail_nm": 524.172862722173
+ },
+ "kernel": "mpb_cell",
+ "kernel_wall_s": 39.40420651435852,
+ "meep_version": "1.35.0",
+ "job": {
+  "exp": "E2",
+  "kernel": "mpb_cell",
+  "params": {
+   "platform": "sin400",
+   "clad": "oxide_fill",
+   "res": 32,
+   "Ly": 3.0,
+   "Lz": 3.0,
+   "L0": 0.5,
+   "target_lambda_um": 1.547,
+   "rescale_iters": 4,
+   "w": 1.2,
+   "delta": 0.02,
+   "r_over_L": 0.16
+  },
+  "tag": "sin400",
+  "key": "776e54087e8194d75d08",
+  "tier": "light"
+ },
+ "modal": {
+  "tier": "light",
+  "nproc": 1,
+  "wall_s": 39.76928353309631,
+  "cpu": 1.0,
+  "memory_MiB": 2048
+ }
+}

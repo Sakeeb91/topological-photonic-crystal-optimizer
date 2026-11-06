@@ -1,0 +1,257 @@
+œ“ Initialized. View run at 
+https://modal.com/apps/sakeeb91/main/ap-421Yq93qjq835XrqoBI8uU
+œ“ Created objects.
+œ œ“ Uploaded 
+   <checkout>/wt-
+   e2b/research/modal/app.py
+œ œ“ Uploaded 
+   <checkout>/wt-
+   e2b/research/modal
+œ œ“ Created Function run_light.
+œ œ“ Created Function run_3d.
+œ œ“ Created Function run_3d_big.
+œ œ“ Created Function run_3d_xl.
+ œ“ Created Function run_ring.
+[plan] 40 jobs by tier {'light': 40}; estimated 1.00 container-h, ~$0.06, longest job 0.03 h (estimates; see docs/MODAL_RUNBOOK.md)
+   492bbb0d9b613eedbdac mpb_cell    light      1.5 min $0.002  si220-bighole
+   8e9dd84c7a3f14708363 mpb_cell    light      1.5 min $0.002  si220-bighole
+   d7918b5e9f839d3685e8 mpb_cell    light      1.5 min $0.002  si220-bighole
+   2ad2f318f76df195da21 mpb_cell    light      1.5 min $0.002  si220-bighole
+   ac62f1938eab8742e75e mpb_cell    light      1.5 min $0.002  si220-bighole
+   e885e4adb7e7df1518d8 mpb_cell    light      1.5 min $0.002  si220-bighole
+   4911b0cc084461f4b342 mpb_cell    light      1.5 min $0.002  si220-bighole
+   9883cb2b8389249bf9a1 mpb_cell    light      1.5 min $0.002  si220-bighole
+   1a7e65d27093acfe8a63 mpb_cell    light      1.5 min $0.002  si220-bighole
+   7659199358b9e53f18d4 mpb_cell    light      1.5 min $0.002  si220-bighole
+   a39fa2335d77508f5b1d mpb_cell    light      1.5 min $0.002  si220-bighole
+   811dc51cfb2d0f2ba30d mpb_cell    light      1.5 min $0.002  si220-bighole
+   ... 28 more
+[skip] 0 already on the Volume; 40 to run
+[run] 40 x light {'cpu': 1.0, 'memory': 2048, 'timeout': 3600, 'np': 1}
+ Modal Deprecation Warning (2026-03-24) 
+ The `wrap_returned_exceptions` parameter of `Function.map` no longer has any 
+ effect and can be removed from your code. Exceptions are no longer wrapped   
+ before being returned from `Function.map`.                                   
+ Source:                                                                      
+ <checkout>/wt- 
+ e2b/research/modal/app.py:207                                                
+   for r in FN[tier].map(group, order_outputs=False, return_exceptions=True,  
+ wrap_returned_exceptions=False):                                             
+   ok           71a99a959c920fae5b81 si220-bighole 
+   ok           861be31e2a9ac2004935 si220-bighole 
+   ok           1a7e65d27093acfe8a63 si220-bighole 
+   ok           ac62f1938eab8742e75e si220-bighole 
+   ok           13131e9881337d2ef2b5 si220-bighole 
+   ok           5808b95bf80c6bd3dddd si220-bighole 
+   ok           6bb30eb5261225035113 si220-bighole 
+   ok           8e80bd655ffde3f8c719 si220-bighole 
+   ok           f045ad9e0ca756ac054c si220-bighole 
+   ok           a39fa2335d77508f5b1d si220-bighole 
+   ok           808ff2da0b6b487f648c si220-bighole 
+   ok           492bbb0d9b613eedbdac si220-bighole 
+   ok           85a6cad5f828a4d8e696 si220-bighole 
+   ok           04c2c7e863ebf3dc50ed si220-bighole 
+   ok           7659199358b9e53f18d4 si220-bighole 
+   ok           318a4c3dd013fe753e85 si220-bighole 
+   ok           0bac7e8a369922b9cd0b si220-bighole 
+   ok           811dc51cfb2d0f2ba30d si220-bighole 
+   ok           b7b3fcd86c0386230b47 si220-bighole 
+   ok           f38afe88c18bd241ce53 si220-bighole 
+   ok           09c88bdc9364b9070b99 si220-bighole 
+   ok           e885e4adb7e7df1518d8 si220-bighole 
+   ok           9883cb2b8389249bf9a1 si220-bighole 
+   ok           d13ca031f86abdb535cb si220-bighole 
+   ok           5b9134d2ae21e2583265 si220-bighole 
+   ok           6c5f393e449cc4e8d64c si220-bighole 
+   ok           5dc935c16ca87bbcf0e1 si220-bighole 
+   ok           2448e7d950922a779536 si220-bighole 
+   ok           8e9dd84c7a3f14708363 si220-bighole 
+   ok           413071f55eacd9fa3e6a si220-bighole 
+   ok           f6ab279af5d18481063b si220-bighole 
+   ok           2ad2f318f76df195da21 si220-bighole 
+   ok           f002d5eb9f470c7a28e7 si220-bighole 
+   ok           4911b0cc084461f4b342 si220-bighole 
+   ok           fbb8bcbdb27bd259f19c si220-bighole 
+   ok           5f4de2d37aba020d8855 si220-bighole 
+   ok           d7918b5e9f839d3685e8 si220-bighole 
+   ok           d134ee2075be2e80e1cd si220-bighole 
+   ok           240666c25ac85a5fe7ba si220-bighole 
+   ok           3863eb7e9736d124d219 si220-bighole 
+{
+ "exp": "E2",
+ "go": true,
+ "by_stack": {
+  "si220|sub|w0.55": {
+   "n": 20,
+   "fab_ok": 18,
+   "feasible": 18,
+   "best": {
+    "a": 0.19968432005833953,
+    "b": 0.16337808004773235,
+    "r": 0.050828736014850065,
+    "L": 0.3630624001060719,
+    "dlambda_nm": 52.31479443431564,
+    "gap_mid_ratio": 0.03394395709010654,
+    "lambda_mid_um": 1.5407668917521757,
+    "min_web_nm": 61.72060801803225,
+    "fab_margin_nm": 1.7206080180322516
+   }
+  },
+  "si220|sub|w0.5": {
+   "n": 50,
+   "fab_ok": 29,
+   "feasible": 29,
+   "best": {
+    "a": 0.2225339160584389,
+    "b": 0.13352034963506335,
+    "r": 0.03560542656935022,
+    "L": 0.35605426569350224,
+    "dlambda_nm": 59.17603000565652,
+    "gap_mid_ratio": 0.03804059085900975,
+    "lambda_mid_um": 1.5550395107053694,
+    "min_web_nm": 62.309496496362925,
+    "fab_margin_nm": 2.309496496362925
+   }
+  },
+  "sin400|oxide_fill|w1.0": {
+   "n": 20,
+   "fab_ok": 0,
+   "feasible": 0,
+   "best": null
+  },
+  "sin400|oxide_fill|w1.2": {
+   "n": 20,
+   "fab_ok": 0,
+   "feasible": 0,
+   "best": null
+  },
+  "si220|oxide_fill|w0.6": {
+   "n": 30,
+   "fab_ok": 8,
+   "feasible": 8,
+   "best": {
+    "a": 0.18700740544395617,
+    "b": 0.1382228648933589,
+    "r": 0.03902763244047781,
+    "L": 0.32523027033731505,
+    "dlambda_nm": 33.98529202920408,
+    "gap_mid_ratio": 0.021863427620441998,
+    "lambda_mid_um": 1.5542499234931153,
+    "min_web_nm": 60.167600012403284,
+    "fab_margin_nm": 0.16760001240328393
+   }
+  },
+  "si220|sub|w0.6": {
+   "n": 30,
+   "fab_ok": 9,
+   "feasible": 9,
+   "best": {
+    "a": 0.19605969102438878,
+    "b": 0.1449136846702004,
+    "r": 0.0409168050833507,
+    "L": 0.3409733756945892,
+    "dlambda_nm": 47.68451262868045,
+    "gap_mid_ratio": 0.03058452633492663,
+    "lambda_mid_um": 1.5587412054504264,
+    "min_web_nm": 63.08007450349898,
+    "fab_margin_nm": 3.0800745034989774
+   }
+  },
+  "si220|oxide_fill|w0.5": {
+   "n": 30,
+   "fab_ok": 9,
+   "feasible": 9,
+   "best": {
+    "a": 0.20000759721265732,
+    "b": 0.14783170228761627,
+    "r": 0.04174071594003283,
+    "L": 0.3478392995002736,
+    "dlambda_nm": 42.010975100733596,
+    "gap_mid_ratio": 0.02703580435168693,
+    "lambda_mid_um": 1.5536174819989834,
+    "min_web_nm": 64.35027040755062,
+    "fab_margin_nm": 4.350270407550624
+   }
+  }
+ },
+ "violation_counts": {
+  "web 55.7": 2,
+  "web 59.4": 1,
+  "web 58.8": 1,
+  "hole diameter": 58,
+  "web 119.2": 1,
+  "web 112.1": 1,
+  "web 100.7": 1,
+  "web 100.2": 1,
+  "web 93.5": 1,
+  "web 74.8": 1,
+  "web 38.7": 1,
+  "web 76.4": 1,
+  "web 61.6": 1,
+  "web 63.1": 1,
+  "web 43.8": 1,
+  "web 19.4": 1,
+  "web 99.0": 1,
+  "web 81.6": 1,
+  "web 80.6": 1,
+  "web 31.6": 1,
+  "web 69.6": 1,
+  "web 62.0": 1,
+  "web 82.0": 1,
+  "web 54.8": 1,
+  "web 55.9": 1,
+  "web 38.0": 1,
+  "web 117.3": 1,
+  "web 86.8": 1,
+  "web 98.5": 1,
+  "web 19.1": 1,
+  "web 75.2": 1,
+  "web 110.3": 1,
+  "web 50.7": 1,
+  "web 91.9": 1,
+  "web 73.5": 1,
+  "web 57.6": 3,
+  "web 80.2": 1,
+  "web 31.0": 1,
+  "web 88.4": 1,
+  "web 49.8": 1,
+  "web 68.5": 1,
+  "web 43.0": 1,
+  "web 56.7": 2,
+  "web 62.8": 1,
+  "web 47.8": 1,
+  "web 55.8": 1,
+  "web 23.7": 1,
+  "web 48.4": 1,
+  "web 44.0": 1,
+  "web 49.4": 1,
+  "web 59.6": 1,
+  "web 52.1": 1,
+  "web 32.1": 1,
+  "web 36.2": 1,
+  "web 40.5": 1,
+  "web 45.6": 1,
+  "web 51.1": 1,
+  "web 59.1": 1,
+  "web 38.8": 1,
+  "web 37.7": 1,
+  "web 46.2": 1,
+  "web 54.7": 1,
+  "web 25.2": 2,
+  "web 47.5": 1,
+  "web 43.2": 2,
+  "web 51.5": 1,
+  "web 34.2": 2,
+  "web 52.2": 1,
+  "web 55.0": 1,
+  "web 26.3": 1,
+  "web 35.6": 1,
+  "web 39.6": 1,
+  "web 54.0": 1,
+  "web 48.6": 1
+ },
+ "criterion": "at least one fabricable cell (rules of its platform) whose zone-edge gap contains 1547 nm, below the light line"
+}
+Stopping app - local entrypoint completed.
+œ“ App completed. View run at 
+https://modal.com/apps/sakeeb91/main/ap-421Yq93qjq835XrqoBI8uU

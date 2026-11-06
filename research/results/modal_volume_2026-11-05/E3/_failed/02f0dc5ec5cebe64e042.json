@@ -1,0 +1,32 @@
+{
+ "job": {
+  "exp": "E3",
+  "kernel": "nanobeam3d",
+  "params": {
+   "platform": "si220",
+   "w": 0.5,
+   "clad": "sub",
+   "fcen": 0.6492200432559385,
+   "df": 0.04231774907931263,
+   "T_harm": 1000,
+   "nfreq": 101,
+   "flux": true,
+   "res": 16,
+   "design": {
+    "kind": "quan_loncar",
+    "period": 0.4616202887604871,
+    "r_center": 0.09694026063970229,
+    "r_end": 0.13848608662814613,
+    "n_taper": 10,
+    "n_mirror": 25
+   }
+  },
+  "tag": "quan_loncar[n_mirror=25]|res16|nominal",
+  "key": "02f0dc5ec5cebe64e042",
+  "tier": "3d"
+ },
+ "returncode": 1,
+ "stderr_tail": "Warning: grid volume is not an integer number of pixels; cell size will be rounded to nearest pixel.\nmeep: simulation fields are NaN or Inf\nAbort(1) on node 4 (rank 4 in comm 0): application called MPI_Abort(MPI_COMM_WORLD, 1) - process 4\n",
+ "stdout_tail": "[1793920419.712138] [modal:33   :0]       tcp_iface.c:984  UCX  ERROR scandir(/sys/class/net) failed: No such file or directory\n[1793920419.712412] [modal:28   :0]       tcp_iface.c:984  UCX  ERROR scandir(/sys/class/net) failed: No such file or directory\n[1793920419.786049] [modal:32   :0]       tcp_iface.c:984  UCX  ERROR scandir(/sys/class/net) failed: No such file or directory\n[1793920419.878735] [modal:30   :0]       tcp_iface.c:984  UCX  ERROR scandir(/sys/class/net) failed: No such file or directory\n[1793920419.960217] [modal:29   :0]       tcp_iface.c:984  UCX  ERROR scandir(/sys/class/net) failed: No such file or directory\n[1793920420.052421] [modal:31   :0]       tcp_iface.c:984  UCX  ERROR scandir(/sys/class/net) failed: No such file or directory\n[1793920420.130937] [modal:34   :0]       tcp_iface.c:984  UCX  ERROR scandir(/sys/class/net) failed: No such file or directory\n[1793920420.239851] [modal:27   :0]       tcp_iface.c:984  UCX  ERROR scandir(/sys/class/net) failed: No such file or directory\nUsing MPI version 4.1, 8 processes\n",
+ "wall_s": 104.35747170448303
+}
