@@ -151,3 +151,4 @@ eps-*.h5
 # Pilot simulation logs are research data; keep them
 !research/pilot_sims/out/*.log
 !research/results/logs/*.log
+research/modal/results_local/

@@ -1,0 +1,16 @@
+# E5 (optional) ring closure. Unrolled-ring 3D supercell: one A and one B wall, length equal
+# to the circumference 2 pi R, periodic in x (no bend loss), so A/B detuning and wall-wall
+# coupling are isolated. Then one full 3D ring at res 20 (24 h Modal timeout cap).
+# Set R from E1 (smallest R with Q_bend >= 1e5 on the chosen platform).
+experiment: E5
+kind: ring
+select: {from: E2, platform: si220, clad: sub, top_k: 1, rank_by: gap_mid_ratio,
+         require: [fab_ok, gap_contains_target, below_lightline]}
+df_gap_multiple: 3.0
+df_min_rel: 0.03
+supercells:
+  - {R_um: 5.0, res: 20}
+  - {R_um: 10.0, res: 20}
+rings:
+  - {R_um: 5.0, res: 20}
+sim: {T_harm: 2000}

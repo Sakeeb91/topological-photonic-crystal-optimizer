@@ -1,0 +1,33 @@
+# E1 cross-section bend-loss map (bare ring, exact 3D cylindrical MEEP, fixed m chosen from
+# an MPB n_eff estimate so the resonance sits near 1547 nm). Picks the platform and the
+# smallest radius with Q_bend >= 1e5, which E5 then uses.
+# Harminv Q far above ~10 pi f T is an extrapolation: compare Q at T/2 and T in the output.
+experiment: E1
+grids:
+  - kernel: bend_q
+    tag: si220
+    base: {platform: si220, res: 40, T_after: 2000}
+    sweep:
+      clad: [oxide, sub]          # oxide-clad, or uncladded (oxide below, air top)
+      w: [0.45, 0.50, 0.60]
+      R: [2.0, 3.0, 5.0, 10.0]
+  - kernel: bend_q
+    tag: sin400
+    base: {platform: sin400, clad: oxide, res: 30, T_after: 2000}
+    sweep:
+      w: [0.8, 1.0, 1.2, 1.6]
+      R: [10.0, 15.0, 20.0, 30.0]
+# Convergence subset: the same (platform, clad, w, R) at higher resolution and a 2x longer
+# ringdown. gonogo("E1") pairs each with its base row and reports dQ/Q and dlambda; trust the
+# map only where |dQ|/Q < 0.2. (E0 on Modal gave Q_bend = 2543 at res 20, T = 300 vs the
+# pilot's 1.6e3 at res 30, T = 600-800 for SiN R=10 w=1.0: low-res bend Q is not converged.)
+  - kernel: bend_q
+    tag: si220-conv
+    base: {platform: si220, clad: oxide, w: 0.50, res: 60, T_after: 4000}
+    sweep:
+      R: [3.0, 5.0]
+  - kernel: bend_q
+    tag: sin400-conv
+    base: {platform: sin400, clad: oxide, w: 1.0, res: 45, T_after: 4000}
+    sweep:
+      R: [10.0, 20.0]

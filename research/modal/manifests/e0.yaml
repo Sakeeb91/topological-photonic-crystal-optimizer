@@ -1,0 +1,12 @@
+# E0 smoke test: one MPB unit cell + one cylindrical bare ring. Minutes, cents.
+# Proves the image builds, MPB and MEEP import, results land on the Volume.
+experiment: E0
+jobs:
+  - kernel: mpb_cell
+    tag: smoke-mpb
+    params: {platform: sin400, clad: oxide_fill, w: 1.0, res: 16, Ly: 2.5, Lz: 2.5,
+             L0: 0.5, delta: 0.3, r_over_L: 0.12, target_lambda_um: 1.547, rescale_iters: 2}
+  - kernel: bend_q
+    tag: smoke-ring
+    # pilot reference (exact 3D cylindrical, oxide-clad SiN): R=10, w=1.0, t=0.4 -> Q ~ 1.6e3
+    params: {platform: sin400, clad: oxide, R: 10.0, w: 1.0, res: 20, T_after: 300}

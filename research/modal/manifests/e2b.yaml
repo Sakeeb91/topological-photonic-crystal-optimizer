@@ -1,0 +1,16 @@
+# E2b: Si 220 cells with LARGER holes and fab margin. Run with
+#   modal run research/modal/app.py::e2 --manifest research/modal/manifests/e2b.yaml
+# Shares the E2 folder, so E3/E4/E5 selections see these cells too.
+# Why: the first E2 picks had r = 36-43 nm at a 60-64 nm web (0 nm margin). 3D cost scales as
+# res^4 and res is set by the smallest hole (>= 2 px on r), so r = 50 nm instead of 36 nm costs
+# (36/50)^4 = 0.27x per job, and a 10 nm web margin is needed for a mask anyway.
+# Feasibility bound: web b - 2r >= 60 nm with b = L (1 - delta) / 2 and L ~ 0.356 um.
+experiment: E2
+grids:
+  - kernel: mpb_cell
+    tag: si220-bighole
+    base: {platform: si220, clad: sub, res: 48, Ly: 2.0, Lz: 2.0, L0: 0.36, target_lambda_um: 1.547, rescale_iters: 4}
+    sweep:
+      w: [0.50, 0.55]
+      delta: [0.02, 0.04, 0.06, 0.08, 0.10]
+      r_over_L: [0.12, 0.13, 0.14, 0.15]

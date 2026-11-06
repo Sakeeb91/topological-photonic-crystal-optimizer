@@ -1,0 +1,42 @@
+# E4 matched disorder ensembles with common random numbers (same seed and realization index
+# -> same draw for hole k in every design). Classes are run separately at each sigma.
+# Paper scale: N: 48 (pass --n 48). Default N is small so a first run is cheap.
+# Disorder is in absolute nm. 5 nm at res 20 is ~0.1 px: MEEP subpixel averaging makes the
+# response smooth but accuracy at this scale is a known limitation (review section 4).
+experiment: E4
+kind: nanobeam
+select: {from: E2, platform: si220, clad: sub, top_k: 1, rank_by: gap_mid_ratio,
+         min_r_nm: 50, min_margin_nm: 10,      # same cell as research/results/manifests/e3_bighole.yaml
+         require: [fab_ok, gap_contains_target, below_lightline]}
+df_gap_multiple: 3.0
+df_min_rel: 0.03
+px_on_r: [1.5]        # = E3-bighole stage 1, so pt.mode_from reuses its modes; 2.0 needs e3c (out of the $10 budget)
+designs:
+  - {kind: ssh, wall: A, Nside: 20, name: ssh_abrupt}       # set Nside to the E3-bighole pick (Q_axial >= 10 Q_rad)
+  - {kind: ssh, wall: tanh, M: 6, Nside: 20, name: ssh_tanh}
+  - {kind: quan_loncar, name: quan_loncar, n_taper: 10, n_mirror: 10, r_end_over_L: 0.30, r_center_ratio: 0.70, margin_nm: 5}
+# Frequency statistics come from first-order perturbation theory (sens3d: one extra 3D run per
+# design, two passes), for every class and sigma, in seconds after the run. FDTD ensembles are
+# kept for two jobs PT cannot do: (1) spot-check PT shifts on the same CRN realizations, and
+# (2) disorder LOSS, which is second order: fit C in <1/Q - 1/Q_nom> = C sigma^2 (Minkov 2013)
+# and extrapolate to 1-3 nm. FDTD N = 48 is no longer needed for sigma_lambda.
+#
+# BUDGET (program cap $10 on Modal, docs/EXPERIMENT_LOG.md): defaults are sized to it.
+#   PT only (set ensemble.N: 0):            7 jobs, ~$0.7  (less when pt.mode_from finds E3 modes)
+#   default N = 1, sigma 10 nm, 4 classes: 19 jobs, ~$1.8  (one spot check + one C estimate per class)
+#   N = 2, sigma 10 nm, 4 classes:         31 jobs, ~$2.9
+# (estimates at px_on_r 1.5 for an r = 53.5 nm cell; the dispatcher's budget guard adds a 1.6x margin
+#  and refuses launches that could pass the cap; check with --dry-run)
+pt:
+  mode_from: E3            # reuse the mode frequency of an E3 nominal run with the same design + res (skips pass 1)
+  sigmas_nm: [1, 2, 3, 5, 10]
+  n_draws: 2000
+  seed: 2026
+  n_theta: 32
+  n_z: 8
+ensemble:
+  N: 1
+  seed: 2026
+  sigmas_nm: [10]
+  classes: [radius, position_x, offset_y, cd_bias]
+sim: {T_harm: 400, nfreq: 101, flux: true}

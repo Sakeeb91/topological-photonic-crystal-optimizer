@@ -1,0 +1,39 @@
+# E3 stage 1 (scan): 3D domain-wall Q at fabricable Si geometry from E2, at ONE resolution
+# chosen by the smallest-feature rule, to (a) pick the mirror length per design and (b) retune
+# the Quan-Loncar control onto 1547 nm. Stage 2 (manifests/e3c.yaml, same experiment folder)
+# then checks convergence over 3 resolutions for the chosen variants only.
+#
+# Lessons from the first E3 run on Modal (2026-11-05, 18 jobs from commit 9f828c4):
+# - res 20 vs 30 moved lambda by 9-24 nm and Q by up to 140%: the selected Si holes (r = 36-43 nm)
+#   were 0.7-1.1 px. Resolution is set from the smallest hole radius (px_on_r), not px/wavelength.
+# - Every design was mirror-limited at Nside = 20 (Q_axial ~ 1e3 << Q_rad ~ 1e4-2e5), so Q_total
+#   compared mirrors, not cavities. Designs are compared on Q_rad, with Nside long enough that
+#   Q_axial >= 10 Q_rad.
+# - The Quan-Loncar control resonated at 1.615-1.624 um (outside the window); period_scale retunes it.
+experiment: E3
+kind: nanobeam
+select: {from: E2, platform: si220, clad: sub, top_k: 1, rank_by: gap_mid_ratio,
+         min_r_nm: 50, min_margin_nm: 10,      # the E2b big-hole cell, as in research/results/manifests/e3_bighole.yaml
+         require: [fab_ok, gap_contains_target, below_lightline]}
+df_gap_multiple: 3.0
+df_min_rel: 0.03
+px_on_r: [1.5]           # res = ceil(1.5 / r_min): 43 for r = 35.6 nm
+designs:
+  - {kind: ssh, wall: A, Nside: [20, 30, 40]}
+  - {kind: ssh, wall: B, Nside: [20, 30, 40]}
+  - {kind: ssh, wall: tanh, M: 6, Nside: [20, 30, 40]}
+  # Graded mirror: weak dimerization at the wall (delta_wall), ramping (tanh, M cells) to the largest
+  # fab-allowed delta in the mirrors (web >= 60 nm + mirror_margin_nm) to shorten xi (5.9 um at the
+  # cell's own delta in E3-bighole). A mirror_cell_check MPB job verifies the strong-mirror gap.
+  - {kind: ssh_graded, name: ssh_graded, delta_wall: 0.0, delta_mirror: max, mirror_margin_nm: 5, M: 4,
+     Nside: [20, 30]}
+  # Quan-Loncar control by the deterministic recipe (Quan & Loncar, Opt. Express 19, 18529 (2011)):
+  # ql_recipe (MPB, ~1 min locally) finds the period that puts the centre segment's band edge at
+  # 1547 nm, scans the mirror strength gamma(r), and tapers the radii so gamma grows LINEARLY over
+  # n_taper segments (Gaussian field). Run E3 once to create the ql_recipe jobs, then again to build
+  # the nanobeams. Air mode (holes grow outward, upper edge) and dielectric mode (holes shrink outward,
+  # lower edge): the tuned air-mode control was radiation-limited at Q 3.6e3 in 220 nm Si.
+  # (The earlier linear-radius taper with tune: true is superseded.)
+  - {kind: quan_loncar, name: quan_loncar, recipe: true, mode_type: [air, dielectric], n_taper: [20, 30],
+     n_mirror: 15, margin_nm: 5, tune_res: 32}
+sim: {T_harm: 1000, nfreq: 101, flux: true}   # check convergence.Q_over_pi_f_T and dQ_half
