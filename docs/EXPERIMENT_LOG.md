@@ -311,6 +311,24 @@ What it shows:
 
 **Budget status:** $7.62 of $10 used. No further Modal runs are planned under this cap. The remaining work (graded walls at Nside 40-60, the proper QL taper, E4 perturbation theory) should go to free compute (see the recommendations in the chat log: ACCESS / Alliance / GCP research credits, Kaggle or local for light jobs) or wait for a budget decision.
 
+## Code after the QL run (Modal branch `3e59567`; no Modal runs)
+
+- **Proper Quan-Loncar control (`ql_recipe`, MPB).** Following Opt. Express 19, 18529 (2011):
+  - a period secant search puts the centre band edge at 1547 nm (upper edge for air mode, lower for dielectric mode);
+  - a mirror-strength scan gamma(r) runs up to the fabrication limit, and r_end = argmax gamma;
+  - the radii are chosen so gamma rises *linearly* over n_taper segments. The linear rise is what produces the Gaussian envelope; the filling fraction ends up roughly quadratic.
+  - Local MPB at production resolution (res 32, Si 220, air top, w 0.5, n_taper 20), both converged at 1547.08 nm with fab ok:
+
+    | Mode | Period | Radii (centre -> end) | gamma_max |
+    |---|---|---|---|
+    | air | 461.6 nm | 96.9 -> 141.9 nm | 0.129 |
+    | dielectric | 357.4 nm | 107.2 -> 80.9 nm | 0.068 |
+
+  - `e3.yaml` scans mode {air, dielectric} x n_taper {20, 30} at n_mirror 15. Run 1 is MPB only (local); run 2 is the 3D beams.
+- **Local-first by default.** Jobs estimated at under 0.5 h run on the launching machine and are uploaded to the Volume path. Without a local environment they are held back rather than sent to Modal, unless `--modal-small` is passed. The runbook has a free-compute table.
+- **Limiting channel.** Each E3 variant reports `limited_by` (mirror if Q_axial < Q_rad) and Q_axial/Q_rad. `comparison.comparable` is false when the designs' longest-mirror variants are limited by different channels.
+  - On the current snapshot, the SSH walls are mirror-limited and the res-29 control is radiation-limited (Q_axial/Q_rad ≈ 1300). So `comparable = false`, as stated above.
+
 ## Open issues (owner: the next person to touch the code)
 
 1. ~~The E3 report keys by design only.~~ Fixed in `175db31` (keyed by cell L plus design).
