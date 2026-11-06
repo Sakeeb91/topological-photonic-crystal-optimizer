@@ -104,12 +104,15 @@ export SSL_CERT_FILE=/root/.ccr/ca-bundle.crt
 ~/.venv-modal/bin/modal token new --source claude-code
 ```
 
-### 4. Free alternative: run cheap jobs locally (no Modal, no credits)
+### 4. Free compute first: run everything you can locally (no Modal, no credits)
 
-The local backend uses the same manifests, job keys and result layout as the Modal Volume:
-- MPB jobs (`mpb_cell`, `ql_period`, `bend_q`) always run.
-- A 3D job runs only if the local cost model (measured on the 4-core container) puts it under `--max-job-hours`, default 0.5.
-- Jobs already on the committed Volume snapshot (`research/results/modal_volume_*`) are skipped, and selections read that snapshot too.
+**Default since this change.** Every `modal run research/modal/app.py::eN` runs, on the machine that launches it, any job the local cost model puts under 0.5 h (`--local-max-hours`, `--local-np`):
+- In practice that is all MPB pre-steps (`mpb_cell`, `ql_recipe`, `ql_period`, parity and mirror-cell checks) and small 3D jobs.
+- Results are uploaded to the Volume at their normal paths, so the Modal path sees them. Only the rest goes to Modal, under the budget guard.
+- If no local MEEP env exists, these jobs are held back rather than sent to Modal. `--modal-small` overrides that; `--no-local-first` turns the default off.
+
+Without Modal at all, the same manifests, keys and layout run with:
+- Jobs already in the committed Volume snapshot (`research/results/modal_volume_*`) are skipped, and selections read that snapshot.
 - Results go to `research/modal/results_local/`, which git ignores.
 
 ```bash
@@ -124,7 +127,14 @@ TPC_ENV=$PWD/scratch/mamba/envs/pmpi python research/modal/app.py --local E3 --d
 TPC_ENV=$PWD/scratch/mamba/envs/pmpi python research/modal/app.py --local E3
 ```
 
-On the current E3 manifest this runs the two MPB jobs (`ql_tune`, `mirror_cell_check`) in about 30 s. It skips the nine E3-bighole SSH jobs, which are already in the snapshot, and lists the graded-mirror 3D jobs (1.8-2.6 h locally each) for Modal.
+**Free compute for the 3D jobs.** The 3D nanobeams on the big-hole cell are 1.8-2.6 h each on 4 cores. Any machine with Linux, about 8 GB RAM and a few cores can run them with the `--local` path, using `--max-job-hours` to raise the limit. Options checked on 2026-11-06:
+
+| Option | What it gives | Fit |
+|---|---|---|
+| GitHub Codespaces | 120 core-hours/month on a free personal account, 180 on Pro; a 4-core codespace uses 4 core-hours per hour ([GitHub docs](https://docs.github.com/en/billing/concepts/product-billing/github-codespaces)) | about 30 h of a 4-core machine per month: roughly 10-15 big-hole 3D jobs |
+| Kaggle notebooks (CPU) | Commonly reported as 4 cores, 16-30 GB RAM, sessions of 9-12 h. Kaggle's own current limits were not found; the figures come from secondary sources ([Packt](https://packtpub.com/en-mx/product/the-kaggle-book-9781801817479/chapter/working-and-learning-with-kaggle-notebooks-4/section/working-and-learning-with-kaggle-notebooks-4), [agentdeals](https://agentdeals.dev/vendor/kaggle)) | Install the env with `setup_env.sh` at the start of each session. Not verified here. |
+| NSF ACCESS "Explore" allocation | Free credits for researchers at US academic and nonprofit institutions. Graduate students can apply with an advisor letter. Credit amounts differ by source (200k-400k), and 1 credit is about 1 CPU-hour on Jetstream2 ([UMich guide](https://caen.engin.umich.edu/rc/nsf-access/), [Jetstream2 docs](https://docs.jetstream-cloud.org/alloc/overview/), [ACCESS](https://access-ci.org/get-started/for-researchers/)) | The best fit for E4/E5-scale work. Approval reportedly takes 1-2 days. |
+| Modal academic credit grant | Up to $10k for graduate students and labs ([modal.com/pricing](https://modal.com/pricing)) | Keeps this exact pipeline; the application is the user's to make. |
 
 ### 4b. Alternative: run on Modal from your own laptop
 
@@ -242,12 +252,19 @@ The three runs are, in order:
    - first edit Nside / `period_scale` / `n_mirror` to the stage-1 picks;
    - three resolutions at 1.5 / 2 / 2.5 px on the smallest hole radius.
 
-**Trivial control: target-driven period** (`tune: true`, replacing the `period_scale` scan):
+**Trivial control: Quan-Loncar deterministic recipe** (`recipe: true`; Quan & Loncar, Opt. Express 19, 18529, 2011):
 - Run E3 twice.
-  - Run 1 creates one `ql_tune` MPB job (`ql_period`). It does a secant search on the period, with radii scaling with it, until the centre segment's cavity band edge sits at 1547 nm. It also checks that the mirror gap contains 1547 nm.
-  - Run 2 builds the Quan-Loncar nanobeams at that period.
-- With r_center < r_end, the cavity is an **air-mode** cavity at the centre's upper band edge. The lower (dielectric) edge lies outside the mirror gap.
-- If the 3D mode lands off target, set `edge_offset_nm` to the measured detuning and rerun.
+  - Run 1 creates one `ql_recipe` MPB job per (mode, n_taper). These run locally by default, about 1 min each.
+  - Each job does three things:
+    1. Searches the period so the centre segment's band edge sits at 1547 nm: the upper edge for air mode, the lower edge for dielectric mode.
+    2. Scans the mirror strength gamma(r) up to the fab limit; r_end is where gamma peaks.
+    3. Tapers the radii so gamma grows linearly over n_taper segments, which gives a Gaussian field.
+  - Run 2 builds the nanobeams with those radii.
+- `e3.yaml` scans air and dielectric mode, with n_taper 20 and 30.
+- Local production-res MPB (res 32), both fab OK and centred at 1547.08 nm:
+  - air: period 461.6 nm, radii 96.9 → 141.9 nm, gamma_max 0.129;
+  - dielectric: period 357.4 nm, radii 107.2 → 80.9 nm, gamma_max 0.068.
+- Why the change: the earlier linear-radius air-mode control was radiation-limited at Q_rad 3.6e3, so it was no fair reference.
 
 **Graded-mirror SSH** (`kind: ssh_graded`):
 - Weak dimerization at the wall, ramping by tanh over M cells to the largest dimerization the fab rule allows in the mirrors (web = 60 nm + `mirror_margin_nm`).
@@ -259,6 +276,8 @@ The three runs are, in order:
 - That list is raised to a floor of 10 px per wavelength in the core (`res_floor`: 23 for Si, 13 for SiN).
 - Why: the tuned control's large holes alone gave res 16, which aborted on Modal with NaN fields.
 - Runs that abort that way are stored as status `unstable` with their resolution, and `report --exp E3` lists them.
+
+**Limiting channel and comparability.** Each variant reports `limited_by`: `mirror` if Q_axial < Q_rad, else `radiation`. If the designs' longest-mirror variants are limited by different channels, `comparison.comparable` is false and E3 cannot go: comparing them would mix mirror strength with radiation loss.
 
 **Q_rad plateau:** `q_rad_plateau` compares Q_rad at the two longest Nside. A change of more than 20% means the flux split still feels the mirrors, and the variant does not count as usable.
 
