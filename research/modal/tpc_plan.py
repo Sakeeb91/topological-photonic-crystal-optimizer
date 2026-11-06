@@ -794,7 +794,8 @@ def _gonogo_e3(rows, ok, ref, target_um: float = 1.547, mirror_ratio: float = 10
     longest = {}
     for g in groups.values():
         d = g["design"]
-        if d not in longest or (g["nside"] or 0) > (longest[d]["nside"] or 0):
+        rank = ((g["nside"] or 0), g.get("max_res", 0))  # longest mirror; ties -> highest resolution
+        if d not in longest or rank > ((longest[d]["nside"] or 0), longest[d].get("max_res", 0)):
             longest[d] = g
     channels = {d: g.get("limited_by") for d, g in longest.items()}
     known = {c for c in channels.values() if c}

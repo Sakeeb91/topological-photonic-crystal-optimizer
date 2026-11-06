@@ -472,3 +472,16 @@ def test_dispatch_runs_small_jobs_locally_first(monkeypatch, capsys):
     monkeypatch.setattr(A, "_run_small_locally", lambda small, n, d: None)
     A._dispatch("E3", "", dry_run=True)
     assert "Not sending them to Modal" in capsys.readouterr().out
+
+
+@pytest.mark.skipif(not os.path.isdir(SNAPSHOT_E3), reason="Modal results snapshot not present")
+def test_e3_snapshot_flags_mixed_channels():
+    import glob
+    import json
+    rows = [json.load(open(f)) for f in glob.glob(os.path.join(SNAPSHOT_E3, "**", "*.json"), recursive=True)]
+    g = P.gonogo("E3", rows)
+    if not any(v["design"] == "quan_loncar" and 29 in v["by_res"] for v in g["variants"].values()):
+        pytest.skip("snapshot predates the res-29 tuned control")
+    # SSH walls mirror-limited at Nside 40 vs the radiation-limited tuned control (Q_axial/Q_rad ~ 1300)
+    assert g["comparison"]["limited_by"]["quan_loncar"] == "radiation"
+    assert g["comparison"]["limited_by"]["ssh_A"] == "mirror" and g["comparison"]["comparable"] is False
