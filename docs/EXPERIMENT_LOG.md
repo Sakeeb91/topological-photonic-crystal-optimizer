@@ -293,6 +293,24 @@ These were produced on the Modal branch. The MPB numbers below were run locally 
 - The run is also not comparable with the SSH walls at res 29.
 - Fix requested on the Modal branch: one common resolution for every design compared on a cell, with a floor of at least 10 px per lambda/n. The records are in `E3/_failed/`.
 
+## E3 v2: tuned QL control at res 29 (code `205d7c9`)
+
+- Manifest: `research/results/manifests/e3_ql25.yaml`. This is `e3.yaml` at `205d7c9` with QL `n_mirror` limited to [25] to stay within budget; the n_mirror 15 variant was skipped. Log: `research/results/logs/e3_ql25.log`.
+- The common per-cell resolution fix puts the control at res 29, the same as the SSH walls.
+- Guard projection: $7.13 + 1.6 x $0.34 = $7.67. **Spend after the run: $7.62.**
+
+| Design | Period | Q_total | Q_rad | Q_axial | lambda | Detuning |
+|---|---|---|---|---|---|---|
+| QL control (tuned, air mode, n_taper 10, n_mirror 25) | 461.6 nm | 3,596 | 3,599 | 4.7e6 | 1538.5 nm | -8.5 nm |
+| for comparison: `ssh_graded`, Nside 30 | 381.5 nm | 6,475 | 5.5e5 | 6,552 | 1542.1 nm | -4.9 nm |
+
+What it shows:
+- **The control is now on target and not mirror-limited, but it is radiation-limited at Q ≈ 3.6e3.** Its 10-segment linear-radius taper is far from the Quan-Loncar prescription (a mirror strength that grows quadratically over about 20 or more segments), which reaches Q_rad of 1e6 or more in Si nanobeams.
+- **No topological-vs-trivial conclusion can be drawn yet.** The SSH walls are mirror-limited (Q_rad 1e5-5e5, Q_axial ≤ 6.6e3) and the control is radiation-limited (Q_rad 3.6e3). Each is limited by something different, and the control is not optimized.
+- **Next, for a fair control:** build a quadratic mirror-strength taper with n_taper 20-30 (Quan & Loncar, Opt. Express 19, 18529, 2011), tuned with the same `ql_period` search. Running it locally (`--local`) or on a free allocation keeps it inside the budget.
+
+**Budget status:** $7.62 of $10 used. No further Modal runs are planned under this cap. The remaining work (graded walls at Nside 40-60, the proper QL taper, E4 perturbation theory) should go to free compute (see the recommendations in the chat log: ACCESS / Alliance / GCP research credits, Kaggle or local for light jobs) or wait for a budget decision.
+
 ## Open issues (owner: the next person to touch the code)
 
 1. ~~The E3 report keys by design only.~~ Fixed in `175db31` (keyed by cell L plus design).
