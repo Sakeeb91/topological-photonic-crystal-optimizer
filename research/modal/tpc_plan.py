@@ -748,6 +748,12 @@ def _gonogo_e3(rows, ok, ref, target_um: float = 1.547, mirror_ratio: float = 10
         g["max_res"] = rs[-1]
         g["n_res"] = len(rs)
         g["mirror_limited"] = bool(top["Q_axial"] and top["Q_rad"] and top["Q_axial"] < mirror_ratio * top["Q_rad"])
+        # dominant loss channel at the highest resolution: whichever Q is smaller limits Q_total
+        if top["Q_axial"] and top["Q_rad"]:
+            g["limited_by"] = "mirror" if top["Q_axial"] < top["Q_rad"] else "radiation"
+            g["Q_axial_over_Q_rad"] = top["Q_axial"] / top["Q_rad"]
+        else:
+            g["limited_by"] = None
         lam = top["lam_um"]
         g["in_window"] = bool(lam and top["window_um"][0] <= lam <= top["window_um"][1])
         g["detuning_nm"] = 1e3 * (lam - target_um) if lam else None
@@ -783,13 +789,27 @@ def _gonogo_e3(rows, ok, ref, target_um: float = 1.547, mirror_ratio: float = 10
                 g["q_rad_plateaued"] = ch <= 0.2
                 if ch > 0.2:
                     g["usable"] = False
+    # cross-design comparability: compare each design's longest-mirror variant; designs limited by
+    # different channels (e.g. SSH mirror-limited vs a radiation-limited control) are not comparable
+    longest = {}
+    for g in groups.values():
+        d = g["design"]
+        if d not in longest or (g["nside"] or 0) > (longest[d]["nside"] or 0):
+            longest[d] = g
+    channels = {d: g.get("limited_by") for d, g in longest.items()}
+    known = {c for c in channels.values() if c}
+    comparison = dict(limited_by=channels, comparable=len(known) <= 1,
+                      note=None if len(known) <= 1 else
+                      "designs are limited by different loss channels; comparing Q_total (or Q_rad of a "
+                      "mirror-limited design) across them mixes mirror strength with radiation: lengthen the "
+                      "mirror-limited designs until Q_axial >= 10 Q_rad first")
     designs = sorted({(g["cell"], g["design"]) for g in groups.values()})
     status = {f"{c}|{d}": any(g["usable"] for g in groups.values() if g["cell"] == c and g["design"] == d) for c, d in designs}
     par = [dict(a=r["a"], b=r["b"], r=r["r"], w=r["w"], clear=r.get("other_parity_clear"),
                 in_gap=r.get("other_parity_in_gap")) for r in rows if r.get("kernel") == "mpb_cell"]
     has_ql = any(d == "quan_loncar" for _, d in designs)
-    return dict(exp="E3", go=bool(status) and all(status.values()) and has_ql, design_usable=status, variants=groups,
-                q_rad_plateau=plateau,
+    return dict(exp="E3", go=bool(status) and all(status.values()) and has_ql and comparison["comparable"],
+                design_usable=status, variants=groups, q_rad_plateau=plateau, comparison=comparison,
                 refused=ref, other_parity=par,
                 criterion=f"for every (cell, design) incl. the Quan-Loncar control, some variant is: converged over >= 3 "
                           f"resolutions (top two: |dQ_rad|/Q_rad < 0.2, |dlambda| < 2 nm, >= 2 px on the smallest hole radius), "

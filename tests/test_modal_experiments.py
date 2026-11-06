@@ -440,3 +440,14 @@ def test_quan_loncar_explicit_radii_and_mirror_strength():
     assert T._mirror_strength(0.60, 0.70, 0.60) == pytest.approx(0.0, abs=1e-6)    # at the band edge
     assert T._mirror_strength(0.60, 0.70, 0.65) == pytest.approx(0.1 / 1.3)        # mid-gap: half-gap / mid
     assert T._mirror_strength(0.60, 0.70, 0.75) == 0.0                             # outside the gap
+
+
+def test_e3_limiting_channel_and_comparability():
+    d = dict(kind="ssh", a=0.2022, b=0.1793, r=0.0534, wall="A", Nside=40)
+    ql = dict(kind="quan_loncar", period=0.4616, radii=[0.0969, 0.1419], n_taper=2, n_mirror=25)
+    rows = [_nb(d, 29, 2.8e5, 2.4e4, 1.547, name="ssh_A[Nside=40]"),          # mirror-limited
+            _nb(ql, 29, 3.6e3, 4.7e6, 1.5385, name="quan_loncar[n_mirror=25]")]  # radiation-limited
+    g = P.gonogo("E3", rows)
+    lim = {v["design"]: v["limited_by"] for v in g["variants"].values()}
+    assert lim == {"ssh_A": "mirror", "quan_loncar": "radiation"}
+    assert g["comparison"]["comparable"] is False and g["go"] is False
