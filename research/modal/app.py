@@ -192,8 +192,30 @@ def _spent_usd() -> float:
     return P.read_program_spend(modal.Workspace.from_context().billing)
 
 
+def _run_small_locally(small: list[dict], local_np: int, dry_run: bool) -> list[dict]:
+    """Run jobs estimated below the local threshold on this machine (no credits), then upload each
+    result to the Volume at its normal path so Modal-side skip-if-done and selections see it."""
+    import run_local as RL
+    env = RL.find_env_optional()
+    if env is None:
+        return None
+    if dry_run:
+        return []
+    out = []
+    for j in small:
+        r = RL.run_job(j, RL.DEFAULT_OUT, env, local_np)
+        path = os.path.join(RL.DEFAULT_OUT, P.job_path(j))
+        if os.path.exists(path):
+            with vol.batch_upload(force=True) as b:
+                b.put_file(path, "/" + P.job_path(j))
+        print(f"   {r['status']:<12} {j['kernel']:<11} {j['tag']}  (local, {r.get('wall_s', 0):.0f}s)")
+        out.append(r)
+    return out
+
+
 def _dispatch(exp_name: str, manifest: str, dry_run: bool, n: int = 0, force: bool = False,
-              budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0) -> list[dict]:
+              budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0, local_first: bool = True,
+              local_max_hours: float = 0.5, local_np: int = 4, modal_small: bool = False) -> list[dict]:
     man = P.load_manifest(manifest or exp_name)
     if n and man.get("ensemble"):
         man["ensemble"]["N"] = int(n)
@@ -212,6 +234,22 @@ def _dispatch(exp_name: str, manifest: str, dry_run: bool, n: int = 0, force: bo
     print(f"[skip] {len(jobs) - len(todo)} already on the Volume; {len(todo)} to run")
     if not todo:
         return []
+    if local_first:
+        # default: anything estimated under local_max_hours on this machine runs here, for free
+        import run_local as RL
+        small = [j for j in todo if RL.local_hours(j, local_np) < local_max_hours]
+        if small:
+            done_local = _run_small_locally(small, local_np, dry_run)
+            if done_local is None and not modal_small:
+                print(f"[local] {len(small)} small job(s) would run locally, but no local MEEP env was found "
+                      "(build one with research/pilot_sims/setup_env.sh, or set TPC_ENV). Not sending them to "
+                      "Modal; pass --modal-small to allow that.")
+                todo = [j for j in todo if j not in small]
+            elif done_local is not None:
+                print(f"[local] {len(small)} job(s) {'would run' if dry_run else 'ran'} locally (< {local_max_hours} h each)")
+                todo = [j for j in todo if j not in small]
+        if not todo:
+            return []
     est = sum(P.cost(j)["usd"] for j in todo)
     if spent_usd < 0:
         try:
@@ -251,44 +289,56 @@ def _dispatch(exp_name: str, manifest: str, dry_run: bool, n: int = 0, force: bo
 
 
 @app.local_entrypoint()
-def e0(dry_run: bool = False, manifest: str = "", budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0):
-    _dispatch("E0", manifest, dry_run, budget_usd=budget_usd, spent_usd=spent_usd)
+def e0(dry_run: bool = False, manifest: str = "", budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0,
+       local_first: bool = True, local_max_hours: float = 0.5, local_np: int = 4, modal_small: bool = False):
+    _dispatch("E0", manifest, dry_run, budget_usd=budget_usd, spent_usd=spent_usd,
+              local_first=local_first, local_max_hours=local_max_hours, local_np=local_np, modal_small=modal_small)
     if not dry_run:
         print(json.dumps(P.gonogo("E0", load_results("E0")), indent=1))
 
 
 @app.local_entrypoint()
-def e1(dry_run: bool = False, manifest: str = "", budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0):
-    _dispatch("E1", manifest, dry_run, budget_usd=budget_usd, spent_usd=spent_usd)
+def e1(dry_run: bool = False, manifest: str = "", budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0,
+       local_first: bool = True, local_max_hours: float = 0.5, local_np: int = 4, modal_small: bool = False):
+    _dispatch("E1", manifest, dry_run, budget_usd=budget_usd, spent_usd=spent_usd,
+              local_first=local_first, local_max_hours=local_max_hours, local_np=local_np, modal_small=modal_small)
     if not dry_run:
         print(json.dumps(P.gonogo("E1", load_results("E1")), indent=1))
 
 
 @app.local_entrypoint()
-def e2(dry_run: bool = False, manifest: str = "", budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0):
-    _dispatch("E2", manifest, dry_run, budget_usd=budget_usd, spent_usd=spent_usd)
+def e2(dry_run: bool = False, manifest: str = "", budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0,
+       local_first: bool = True, local_max_hours: float = 0.5, local_np: int = 4, modal_small: bool = False):
+    _dispatch("E2", manifest, dry_run, budget_usd=budget_usd, spent_usd=spent_usd,
+              local_first=local_first, local_max_hours=local_max_hours, local_np=local_np, modal_small=modal_small)
     if not dry_run:
         print(json.dumps(P.gonogo("E2", load_results("E2")), indent=1))
 
 
 @app.local_entrypoint()
-def e3(dry_run: bool = False, manifest: str = "", force: bool = False, budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0):
-    _dispatch("E3", manifest, dry_run, force=force, budget_usd=budget_usd, spent_usd=spent_usd)
+def e3(dry_run: bool = False, manifest: str = "", force: bool = False, budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0,
+       local_first: bool = True, local_max_hours: float = 0.5, local_np: int = 4, modal_small: bool = False):
+    _dispatch("E3", manifest, dry_run, force=force, budget_usd=budget_usd, spent_usd=spent_usd,
+              local_first=local_first, local_max_hours=local_max_hours, local_np=local_np, modal_small=modal_small)
     if not dry_run:
         print(json.dumps(P.gonogo("E3", load_results("E3")), indent=1))
 
 
 @app.local_entrypoint()
-def e4(dry_run: bool = False, manifest: str = "", n: int = 0, force: bool = False, budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0):
+def e4(dry_run: bool = False, manifest: str = "", n: int = 0, force: bool = False, budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0,
+       local_first: bool = True, local_max_hours: float = 0.5, local_np: int = 4, modal_small: bool = False):
     """Disorder ensembles; --n overrides the manifest's realizations per cell (48 for the paper)."""
-    _dispatch("E4", manifest, dry_run, n=n, force=force, budget_usd=budget_usd, spent_usd=spent_usd)
+    _dispatch("E4", manifest, dry_run, n=n, force=force, budget_usd=budget_usd, spent_usd=spent_usd,
+              local_first=local_first, local_max_hours=local_max_hours, local_np=local_np, modal_small=modal_small)
     if not dry_run:
         _summarize_e4(manifest, n)
 
 
 @app.local_entrypoint()
-def e5(dry_run: bool = False, manifest: str = "", budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0):
-    _dispatch("E5", manifest, dry_run, budget_usd=budget_usd, spent_usd=spent_usd)
+def e5(dry_run: bool = False, manifest: str = "", budget_usd: float = P.BUDGET_USD, spent_usd: float = -1.0,
+       local_first: bool = True, local_max_hours: float = 0.5, local_np: int = 4, modal_small: bool = False):
+    _dispatch("E5", manifest, dry_run, budget_usd=budget_usd, spent_usd=spent_usd,
+              local_first=local_first, local_max_hours=local_max_hours, local_np=local_np, modal_small=modal_small)
     if not dry_run:
         print(json.dumps(P.gonogo("E5", load_results("E5")), indent=1))
 

@@ -451,3 +451,24 @@ def test_e3_limiting_channel_and_comparability():
     lim = {v["design"]: v["limited_by"] for v in g["variants"].values()}
     assert lim == {"ssh_A": "mirror", "quan_loncar": "radiation"}
     assert g["comparison"]["comparable"] is False and g["go"] is False
+
+
+def test_dispatch_runs_small_jobs_locally_first(monkeypatch, capsys):
+    modal = pytest.importorskip("modal")  # app.py needs the client library, not a connection
+    import app as A
+    calls = {}
+    monkeypatch.setattr(A, "_existing", lambda exp: set())
+    monkeypatch.setattr(A, "load_results", lambda exp: _fake_e2_bighole() if exp == "E2" else [])
+    monkeypatch.setattr(A, "_spent_usd", lambda: 7.62)
+    def fake_local(small, local_np, dry_run):
+        calls["small"] = [j["kernel"] for j in small]
+        return []
+    monkeypatch.setattr(A, "_run_small_locally", fake_local)
+    A._dispatch("E3", "", dry_run=True)
+    out = capsys.readouterr().out
+    assert set(calls["small"]) == {"mpb_cell", "ql_recipe"}  # MPB jobs stay local; 3D nanobeams go to Modal
+    assert "[budget] spent $7.62" in out
+    # no local env and no --modal-small: small jobs are held back, not sent to Modal
+    monkeypatch.setattr(A, "_run_small_locally", lambda small, n, d: None)
+    A._dispatch("E3", "", dry_run=True)
+    assert "Not sending them to Modal" in capsys.readouterr().out

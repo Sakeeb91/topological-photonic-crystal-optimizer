@@ -45,6 +45,17 @@ def local_hours(job: dict, nproc: int) -> float:
     return e["vox_reduced"] * e["steps"] * cns * 1e-9 / nproc / 3600
 
 
+def find_env_optional(explicit: str = "") -> str | None:
+    """Local MEEP env prefix, or None if none is installed."""
+    if explicit:
+        return explicit
+    if os.environ.get("TPC_ENV"):
+        return os.environ["TPC_ENV"]
+    for cand in glob.glob(os.path.join(REPO, "**", "mamba", "envs", "pmpi"), recursive=True):
+        return cand
+    return None
+
+
 def find_env(explicit: str) -> str:
     if explicit:
         return explicit
