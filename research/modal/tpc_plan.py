@@ -225,6 +225,22 @@ def _designs_for_cell(cell: dict, man: dict, tuned: list[dict] | None = None) ->
                                                     a=a_m, b=b_m, r=r, res=int(cell.get("res", 32)),
                                                     Ly=cell.get("Ly", 2.0), Lz=cell.get("Lz", 2.0),
                                                     target_lambda_um=1.547)))
+            elif d["kind"] == "quan_loncar" and d.get("recipe"):
+                # deterministic Quan-Loncar recipe (ql_recipe MPB job; run 1 creates it, run 2 builds the beam)
+                mode = d.get("mode_type", "air")
+                rp = dict(platform=cell["platform"], w=cell["w"], clad=cell["clad"], res=int(d.get("tune_res", 32)),
+                          L0=cell["a"] + cell["b"], mode_type=mode,
+                          rc_over_L=float(d.get("rc_over_L", {"air": 0.21, "dielectric": 0.30}[mode])),
+                          target_lambda_um=float(d.get("target_lambda_um", 1.547)), n_taper=int(d["n_taper"]),
+                          margin_nm=float(d.get("margin_nm", 5.0)), edge_offset_nm=float(d.get("edge_offset_nm", 0.0)))
+                rj = make_job("", "ql_recipe", rp)
+                hit = next((r for r in (tuned or []) if r.get("kernel") == "ql_recipe"
+                            and r.get("job", {}).get("key") == rj["key"]), None)
+                out.append(("__ql_recipe__", rp))
+                if hit and hit.get("converged") and hit.get("fab_ok"):
+                    out.append((d.get("name", "quan_loncar") + sfx,
+                                dict(kind="quan_loncar", period=hit["period"], radii=hit["radii"], mode_type=mode,
+                                     n_taper=int(d["n_taper"]), n_mirror=int(d.get("n_mirror", 10)))))
             elif d["kind"] == "quan_loncar":
                 if d.get("tune"):
                     # target-driven period from a ql_period MPB job in the same experiment (run 1 creates
@@ -284,6 +300,8 @@ def common_resolutions(man: dict, designs: list[dict], platform: str) -> list[in
     floor = res_floor(platform, px_per_lambda_n=float(man.get("px_per_lambda_n", PX_PER_LAMBDA_N_MIN)))
     if not man.get("px_on_r"):
         return [max(int(x), floor) for x in man.get("res", [20])]
+    if not designs:
+        return []  # e.g. only MPB pre-steps (ql_recipe / ql_tune) this round
     rmins = [min(h["r"] for h in G.build_design(d)) for d in designs]
     return sorted({max(floor, max(int(math.ceil(float(px) / rm)) for rm in rmins)) for px in man["px_on_r"]})
 
@@ -321,10 +339,13 @@ def _expand(man: dict, load_results: Callable[[str], list[dict]] | None = None) 
         base = dict(platform=geo["platform"], w=geo["w"], clad=geo["clad"], fcen=fcen, df=df, **sim)
         kind = man.get("kind", "nanobeam")
         if kind == "nanobeam":
-            tuned = load_results(exp) if any(d.get("tune") for d in man.get("designs", [])) else None
+            tuned = load_results(exp) if any(d.get("tune") or d.get("recipe") for d in man.get("designs", [])) else None
             dlist = _designs_for_cell(cell, man, tuned)
             cell_res = common_resolutions(man, [d for n_, d in dlist if not n_.startswith("__")], geo["platform"])
             for name, design in dlist:
+                if name == "__ql_recipe__":
+                    jobs.append(make_job(exp, "ql_recipe", design, tag=f"ql_recipe|{design['mode_type']}|n{design['n_taper']}"))
+                    continue
                 if name == "__ql_tune__":
                     jobs.append(make_job(exp, "ql_period", design, tag="ql_tune"))
                     continue
@@ -429,7 +450,7 @@ def estimate(job: dict) -> dict:
     res = int(p.get("res", 20))
     dpml = 1.0
     z_sym = p.get("clad") in ("oxide", "oxide_fill", "susp")
-    if k in ("mpb_cell", "ql_period"):
+    if k in ("mpb_cell", "ql_period", "ql_recipe"):
         return dict(kind="mpb", vox_reduced=0, steps=0)
     if k == "bend_q":
         R = p["R"]; sr = R + w / 2 + 2.5 + dpml; sz = t + 3 + 2 * dpml
@@ -469,7 +490,7 @@ def estimate(job: dict) -> dict:
 
 def route(job: dict) -> str:
     k = job["kernel"]
-    if k in ("mpb_cell", "bend_q", "ql_period"):
+    if k in ("mpb_cell", "bend_q", "ql_period", "ql_recipe"):
         return "light"
     if k == "ring3d":
         return "ring"
@@ -712,7 +733,7 @@ def _gonogo_e3(rows, ok, ref, target_um: float = 1.547, mirror_ratio: float = 10
     for r in [x for x in ok if x.get("kernel") == "nanobeam3d"]:
         d = r["design"]
         name = r.get("job", {}).get("tag", "").split("|")[0]
-        var = {k: v for k, v in d.items() if k not in ("a", "b", "r", "L", "period", "r_center", "r_end")}
+        var = {k: v for k, v in d.items() if k not in ("a", "b", "r", "L", "period", "r_center", "r_end", "radii")}
         key = f"{_cell_key(d)}|{name}|" + ",".join(f"{k}={v}" for k, v in sorted(var.items()) if k != "kind")
         pm = (r.get("convergence") or {}).get("primary") or {}
         g = groups.setdefault(key, dict(cell=_cell_key(d), design=name.split("[")[0], variant=name, by_res={},

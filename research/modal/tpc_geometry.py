@@ -152,6 +152,17 @@ def quan_loncar_nanobeam(period: float, r_center: float, r_end: float, n_taper: 
     return _holes(xs, rr)
 
 
+def quan_loncar_radii(period: float, radii: list[float], n_mirror: int) -> list[dict]:
+    """Constant-period nanobeam with explicit taper radii (centre outward, from ql_recipe), then
+    n_mirror holes at the last radius. Holes at +-(i + 1/2) period."""
+    rs = list(radii) + [radii[-1]] * n_mirror
+    xs, rr = [], []
+    for i, ri in enumerate(rs):
+        x = (i + 0.5) * period
+        xs += [x, -x]; rr += [ri, ri]
+    return _holes(xs, rr)
+
+
 def ring_gap_sequence(a: float, b: float, N1: int, N2: int) -> list[float]:
     """Gap list for a closed two-segment SSH ring/supercell: N1 cells of (a, b) then N2
     cells of (b, a). The junctions give one 'b b' and one 'a a' wall, i.e. one A-type
@@ -259,6 +270,8 @@ def build_design(d: dict) -> list[dict]:
         return ssh_nanobeam(d["a"], d["b"], d["r"], int(d["Nside"]), d.get("wall", "A"), float(d.get("M", 0.0)))
     if kind == "ssh_graded":
         return graded_nanobeam(d["L"], d["r"], int(d["Nside"]), float(d["delta_wall"]), float(d["delta_mirror"]), float(d["M"]))
+    if kind == "quan_loncar" and d.get("radii"):
+        return quan_loncar_radii(d["period"], [float(r) for r in d["radii"]], int(d["n_mirror"]))
     if kind == "quan_loncar":
         return quan_loncar_nanobeam(d["period"], d["r_center"], d["r_end"], int(d["n_taper"]), int(d["n_mirror"]))
     raise ValueError(f"unknown design kind {kind!r}")

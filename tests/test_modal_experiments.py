@@ -121,20 +121,34 @@ def _fake_e2_bighole():
                  gap_contains_target=True, below_lightline=True, fab=G.ssh_cell_fab_check(a, b, r, 0.5, plat))]
 
 
+def _recipe_hits(rec_jobs):
+    """Fake ql_recipe results shaped like the local production-res runs (2026-11-06, res 32):
+    air 461.6 nm period, radii 96.9 -> 141.9 nm; dielectric 357.4 nm, 107.2 -> 80.9 nm."""
+    out = []
+    for j in rec_jobs:
+        p = j["params"]
+        L, r0, r1 = (0.4616, 0.0969, 0.1419) if p["mode_type"] == "air" else (0.3574, 0.1072, 0.0809)
+        radii = list(np.linspace(r0, r1, p["n_taper"]))
+        out.append(dict(kernel="ql_recipe", converged=True, fab_ok=True, period=L, radii=radii, job=dict(key=j["key"])))
+    return out
+
+
 def test_selection_manifests_expand_from_e2():
     assert P.expand(P.load_manifest("E3"), lambda e: _fake_e2()) == []  # r = 35 nm fails min_r_nm 50
     e3 = P.expand(P.load_manifest("E3"), lambda e: _fake_e2_bighole())
     # 3 SSH walls x 3 Nside + graded x 2 Nside at one resolution + parity check + mirror_cell_check
-    # + one ql_tune MPB job (QL nanobeams wait for it)
-    assert len(e3) == 14 and {j["tier"] for j in e3} <= {"light", "3d", "3d_big", "3d_xl"}
+    # + 4 ql_recipe MPB jobs (air/dielectric x n_taper 20/30; QL nanobeams wait for them)
+    assert len(e3) == 17 and {j["tier"] for j in e3} <= {"light", "3d", "3d_big", "3d_xl"}
     assert sum(j["params"].get("check_other_parity", False) for j in e3) == 1
-    tune = [j for j in e3 if j["kernel"] == "ql_period"]
-    assert len(tune) == 1 and tune[0]["params"]["mode_type"] == "auto"
-    hit = dict(kernel="ql_period", converged=True, fab_ok=True, period=0.46, r_center=0.097, r_end=0.139,
-               job=dict(key=tune[0]["key"]))
-    e3b = P.expand(P.load_manifest("E3"), lambda e: _fake_e2_bighole() if e == "E2" else [hit])
+    rec = [j for j in e3 if j["kernel"] == "ql_recipe"]
+    assert sorted((j["params"]["mode_type"], j["params"]["n_taper"]) for j in rec) == \
+        [("air", 20), ("air", 30), ("dielectric", 20), ("dielectric", 30)]
+    e3b = P.expand(P.load_manifest("E3"), lambda e: _fake_e2_bighole() if e == "E2" else _recipe_hits(rec))
     ql = [j for j in e3b if j["kernel"] == "nanobeam3d" and j["tag"].startswith("quan_loncar")]
-    assert len(ql) == 2 and all(j["params"]["design"]["period"] == 0.46 for j in ql)  # n_mirror 15 / 25
+    assert len(ql) == 4 and all(len(j["params"]["design"]["radii"]) == j["params"]["design"]["n_taper"] for j in ql)
+    # the older tune: true path (ql_period) still works for manifests that use it
+    tm = dict(P.load_manifest("E3"), designs=[dict(kind="quan_loncar", name="ql_old", tune=True, n_taper=10, n_mirror=15)])
+    assert [j["kernel"] for j in P.expand(tm, lambda e: _fake_e2_bighole() if e == "E2" else []) if j["kernel"] != "mpb_cell"] == ["ql_period"]
     nb = [j for j in e3 if j["kernel"] == "nanobeam3d"]
     assert all(j["params"]["res"] * min(h["r"] for h in G.build_design(j["params"]["design"])) >= 1.5 for j in nb)
     e3c = P.expand(P.load_manifest(os.path.join(os.path.dirname(P.__file__), "manifests", "e3c.yaml")), lambda e: _fake_e2())
@@ -392,17 +406,16 @@ def test_read_program_spend_includes_current_hour_and_fails_closed():
 def test_common_resolution_and_floor():
     assert P.res_floor("si220") == 23 and P.res_floor("sin400") == 13
     # tuned QL control from E3 v2 (r_c = 96.9 nm) alone would get ceil(1.5 / 0.0969) = 16 -> NaN on Modal
-    tune = [j for j in P.expand(P.load_manifest("E3"), lambda e: _fake_e2_bighole() if e == "E2" else [])
-            if j["kernel"] == "ql_period"][0]
-    hit = dict(kernel="ql_period", converged=True, fab_ok=True, period=0.4616, r_center=0.0969, r_end=0.1385,
-               job=dict(key=tune["key"]))
-    e3 = P.expand(P.load_manifest("E3"), lambda e: _fake_e2_bighole() if e == "E2" else [hit])
+    rec = [j for j in P.expand(P.load_manifest("E3"), lambda e: _fake_e2_bighole() if e == "E2" else [])
+           if j["kernel"] == "ql_recipe"]
+    hit = _recipe_hits(rec)
+    e3 = P.expand(P.load_manifest("E3"), lambda e: _fake_e2_bighole() if e == "E2" else hit)
     nb = [j for j in e3 if j["kernel"] == "nanobeam3d"]
     assert {j["params"]["res"] for j in nb} == {29}  # SSH holes (r 53.5 nm) set it for every design on the cell
     assert any(j["tag"].startswith("quan_loncar") for j in nb)
     alone = dict(P.load_manifest("E3"), designs=[d for d in P.load_manifest("E3")["designs"] if d["kind"] == "quan_loncar"])
-    ql_only = [j for j in P.expand(alone, lambda e: _fake_e2_bighole() if e == "E2" else [hit]) if j["kernel"] == "nanobeam3d"]
-    assert {j["params"]["res"] for j in ql_only} == {23}  # floor, not 16
+    ql_only = [j for j in P.expand(alone, lambda e: _fake_e2_bighole() if e == "E2" else hit) if j["kernel"] == "nanobeam3d"]
+    assert {j["params"]["res"] for j in ql_only} == {23}  # floor, not ceil(1.5 / r_min) = 16-19
 
 
 def test_unstable_runs_are_recorded_and_reported():
@@ -416,3 +429,14 @@ def test_unstable_runs_are_recorded_and_reported():
     assert P.unstable_result(job, "", "Killed (OOM)", 5.0) is None  # other failures stay in _failed
     g = P.gonogo("E3", [u])
     assert g["unstable"] == [dict(tag="quan_loncar[n_mirror=15]|res16|nominal", res=16)] and g["go"] is False
+
+
+def test_quan_loncar_explicit_radii_and_mirror_strength():
+    import tpc_physics as T
+    h = G.build_design(dict(kind="quan_loncar", period=0.4616, radii=[0.0969, 0.12, 0.1419], n_taper=3, n_mirror=2))
+    pos = sorted([q for q in h if q["x"] > 0], key=lambda q: q["x"])
+    assert [round(q["r"], 4) for q in pos] == [0.0969, 0.12, 0.1419, 0.1419, 0.1419]
+    assert abs(pos[0]["x"] - 0.2308) < 1e-9
+    assert T._mirror_strength(0.60, 0.70, 0.60) == pytest.approx(0.0, abs=1e-6)    # at the band edge
+    assert T._mirror_strength(0.60, 0.70, 0.65) == pytest.approx(0.1 / 1.3)        # mid-gap: half-gap / mid
+    assert T._mirror_strength(0.60, 0.70, 0.75) == 0.0                             # outside the gap

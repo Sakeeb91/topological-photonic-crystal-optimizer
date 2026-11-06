@@ -27,10 +27,13 @@ designs:
   # cell's own delta in E3-bighole). A mirror_cell_check MPB job verifies the strong-mirror gap.
   - {kind: ssh_graded, name: ssh_graded, delta_wall: 0.0, delta_mirror: max, mirror_margin_nm: 5, M: 4,
      Nside: [20, 30]}
-  # Quan-Loncar control with a TARGET-DRIVEN period (ql_period, MPB, cents): run E3 once to create the
-  # ql_tune job, then again to build the nanobeam at the tuned period. With r_center < r_end the
-  # cavity is an AIR-mode cavity at the centre segment's upper band edge (mode_type auto -> air).
-  # The fixed period_scale scan (0.94-0.97) landed 26-43 nm red and is superseded.
-  - {kind: quan_loncar, name: quan_loncar, tune: true, n_taper: 10, n_mirror: [15, 25], r_end_over_L: 0.30,
-     r_center_ratio: 0.70, margin_nm: 5, edge_offset_nm: 0, tune_res: 32}
+  # Quan-Loncar control by the deterministic recipe (Quan & Loncar, Opt. Express 19, 18529 (2011)):
+  # ql_recipe (MPB, ~1 min locally) finds the period that puts the centre segment's band edge at
+  # 1547 nm, scans the mirror strength gamma(r), and tapers the radii so gamma grows LINEARLY over
+  # n_taper segments (Gaussian field). Run E3 once to create the ql_recipe jobs, then again to build
+  # the nanobeams. Air mode (holes grow outward, upper edge) and dielectric mode (holes shrink outward,
+  # lower edge): the tuned air-mode control was radiation-limited at Q 3.6e3 in 220 nm Si.
+  # (The earlier linear-radius taper with tune: true is superseded.)
+  - {kind: quan_loncar, name: quan_loncar, recipe: true, mode_type: [air, dielectric], n_taper: [20, 30],
+     n_mirror: 15, margin_nm: 5, tune_res: 32}
 sim: {T_harm: 1000, nfreq: 101, flux: true}   # check convergence.Q_over_pi_f_T and dQ_half

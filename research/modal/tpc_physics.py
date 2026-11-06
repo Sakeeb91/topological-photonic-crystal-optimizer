@@ -192,6 +192,78 @@ def ql_period(p):
                 fab_mirror=fab_m, fab_centre=fab_c, fab_ok=bool(fab_m["ok"] and fab_c["ok"]),
                 history=[dict(L=h["L"], edge_lambda_um=h[edge]) for h in hist])
 
+def _period_search(goal, edge, rcL, L0, solve, tol, max_iters):
+    """Secant search on the period L so that the centre segment's `edge` sits at `goal` (um)."""
+    c0 = solve(L0); hist = [c0]
+    c1 = solve(L0 * goal / c0[edge]); hist.append(c1)
+    for _ in range(max_iters):
+        if abs(c1[edge] - goal) < tol:
+            break
+        dl = c1[edge] - c0[edge]
+        L2 = c1["L"] + (goal - c1[edge]) * (c1["L"] - c0["L"]) / dl if abs(dl) > 1e-9 else c1["L"] * goal / c1[edge]
+        c0, c1 = c1, solve(L2)
+        hist.append(c1)
+    return c1, hist
+
+
+def _mirror_strength(f1, f2, f_res):
+    """Quan & Loncar (2011) mirror strength of a segment at the resonance:
+    gamma = sqrt( ((f2-f1)/(f2+f1))^2 - ((f_res-f0)/f0)^2 ), f0 = (f1+f2)/2; 0 outside the gap."""
+    f0 = 0.5 * (f1 + f2)
+    g2 = ((f2 - f1) / (f2 + f1)) ** 2 - ((f_res - f0) / f0) ** 2
+    return math.sqrt(g2) if g2 > 0 else 0.0
+
+
+def ql_recipe(p):
+    """Deterministic Gaussian-mirror nanobeam (Quan & Loncar, Opt. Express 19, 18529 (2011)) at constant period:
+      1. period: secant search so the CENTRE segment's band edge sits at target + edge_offset_nm
+         (air mode: upper edge, holes grow outward; dielectric mode: lower edge, holes shrink outward);
+      2. mirror strength gamma(r) of single-hole segments at that period and resonance, scanned from
+         r_center toward the fab limit (air: largest r with web >= min_web + margin; dielectric:
+         smallest r with diameter >= min_feature + margin); r_end = argmax gamma;
+      3. taper radii so gamma grows LINEARLY from 0 at the centre to gamma_max over n_taper segments
+         (constant slope -> Gaussian field envelope), by interpolating r(gamma) on the monotonic branch.
+    Returns the radii list for build_design(kind=quan_loncar, radii=...)."""
+    import numpy as np
+    plat = G.platform(p["platform"], t=p.get("t"))
+    w, t, clad, res = p["w"], plat["t"], p["clad"], int(p["res"])
+    Ly, Lz = p.get("Ly", 2.0), p.get("Lz", 2.0)
+    mode = p.get("mode_type", "air")
+    edge = "lambda2_um" if mode == "air" else "lambda1_um"
+    rcL = float(p["rc_over_L"])
+    tgt = float(p["target_lambda_um"]); goal = tgt + 1e-3 * float(p.get("edge_offset_nm", 0.0))
+    margin = 1e-3 * float(p.get("margin_nm", 5.0))
+    solve = lambda L: _mpb_single_once(L, rcL * L, w, t, plat, clad, res, Ly, Lz)
+    c1, hist = _period_search(goal, edge, rcL, float(p["L0"]), solve, 1e-3 * float(p.get("tol_nm", 0.5)),
+                              int(p.get("max_iters", 6)))
+    L = c1["L"]; r_c = rcL * L; f_res = 1.0 / goal
+    if mode == "air":
+        r_lim = 0.5 * (L - plat["min_web"]) - margin
+    else:
+        r_lim = 0.5 * plat["min_feature"] + margin
+    rs = np.linspace(r_c, r_lim, int(p.get("n_r", 12)))
+    scan = []
+    for r in rs:
+        c = _mpb_single_once(L, float(r), w, t, plat, clad, res, Ly, Lz)
+        scan.append(dict(r=float(r), f1=c["f1"], f2=c["f2"], gamma=_mirror_strength(c["f1"], c["f2"], f_res)))
+    gam = np.array([q["gamma"] for q in scan])
+    k = int(np.argmax(gam)); g_max = float(gam[k]); r_end = scan[k]["r"]
+    # monotonic branch from the centre to argmax
+    gb = np.maximum.accumulate(gam[: k + 1]); rb = np.array([q["r"] for q in scan[: k + 1]])
+    n_taper = int(p["n_taper"])
+    targets = [g_max * i / max(n_taper - 1, 1) for i in range(n_taper)]
+    radii = [float(np.interp(g, gb, rb)) for g in targets]
+    radii[0], radii[-1] = r_c, r_end
+    holes = [dict(x=(i + 0.5) * L, y=0.0, r=r, ord=i) for i, r in enumerate(radii)]
+    fab = G.fab_check(holes, w, plat)
+    return dict(platform=plat["name"], w=w, t=t, clad=clad, res=res, mode_type=mode, target_lambda_um=tgt,
+                edge_offset_nm=float(p.get("edge_offset_nm", 0.0)), period=L, r_center=r_c, r_end=r_end,
+                radii=radii, gamma_targets=targets, gamma_max=g_max, n_taper=n_taper,
+                centre_edge_lambda_um=c1[edge], converged=abs(c1[edge] - goal) < 1e-3 * float(p.get("tol_nm", 0.5)),
+                gamma_scan=scan, gamma_peak_inside_scan=0 < k < len(scan) - 1, fab=fab, fab_ok=fab["ok"],
+                n_mpb_solves=len(hist) + len(scan), history=[dict(L=h["L"], edge_lambda_um=h[edge]) for h in hist])
+
+
 def mpb_neff(plat, w, t, clad, lam=LAM0, res=40, Ly=4.0, Lz=4.0):
     """TE0 effective index of a bare strip (a1_mpb_waveguide_neff.py)."""
     mp = _meep()
@@ -634,7 +706,7 @@ def sens3d(p):
     return out
 
 
-KERNELS = dict(mpb_cell=mpb_cell, bend_q=bend_q, nanobeam3d=nanobeam3d, supercell3d=supercell3d, ring3d=ring3d, sens3d=sens3d, ql_period=ql_period)
+KERNELS = dict(mpb_cell=mpb_cell, bend_q=bend_q, nanobeam3d=nanobeam3d, supercell3d=supercell3d, ring3d=ring3d, sens3d=sens3d, ql_period=ql_period, ql_recipe=ql_recipe)
 
 
 def _json_default(o):

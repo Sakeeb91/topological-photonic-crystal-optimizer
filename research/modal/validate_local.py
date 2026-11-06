@@ -29,6 +29,7 @@ SMALL = {
     "nanobeam3d": dict(T_harm=60, nfreq=41),   # res comes from shrink_manifest
     "sens3d": dict(T_harm=60, n_theta=16, n_z=4),
     "ql_period": dict(res=12, max_iters=3),
+    "ql_recipe": dict(res=12, max_iters=3, n_r=6),
     "supercell3d": dict(T_harm=40),
     "ring3d": dict(T_harm=20),
 }
